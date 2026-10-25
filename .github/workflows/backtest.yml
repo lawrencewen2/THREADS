@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches-ignore: [main]
-    paths: ["fearindex/**", "scripts/**", "tests/**", "requirements.txt"]
+    paths: ["fearindex/**", "scripts/**", "tests/**", "requirements.txt", "!scripts/astock_*", "!tests/test_astock.py"]
 
 permissions:
   contents: write
