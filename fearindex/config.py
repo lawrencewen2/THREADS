@@ -56,10 +56,10 @@ COMPONENTS = {
     "jp_rvol": dict(region="jp", transform="realized_vol", inputs=["n225"], weight=1.25, name="日经225 20日实际波动率"),
     "jp_dd": dict(region="jp", transform="drawdown", inputs=["n225"], weight=1.0, name="日经225 回撤"),
     "jp_ma": dict(region="jp", transform="below_ma", inputs=["n225"], weight=0.75, name="日经225 低于125日均线幅度"),
-    "jp_yen": dict(region="jp", transform="fall_20d", inputs=["usdjpy"], weight=0.75, name="日元20日急升"),
+    "jp_yen": dict(region="jp", transform="fall_20d", inputs=["usdjpy"], weight=0.5, name="日元20日急升"),
     # ---- A股 ----
     "cn_qvix": dict(region="cn", transform="level", inputs=["qvix50"], weight=1.0, name="50ETF 期权波动率 QVIX"),
-    "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=1.0, name="沪深300 20日实际波动率"),
+    "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=0.5, name="沪深300 20日实际波动率"),
     "cn_dd": dict(region="cn", transform="drawdown", inputs=["csi300"], weight=1.0, name="沪深300 回撤"),
     "cn_turnover": dict(region="cn", transform="turnover_shrink", inputs=["a_turnover"], weight=0.75, name="两市成交额萎缩"),
     "cn_margin": dict(region="cn", transform="fall_20d", inputs=["sh_margin"], weight=0.75, name="沪市融资余额下降"),
@@ -70,8 +70,8 @@ COMPONENTS = {
     "hk_tech": dict(region="hk", transform="underperform_20d", inputs=["hstech", "hsi"], weight=0.5, name="恒生科技跑输恒指"),
     # ---- 全球公共 ----
     "gl_move": dict(region="global", transform="level", inputs=["move"], weight=1.0, name="MOVE 美债波动率"),
-    "gl_gold": dict(region="global", transform="underperform_20d", inputs=["spx", "gold"], weight=0.75, name="黄金跑赢股票"),
-    "gl_bond": dict(region="global", transform="drop_20d", inputs=["us10y"], weight=0.75, name="美债收益率急跌（避险买盘）"),
+    "gl_gold": dict(region="global", transform="underperform_20d", inputs=["spx", "gold"], weight=0.5, name="黄金跑赢股票"),
+    "gl_bond": dict(region="global", transform="drop_20d", inputs=["us10y"], weight=0.5, name="美债收益率急跌（避险买盘）"),
 }
 
 REGIONS = {
@@ -87,13 +87,18 @@ REGION_WEIGHTS = {"us": 0.45, "eu": 0.20, "jp": 0.10, "cn": 0.15, "hk": 0.10}
 COMMON_WEIGHT = 0.10
 
 # 标准化参数
-RANK_WINDOW = 756        # 约3年交易日
+RANK_WINDOW = 1260       # 约5年交易日（回测中优于3年窗口）
 RANK_MIN_PERIODS = 252   # 至少1年历史才出分
 MIN_REGION_COVERAGE = 0.5  # 区域内可用成分权重低于该比例则该区域当天不出分
 FFILL_LIMIT = 5          # 节假日最多向前填充的天数
 SMOOTH_SPAN = 3          # 最终指数的 EMA 平滑跨度；1 表示不平滑
 
 START_DATE = "2000-01-01"
+
+# 仓位信号：分数 ≥ RISK_OFF_LEVEL 且高于 RISK_OFF_LOOKBACK 个交易日前 → 建议仓位减半。
+# 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
+RISK_OFF_LEVEL = 60
+RISK_OFF_LOOKBACK = 20
 
 BANDS = [
     (20, "极度贪婪"),
@@ -118,5 +123,10 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN)
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
+
+
+def risk_off(score):
+    """返回布尔序列：True 表示恐慌在升温，建议降低仓位。"""
+    return (score >= RISK_OFF_LEVEL) & (score.diff(RISK_OFF_LOOKBACK) > 0)

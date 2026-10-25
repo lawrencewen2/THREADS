@@ -33,13 +33,14 @@
 <script>
 const D = /*__DATA__*/null;
 const bandColor = s => s == null ? '#9ca3af' : s >= 80 ? '#dc2626' : s >= 60 ? '#f97316' : s >= 40 ? '#6b7280' : s >= 20 ? '#22c55e' : '#15803d';
-document.getElementById('sub').textContent = `数据截至 ${D.latest.date} 收盘 · 0 = 极度贪婪，100 = 极度恐慌 · 各成分为过去3年滚动分位`;
+document.getElementById('sub').textContent = `数据截至 ${D.latest.date} 收盘 · 0 = 极度贪婪，100 = 极度恐慌 · 各成分为过去5年滚动分位`;
 const cards = document.getElementById('cards');
 for (const [k, r] of Object.entries(D.latest.regions)) {
   const chg = r.change_5d == null ? '' : `5日 ${r.change_5d > 0 ? '+' : ''}${r.change_5d}`;
   cards.insertAdjacentHTML('beforeend', `<div class="card"><div class="n">${r.name}</div>
     <div class="v" style="color:${bandColor(r.score)}">${r.score == null ? '—' : Math.round(r.score)}</div>
-    <div class="b">${r.band || '数据缺失'}</div><div class="c">${chg}</div></div>`);
+    <div class="b">${r.band || '数据缺失'}</div><div class="c">${chg}</div>
+    <div class="c" style="color:${r.risk_off ? '#dc2626' : 'inherit'}">${r.risk_off ? '恐慌升温，减仓' : '仓位正常'}</div></div>`);
 }
 if (D.latest.status.warnings && D.latest.status.warnings.length) document.getElementById('warn').textContent = '⚠ ' + D.latest.status.warnings.join('；');
 const rn = Object.assign({}, D.names, {global: '全球公共'});

@@ -38,6 +38,7 @@ def latest_snapshot(index_df, comp_df, status):
             score=None if pd.isna(v) else float(v),
             band=None if pd.isna(v) else config.band(v),
             change_5d=None if pd.isna(v) or pd.isna(week.get(key)) else round(float(v - week[key]), 1),
+            risk_off=bool(config.risk_off(index_df[key]).iloc[-1]),
         )
     comps = {}
     for cid, spec in config.COMPONENTS.items():
@@ -99,11 +100,13 @@ def svg_chart(index_df, days=520, width=900, height=360):
 
 
 def readme_block(latest):
-    lines = [f"**最新读数（{latest['date']} 收盘）**", "", "| 区域 | 恐慌指数 | 状态 | 5日变化 |", "| --- | --- | --- | --- |"]
+    lines = [f"**最新读数（{latest['date']} 收盘）**", "",
+             "| 区域 | 恐慌指数 | 状态 | 5日变化 | 仓位信号 |", "| --- | --- | --- | --- | --- |"]
     for r in latest["regions"].values():
         score = "—" if r["score"] is None else f"{r['score']:.0f}"
         chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
-        lines.append(f"| {r['name']} | {score} | {r['band'] or '—'} | {chg} |")
+        signal = "恐慌升温，减仓" if r.get("risk_off") else "正常"
+        lines.append(f"| {r['name']} | {score} | {r['band'] or '—'} | {chg} | {signal} |")
     st = latest["status"]
     if st.get("warnings"):
         lines += ["", "⚠️ " + "；".join(st["warnings"])]

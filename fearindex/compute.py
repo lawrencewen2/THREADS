@@ -44,8 +44,10 @@ def raw_components(series):
     return cols
 
 
-def rolling_pct_rank(s, window=config.RANK_WINDOW, min_periods=config.RANK_MIN_PERIODS):
+def rolling_pct_rank(s, window=None, min_periods=None):
     """当天值在过去 window 个观测里的分位（含当天），0–100。"""
+    window = window or config.RANK_WINDOW
+    min_periods = min_periods or config.RANK_MIN_PERIODS
     return s.rolling(window, min_periods=min_periods).rank(pct=True) * 100
 
 
@@ -99,7 +101,8 @@ def global_score(reg):
     return g.where(common.notna(), regional)
 
 
-def smooth(df, span=config.SMOOTH_SPAN):
+def smooth(df, span=None):
+    span = span or config.SMOOTH_SPAN
     if span <= 1:
         return df
     return df.ewm(span=span, adjust=False, ignore_na=True).mean().where(df.notna())
