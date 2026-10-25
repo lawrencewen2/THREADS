@@ -257,6 +257,7 @@ NO_SECOND_SOURCE = {
 
 
 def compare(ours, theirs, mode, tol, days=20):
+    ours, theirs = (s[~s.index.duplicated(keep="last")] for s in (ours, theirs))
     both = pd.concat([ours, theirs], axis=1, join="inner").dropna().iloc[-days:]
     if len(both) < 5:
         return dict(n=len(both), status=WARN, detail="重叠日期不足 5 天，无法比较")
@@ -283,7 +284,11 @@ def cross_source(series):
         except Exception as exc:
             rows.append(dict(key=key, source=label, status="—", detail=f"第二来源取数失败：{type(exc).__name__} {str(exc)[:60]}"))
             continue
-        res = compare(series[key], theirs, mode, tol)
+        try:
+            res = compare(series[key], theirs, mode, tol)
+        except Exception as exc:
+            rows.append(dict(key=key, source=label, status="—", detail=f"比较出错：{type(exc).__name__} {str(exc)[:60]}"))
+            continue
         if res["status"] == WARN and "ours" in res:
             res["detail"] += f"；我方 {res['ours']:.6g} vs 对方 {res['theirs']:.6g}"
         rows.append(dict(key=key, source=label, tol=f"{tol * 100:g}%", **res))
