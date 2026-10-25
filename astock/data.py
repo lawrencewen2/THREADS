@@ -115,20 +115,29 @@ def save_kline(df):
     df.to_pickle(KLINE_FILE)
 
 
+_worker_session = None
+
+
+def _init_worker():
+    """每个下载进程登录一次、全程不登出：baostock 的匿名账号共用会话，任何一个进程登出会把其他进程一起踢下线。"""
+    global _worker_session
+    _worker_session = Session().__enter__()
+
+
 def _fetch_chunk(job):
-    """在独立进程里登录 baostock 拉一批股票；返回 (数据列表, 失败代码)。"""
+    """在下载进程里拉一批股票；返回 (数据列表, 失败代码)。"""
     items, end = job
+    sess = _worker_session or Session().__enter__()
     parts, failed = [], []
-    with Session() as sess:
-        for code, start in items:
-            try:
-                df = sess.kline(code, start, end)
-            except Exception as exc:
-                log.warning("kline %s failed: %s", code, exc)
-                failed.append(code)
-                continue
-            if len(df):
-                parts.append(clean_kline(df))
+    for code, start in items:
+        try:
+            df = sess.kline(code, start, end)
+        except Exception as exc:
+            log.warning("kline %s failed: %s", code, exc)
+            failed.append(code)
+            continue
+        if len(df):
+            parts.append(clean_kline(df))
     return parts, failed
 
 
@@ -151,7 +160,7 @@ def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, w
     chunk = 150
     jobs = [(items[i:i + chunk], end) for i in range(0, len(items), chunk)]
     parts, failed, done = [], [], 0
-    with Pool(max(1, workers)) as pool:
+    with Pool(max(1, workers), initializer=_init_worker) as pool:
         for got, bad in pool.imap_unordered(_fetch_chunk, jobs):
             parts += got
             failed += bad
