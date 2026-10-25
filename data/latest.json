@@ -1,48 +1,54 @@
 {
   "date": "2026-10-23",
-  "method": "447790de03a3",
+  "method": "5d206209d4b7",
   "regions": {
     "global": {
       "name": "全球",
       "score": 36.9,
       "band": "恐慌",
       "change_5d": -9.0,
-      "risk_off": false
+      "risk_off": false,
+      "signal": "normal"
     },
     "us": {
       "name": "美国",
       "score": 44.5,
       "band": "中性",
       "change_5d": -8.2,
-      "risk_off": false
+      "risk_off": false,
+      "signal": "normal"
     },
     "eu": {
       "name": "欧洲",
       "score": 31.5,
       "band": "恐慌",
       "change_5d": -7.2,
-      "risk_off": true
+      "risk_off": true,
+      "signal": "risk_off"
     },
     "jp": {
       "name": "日本",
       "score": 12.8,
       "band": "极度恐慌",
       "change_5d": -17.1,
-      "risk_off": true
+      "risk_off": true,
+      "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
       "score": 24.2,
       "band": "恐慌",
       "change_5d": -1.5,
-      "risk_off": true
+      "risk_off": true,
+      "signal": "risk_off"
     },
     "hk": {
       "name": "港股",
       "score": 40.5,
       "band": "中性",
       "change_5d": -16.5,
-      "risk_off": false
+      "risk_off": false,
+      "signal": "normal"
     }
   },
   "components": {
@@ -198,7 +204,9 @@
     }
   },
   "status": {
-    "warnings": [],
+    "warnings": [
+      "算法参数已更新，本次跳过历史值漂移检查"
+    ],
     "failures": [],
     "ok": true
   }

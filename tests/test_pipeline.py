@@ -201,3 +201,14 @@ def test_risk_off_needs_two_days():
     s = pd.Series([60.0] * 25 + [35.0, 50.0, 35.0, 34.0], index=pd.bdate_range("2020-01-01", periods=29))
     on = config.risk_off(s)
     assert not on.iloc[25] and not on.iloc[27] and on.iloc[28]
+
+
+def test_extreme_hints():
+    idx = pd.bdate_range("2020-01-01", periods=60)
+    s = pd.Series([50.0] * 10 + [15.0] * 10 + [30.0, 45.0, 55.0] + [55.0] * 15 + [90.0] * 5 + [70.0, 60.0] + [60.0] * 15,
+                  index=idx)
+    assert config.extreme_events(s, "bottom") == [idx[22]]
+    assert config.extreme_events(s, "top") == [idx[44]]
+    sig = config.signals(s)
+    assert sig.iloc[22] == "bottom" and sig.iloc[26] == "bottom" and sig.iloc[27] == "normal"
+    assert sig.iloc[44] == "top"

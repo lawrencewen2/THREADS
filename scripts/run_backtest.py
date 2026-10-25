@@ -17,7 +17,8 @@ def main():
     report = backtest.run(index_df, series)
     out = ROOT / "reports"
     out.mkdir(exist_ok=True)
-    (out / "backtest.md").write_text(backtest.to_markdown(report, index_df))
+    stats = backtest.extreme_stats(index_df, series)
+    (out / "backtest.md").write_text(backtest.to_markdown(report, index_df) + "\n" + backtest.extremes_markdown(stats))
     summary = {r: dict(capture_rate=v["capture_rate"], false_alarm_rate=v["false_alarm_rate"],
                        events=len(v["events"]), alarms=len(v["alarms"])) for r, v in report.items()}
     (out / "backtest_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2))

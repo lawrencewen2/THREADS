@@ -166,6 +166,48 @@ def run(index_df, series):
     return report
 
 
+def extreme_stats(index_df, series):
+    """触底/触顶提示的历史表现（全球及各区域合并统计）。"""
+    px = price_panel(series, index_df.index)
+    rows = []
+    for kind, label in (("bottom", "触底提示"), ("top", "触顶提示")):
+        for per, in_per in (("样本内(–2018)", lambda d: d < SPLIT), ("样本外(2019–)", lambda d: d >= SPLIT)):
+            r60, drops, base_r60, base_drop = [], [], [], []
+            for region in ["global"] + list(config.REGIONS):
+                if region not in px:
+                    continue
+                p = px[region].reindex(index_df.index)
+                f60 = p.shift(-60) / p - 1
+                fmin = p[::-1].rolling(60, min_periods=1).min()[::-1].shift(-1)
+                drop = (1 - fmin / p) > 0.10
+                m = in_per(p.index) & f60.notna()
+                base_r60.append(f60[m].mean())
+                base_drop.append(drop[m].mean())
+                for d in config.extreme_events(index_df[region], kind):
+                    if in_per(d) and pd.notna(f60.get(d)):
+                        r60.append(f60[d])
+                        drops.append(bool(drop[d]))
+            rows.append({"提示": label, "区间": per, "次数": len(r60),
+                         "之后60日平均涨跌%": round(np.mean(r60) * 100, 1) if r60 else np.nan,
+                         "所有交易日60日平均涨跌%": round(np.nanmean(base_r60) * 100, 1),
+                         "之后60日上涨概率%": round(np.mean(np.array(r60) > 0) * 100, 0) if r60 else np.nan,
+                         "之后60日再跌超10%概率%": round(np.mean(drops) * 100, 0) if drops else np.nan,
+                         "所有交易日再跌超10%概率%": round(np.nanmean(base_drop) * 100, 0)})
+    df = pd.DataFrame(rows).set_index(["提示", "区间"])
+    for c in ("次数", "之后60日上涨概率%", "之后60日再跌超10%概率%", "所有交易日再跌超10%概率%"):
+        df[c] = df[c].astype("Int64")
+    return df
+
+
+def extremes_markdown(stats):
+    return "\n".join([
+        "## 触底、触顶提示的历史表现", "",
+        f"触底：分数在 {config.EXTREME_MEMORY} 个交易日内曾 ≤ {config.BOTTOM_LEVEL}，之后回升到 {config.BOTTOM_EXIT} 以上。"
+        f"触顶：曾 ≥ {config.TOP_LEVEL}，之后回落到 {config.TOP_EXIT} 以下。全球与五个区域合并统计。",
+        "两种提示都没有可靠的预测力，仅供参考，不参与减仓规则。", "",
+        _md_table(stats), ""])
+
+
 def _md_table(df):
     idx_name = df.index.name or ""
     head = [idx_name] + [str(c) for c in df.columns]

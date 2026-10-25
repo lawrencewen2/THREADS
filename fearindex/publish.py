@@ -39,6 +39,7 @@ def latest_snapshot(index_df, comp_df, status):
             band=None if pd.isna(v) else config.band(v),
             change_5d=None if pd.isna(v) or pd.isna(week.get(key)) else round(float(v - week[key]), 1),
             risk_off=bool(config.risk_off(index_df[key]).iloc[-1]),
+            signal=config.signals(index_df[key]).iloc[-1] if index_df[key].notna().any() else "normal",
         )
     comps = {}
     for cid, spec in config.COMPONENTS.items():
@@ -105,7 +106,7 @@ def readme_block(latest):
     for r in latest["regions"].values():
         score = "—" if r["score"] is None else f"{r['score']:.0f}"
         chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
-        signal = "恐慌加深，减仓" if r.get("risk_off") else "正常"
+        signal = config.SIGNAL_TEXT[r.get("signal", "normal")]
         lines.append(f"| {r['name']} | {score} | {r['band'] or '—'} | {chg} | {signal} |")
     st = latest["status"]
     if st.get("warnings"):
@@ -126,7 +127,7 @@ def region_tables(index_df, comp_df, latest):
         score = index_df[key]
         head = f"### {name}：{_fmt(r['score'])}（{r['band'] or '数据缺失'}）"
         chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
-        signal = "恐慌加深，减仓" if r.get("risk_off") else "正常"
+        signal = config.SIGNAL_TEXT[r.get("signal", "normal")]
         lines += [head, "", f"5日变化 {chg} · 仓位信号：{signal}", "",
                   "| 成分 | 今日 | 5日前 | 20日前 | 权重 |", "| --- | --- | --- | --- | --- |",
                   f"| **{name}恐慌贪婪指数** | **{_fmt(score.iloc[-1])}** | {_fmt(score.iloc[-6])} | "
@@ -216,6 +217,6 @@ def write_page_data(index_df, latest):
             for d, r in hist.iterrows()]
     (out / "history.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
     summary = [dict(key=k, name=r["name"], date=latest["date"], score=r["score"], band=r["band"],
-                    change_5d=r["change_5d"], signal="恐慌加深，减仓" if r.get("risk_off") else "正常")
+                    change_5d=r["change_5d"], signal=config.SIGNAL_TEXT[r.get("signal", "normal")])
                for k, r in latest["regions"].items()]
     (out / "latest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1))

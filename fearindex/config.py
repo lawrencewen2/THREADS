@@ -4,6 +4,8 @@
 0 = 极度恐慌，100 = 极度贪婪（与 CNN 恐惧贪婪指数方向一致）。
 """
 
+import pandas as pd
+
 # 原始序列：key -> [(数据源, 代码), ...]，按顺序尝试，第一个成功的生效。
 # 换了数据源（量纲可能不同）时会整段重拉，不与旧缓存拼接。
 # yahoo: yfinance 收盘价；akshare: 见 fetch.py 里的专用函数
@@ -113,6 +115,18 @@ RISK_OFF_LEVEL = 40
 RISK_OFF_LOOKBACK = 20
 RISK_OFF_CONFIRM = 2     # 条件连续成立几天才发出信号，减少来回开关
 
+# 极端行情提示（参考，不参与减仓规则；回测显示两者都没有可靠的预测力，统计见 reports/backtest.md）：
+#   触底：分数在过去 EXTREME_MEMORY 个交易日内曾 ≤ BOTTOM_LEVEL，之后回升到 BOTTOM_EXIT 以上（恐慌解除）
+#   触顶：分数在过去 EXTREME_MEMORY 个交易日内曾 ≥ TOP_LEVEL，之后回落到 TOP_EXIT 以下（贪婪退潮）
+# 触发后显示 EXTREME_SHOW 个交易日；同一种提示至少间隔 EXTREME_GAP 个交易日。阈值只依据 2018 年以前的回测选定。
+BOTTOM_LEVEL, BOTTOM_EXIT = 20, 50
+TOP_LEVEL, TOP_EXIT = 85, 65
+EXTREME_MEMORY = 60
+EXTREME_SHOW = 5
+EXTREME_GAP = 20
+SIGNAL_TEXT = {"risk_off": "恐慌加深，减仓", "bottom": "恐慌解除（可能触底，仅供参考）",
+               "top": "贪婪退潮（可能触顶，仅供参考）", "normal": "正常"}
+
 BANDS = [
     (20, "极度恐慌"),
     (40, "恐慌"),
@@ -136,7 +150,8 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM))
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM),
+                  extremes=(BOTTOM_LEVEL, BOTTOM_EXIT, TOP_LEVEL, TOP_EXIT, EXTREME_MEMORY, EXTREME_SHOW, EXTREME_GAP))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
@@ -146,3 +161,32 @@ def risk_off(score):
     if RISK_OFF_CONFIRM <= 1:
         return raw
     return raw.astype(int).rolling(RISK_OFF_CONFIRM, min_periods=RISK_OFF_CONFIRM).min().fillna(0).astype(bool)
+
+
+def extreme_events(score, kind):
+    """触底（kind='bottom'）或触顶（kind='top'）提示的触发日期列表。"""
+    s = score.dropna()
+    if kind == "bottom":
+        seen = (s <= BOTTOM_LEVEL).astype(int).rolling(EXTREME_MEMORY, min_periods=1).max().shift(1, fill_value=0) > 0
+        fire = seen & (s >= BOTTOM_EXIT) & (s.shift(1) < BOTTOM_EXIT)
+    else:
+        seen = (s >= TOP_LEVEL).astype(int).rolling(EXTREME_MEMORY, min_periods=1).max().shift(1, fill_value=0) > 0
+        fire = seen & (s <= TOP_EXIT) & (s.shift(1) > TOP_EXIT)
+    out = []
+    for d in s.index[fire]:
+        if not out or s.index.get_loc(d) - s.index.get_loc(out[-1]) >= EXTREME_GAP:
+            out.append(d)
+    return out
+
+
+def signals(score):
+    """每天的仓位信号：risk_off / bottom / top / normal。减仓优先，提示在触发后显示 EXTREME_SHOW 天。"""
+    s = score.dropna()
+    out = pd.Series("normal", index=s.index)
+    pos = pd.Series(range(len(s)), index=s.index)
+    for kind in ("top", "bottom"):
+        for d in extreme_events(s, kind):
+            i = pos[d]
+            out.iloc[i:i + EXTREME_SHOW] = kind
+    out[risk_off(s)] = "risk_off"
+    return out
