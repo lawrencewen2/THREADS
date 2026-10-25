@@ -198,12 +198,7 @@ def _ak_sum(fn, symbols, value_col):
 
 
 def _sina_us(symbol):
-    import akshare as ak
-
-    df = ak.stock_us_daily(symbol=symbol, adjust="")
-    s = pd.to_numeric(df["close"], errors="coerce")
-    s.index = pd.to_datetime(df.index).tz_localize(None).normalize()
-    return s.dropna().sort_index()
+    return _ak("stock_us_daily", symbol=symbol, adjust="")
 
 
 def _first(*getters):
