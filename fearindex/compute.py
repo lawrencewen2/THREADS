@@ -52,6 +52,9 @@ def rolling_pct_rank(s, window=config.RANK_WINDOW, min_periods=config.RANK_MIN_P
 def component_scores(series, calendar=None):
     raw = raw_components(series)
     scores = {cid: rolling_pct_rank(s).dropna() for cid, s in raw.items()}
+    # 历史不足 RANK_MIN_PERIODS 的成分暂不出分
+    scores = {cid: s for cid, s in scores.items() if len(s)}
+    raw = {cid: raw[cid] for cid in scores}
     if calendar is None:
         last = max(s.index[-1] for s in scores.values())
         first = min(s.index[0] for s in scores.values())

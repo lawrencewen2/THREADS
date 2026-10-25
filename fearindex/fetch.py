@@ -96,6 +96,7 @@ def fetch_akshare(spec, start):
 
 FETCHERS = {"yahoo": fetch_yahoo, "akshare": fetch_akshare}
 SOURCES_FILE = RAW_DIR / "_sources.json"
+MIN_HISTORY_ROWS = 250  # 新数据源至少要有约 1 年历史，否则视为失败、换下一个源
 
 
 def load_cached(key):
@@ -135,12 +136,15 @@ def update_all(keys=None, start=config.START_DATE, full=False):
         chain.sort(key=lambda sc: f"{sc[0]}:{sc[1]}" != sources.get(key))
         for source, code in chain:
             label = f"{source}:{code}"
-            same_source = cached is not None and len(cached) and sources.get(key) == label
+            same_source = (cached is not None and len(cached) >= MIN_HISTORY_ROWS
+                           and sources.get(key) == label)
             fetch_start = start
             if same_source and not full:
                 fetch_start = (cached.index[-1] - pd.Timedelta(days=370)).strftime("%Y-%m-%d")
             try:
                 fresh = FETCHERS[source](code, fetch_start)
+                if not same_source and len(fresh) < MIN_HISTORY_ROWS:
+                    raise ValueError(f"only {len(fresh)} rows of history")
             except Exception as exc:
                 failures.append(f"{label} {type(exc).__name__}: {str(exc)[:120]}")
                 log.warning("%s via %s failed: %s", key, label, failures[-1])

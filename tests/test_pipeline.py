@@ -99,7 +99,7 @@ def test_fetch_falls_back_and_refetches_on_source_change(tmp_path, monkeypatch):
     monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
     monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
     monkeypatch.setattr(config, "SERIES", {"x": [("yahoo", "A"), ("akshare", "B")]})
-    idx = pd.bdate_range("2020-01-01", periods=10)
+    idx = pd.bdate_range("2020-01-01", periods=300)
     calls = []
 
     def bad(code, start):
@@ -108,12 +108,32 @@ def test_fetch_falls_back_and_refetches_on_source_change(tmp_path, monkeypatch):
 
     def good(code, start):
         calls.append(("akshare", start))
-        return pd.Series(range(10), index=idx, dtype=float)
+        return pd.Series(range(len(idx)), index=idx, dtype=float)
 
     monkeypatch.setattr(fetch, "FETCHERS", {"yahoo": bad, "akshare": good})
     out, errors = fetch.update_all()
-    assert not errors and len(out["x"]) == 10
+    assert not errors and len(out["x"]) == 300
     # 第二次运行优先用缓存来源 akshare，且为增量拉取
     calls.clear()
     fetch.update_all()
     assert calls[0][0] == "akshare" and calls[0][1] != config.START_DATE
+
+
+def test_fetch_rejects_short_history(tmp_path, monkeypatch):
+    from fearindex import fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
+    monkeypatch.setattr(config, "SERIES", {"x": [("yahoo", "A"), ("akshare", "B")]})
+    one_row = pd.Series([1.0], index=pd.bdate_range("2026-10-23", periods=1))
+    full = pd.Series(1.0, index=pd.bdate_range("2020-01-01", periods=300))
+    monkeypatch.setattr(fetch, "FETCHERS", {"yahoo": lambda c, s: one_row, "akshare": lambda c, s: full})
+    out, _ = fetch.update_all()
+    assert len(out["x"]) == 300
+
+
+def test_short_series_does_not_break_build():
+    series = synthetic_series()
+    series["hstech"] = series["hstech"].iloc[-1:]
+    idx, comp, _ = compute.build(series)
+    assert "hk_tech" not in comp.columns and idx["hk"].notna().any()
