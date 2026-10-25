@@ -4,14 +4,12 @@
 新数据覆盖同日期旧值，拉取失败时保留旧缓存并记录缺失。
 """
 
-import io
+import json
 import logging
 import time
 from pathlib import Path
 
 import pandas as pd
-import requests
-
 from . import config
 
 log = logging.getLogger(__name__)
@@ -54,37 +52,33 @@ def fetch_yahoo(ticker, start):
     return _clean(_retry(go))
 
 
-def fetch_fred(series_id, start):
-    url = f"https://fred.stlouisfed.org/graph/fredgraph.csv?id={series_id}&cosd={start}"
-
-    def go():
-        r = requests.get(url, timeout=60, headers={"User-Agent": "Mozilla/5.0"})
-        r.raise_for_status()
-        df = pd.read_csv(io.StringIO(r.text))
-        df.columns = ["date", "value"]
-        return df.set_index("date")["value"].replace(".", None)
-
-    return _clean(_retry(go))
-
-
-def _ak_index_frame(symbol):
+def _ak_index(provider, symbol, field):
     import akshare as ak
 
-    df = ak.stock_zh_index_daily_em(symbol=symbol)
-    return df.set_index("date")
+    if provider == "em":
+        df = ak.stock_zh_index_daily_em(symbol=symbol)
+    elif provider == "tx":
+        df = ak.stock_zh_index_daily_tx(symbol=symbol)
+    elif provider == "sina":
+        df = ak.stock_zh_index_daily(symbol=symbol)
+    else:
+        raise KeyError(provider)
+    return pd.to_numeric(df.set_index("date")[field], errors="coerce")
 
 
 def fetch_akshare(spec, start):
     import akshare as ak
 
     def go():
-        if spec.startswith("index_close:"):
-            return _ak_index_frame(spec.split(":", 1)[1])["close"]
-        if spec == "a_turnover":
-            # 沪市 + 深市成交额（元）
-            sh = pd.to_numeric(_ak_index_frame("sh000001")["amount"], errors="coerce")
-            sz = pd.to_numeric(_ak_index_frame("sz399001")["amount"], errors="coerce")
-            return (sh + sz).dropna()
+        if ":" in spec:
+            # 形如 em_close:sh000300 或 tx_amount:sh000001+sz399001（多个指数相加）
+            kind, symbols = spec.split(":", 1)
+            provider, field = kind.split("_", 1)
+            parts = [_ak_index(provider, s, field) for s in symbols.split("+")]
+            total = parts[0]
+            for p in parts[1:]:
+                total = total + p
+            return total.dropna()
         if spec == "sh_margin":
             df = ak.macro_china_market_margin_sh()
             date_col = df.columns[0]
@@ -96,11 +90,12 @@ def fetch_akshare(spec, start):
             return df.set_index("date")["close"]
         raise KeyError(spec)
 
-    s = _clean(_retry(go))
+    s = _clean(_retry(go, attempts=3))
     return s[s.index >= pd.Timestamp(start)]
 
 
-FETCHERS = {"yahoo": fetch_yahoo, "fred": fetch_fred, "akshare": fetch_akshare}
+FETCHERS = {"yahoo": fetch_yahoo, "akshare": fetch_akshare}
+SOURCES_FILE = RAW_DIR / "_sources.json"
 
 
 def load_cached(key):
@@ -116,32 +111,54 @@ def save_cached(key, s):
     s.rename("value").rename_axis("date").to_csv(RAW_DIR / f"{key}.csv", float_format="%.6g")
 
 
+def _load_sources():
+    try:
+        return json.loads(SOURCES_FILE.read_text())
+    except (FileNotFoundError, ValueError):
+        return {}
+
+
 def update_all(keys=None, start=config.START_DATE, full=False):
     """拉取并合并所有序列。返回 (dict key->Series, dict key->错误信息)。
 
-    full=False 时只拉最近约 1 年并与缓存合并，减轻接口压力；
-    yfinance/akshare 部分接口不支持起始日期，会返回全量，同样合并即可。
+    full=False 时只拉最近约 1 年并与缓存合并，减轻接口压力；部分接口不支持起始日期，
+    会返回全量，同样合并即可。某个序列改用了备用数据源时整段重拉，避免量纲不同的数据拼接。
     """
     keys = keys or list(config.SERIES)
+    sources = _load_sources()
     out, errors = {}, {}
     for key in keys:
-        source, code = config.SERIES[key]
         cached = load_cached(key)
-        fetch_start = start
-        if cached is not None and not full and len(cached):
-            fetch_start = (cached.index[-1] - pd.Timedelta(days=370)).strftime("%Y-%m-%d")
-        try:
-            fresh = FETCHERS[source](code, fetch_start)
-            merged = fresh if cached is None else pd.concat([cached[cached.index < fresh.index[0]], fresh])
+        failures = []
+        chain = list(config.SERIES[key])
+        # 优先沿用缓存所用的数据源，避免主备来回切换导致整段重拉
+        chain.sort(key=lambda sc: f"{sc[0]}:{sc[1]}" != sources.get(key))
+        for source, code in chain:
+            label = f"{source}:{code}"
+            same_source = cached is not None and len(cached) and sources.get(key) == label
+            fetch_start = start
+            if same_source and not full:
+                fetch_start = (cached.index[-1] - pd.Timedelta(days=370)).strftime("%Y-%m-%d")
+            try:
+                fresh = FETCHERS[source](code, fetch_start)
+            except Exception as exc:
+                failures.append(f"{label} {type(exc).__name__}: {str(exc)[:120]}")
+                log.warning("%s via %s failed: %s", key, label, failures[-1])
+                continue
+            merged = pd.concat([cached[cached.index < fresh.index[0]], fresh]) if same_source else fresh
             merged = _clean(merged)
             save_cached(key, merged)
+            sources[key] = label
             out[key] = merged
-            log.info("%s: %d rows, last %s", key, len(merged), merged.index[-1].date())
-        except Exception as exc:
-            errors[key] = f"{type(exc).__name__}: {exc}"
-            log.error("%s failed: %s", key, errors[key])
+            log.info("%s via %s: %d rows, last %s", key, label, len(merged), merged.index[-1].date())
+            break
+        else:
+            errors[key] = "; ".join(failures)
+            log.error("%s failed on all sources", key)
             if cached is not None:
                 out[key] = cached
+    RAW_DIR.mkdir(parents=True, exist_ok=True)
+    SOURCES_FILE.write_text(json.dumps(sources, indent=2))
     return out, errors
 
 

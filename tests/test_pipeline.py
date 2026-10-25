@@ -20,8 +20,8 @@ def synthetic_series(seed=0, start="2010-01-01", end="2020-12-31"):
     price = pd.Series(100 * np.exp(np.cumsum(ret)), index=idx)
     stress = pd.Series(vol * 1500 + rng.normal(0, 0.5, n), index=idx)
     out = {}
-    for key, (source, _) in config.SERIES.items():
-        if key in ("vix", "vstoxx", "qvix50", "move", "us_hy_oas", "eu_hy_oas"):
+    for key in config.SERIES:
+        if key in ("vix", "qvix50", "move"):
             out[key] = stress
         elif key == "vix3m":
             out[key] = stress.rolling(60, min_periods=1).mean()
@@ -65,11 +65,11 @@ def test_no_lookahead(built):
 
 def test_missing_component_degrades_gracefully():
     series = synthetic_series()
-    series.pop("vstoxx")
+    series.pop("hstech")
     series.pop("qvix50")
     idx, comp, _ = compute.build(series)
-    assert "eu_vstoxx" not in comp.columns
-    assert idx["eu"].dropna().size > 1000
+    assert "hk_tech" not in comp.columns and "cn_qvix" not in comp.columns
+    assert idx["hk"].dropna().size > 1000 and idx["cn"].dropna().size > 1000
 
 
 def test_rolling_rank_bounds():
@@ -91,3 +91,29 @@ def test_drawdown_episodes():
     eps = backtest.drawdown_episodes(p, 0.15)
     assert len(eps) == 2
     assert eps[0][2] == pytest.approx(1 - 80 / 110)
+
+
+def test_fetch_falls_back_and_refetches_on_source_change(tmp_path, monkeypatch):
+    from fearindex import fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
+    monkeypatch.setattr(config, "SERIES", {"x": [("yahoo", "A"), ("akshare", "B")]})
+    idx = pd.bdate_range("2020-01-01", periods=10)
+    calls = []
+
+    def bad(code, start):
+        calls.append(("yahoo", start))
+        raise ConnectionError("blocked")
+
+    def good(code, start):
+        calls.append(("akshare", start))
+        return pd.Series(range(10), index=idx, dtype=float)
+
+    monkeypatch.setattr(fetch, "FETCHERS", {"yahoo": bad, "akshare": good})
+    out, errors = fetch.update_all()
+    assert not errors and len(out["x"]) == 10
+    # 第二次运行优先用缓存来源 akshare，且为增量拉取
+    calls.clear()
+    fetch.update_all()
+    assert calls[0][0] == "akshare" and calls[0][1] != config.START_DATE

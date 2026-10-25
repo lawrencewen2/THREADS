@@ -3,34 +3,37 @@
 所有成分都调成“数值越高越恐慌”，再做滚动分位数标准化。
 """
 
-# 原始序列：key -> (数据源, 代码)
-# yahoo: yfinance 收盘价；fred: FRED 公开 CSV；akshare: 见 fetch.py 里的专用函数
+# 原始序列：key -> [(数据源, 代码), ...]，按顺序尝试，第一个成功的生效。
+# 换了数据源（量纲可能不同）时会整段重拉，不与旧缓存拼接。
+# yahoo: yfinance 收盘价；akshare: 见 fetch.py 里的专用函数
+# 注：FRED 的 ICE 高收益债利差在 Actions 上常超时，且公开历史有限，改用 HYG/IEF 比值衡量信用压力。
 SERIES = {
     # 美国
-    "spx": ("yahoo", "^GSPC"),
-    "vix": ("yahoo", "^VIX"),
-    "vix3m": ("yahoo", "^VIX3M"),
-    "us_hy_oas": ("fred", "BAMLH0A0HYM2"),
+    "spx": [("yahoo", "^GSPC")],
+    "vix": [("yahoo", "^VIX")],
+    "vix3m": [("yahoo", "^VIX3M")],
+    "hyg": [("yahoo", "HYG")],
+    "ief": [("yahoo", "IEF")],
     # 欧洲
-    "sx5e": ("yahoo", "^STOXX50E"),
-    "vstoxx": ("yahoo", "^V2TX"),
-    "eurchf": ("yahoo", "EURCHF=X"),
-    "eu_hy_oas": ("fred", "BAMLHE00EHYIOAS"),
+    "sx5e": [("yahoo", "^STOXX50E")],
+    "eurchf": [("yahoo", "EURCHF=X")],
     # 日本
-    "n225": ("yahoo", "^N225"),
-    "usdjpy": ("yahoo", "JPY=X"),
-    # A股
-    "csi300": ("akshare", "index_close:sh000300"),
-    "a_turnover": ("akshare", "a_turnover"),
-    "sh_margin": ("akshare", "sh_margin"),
-    "qvix50": ("akshare", "qvix50"),
+    "n225": [("yahoo", "^N225")],
+    "usdjpy": [("yahoo", "JPY=X")],
+    # A股（东方财富常拒绝境外 IP，依次退到腾讯、新浪、Yahoo）
+    "csi300": [("akshare", "em_close:sh000300"), ("akshare", "tx_close:sh000300"),
+               ("akshare", "sina_close:sh000300"), ("yahoo", "000300.SS")],
+    "a_turnover": [("akshare", "em_amount:sh000001+sz399001"), ("akshare", "tx_amount:sh000001+sz399001"),
+                   ("akshare", "sina_volume:sh000001+sz399001")],
+    "sh_margin": [("akshare", "sh_margin")],
+    "qvix50": [("akshare", "qvix50")],
     # 港股
-    "hsi": ("yahoo", "^HSI"),
-    "hstech": ("yahoo", "^HSTECH"),
+    "hsi": [("yahoo", "^HSI")],
+    "hstech": [("yahoo", "HSTECH.HK"), ("yahoo", "3033.HK")],
     # 全球公共
-    "gold": ("yahoo", "GC=F"),
-    "move": ("yahoo", "^MOVE"),
-    "us10y": ("yahoo", "^TNX"),
+    "gold": [("yahoo", "GC=F")],
+    "move": [("yahoo", "^MOVE")],
+    "us10y": [("yahoo", "^TNX")],
 }
 
 # 成分：id -> 定义
@@ -43,12 +46,11 @@ COMPONENTS = {
     "us_term": dict(region="us", transform="ratio", inputs=["vix", "vix3m"], weight=0.75, name="VIX/VIX3M 期限结构"),
     "us_rvol": dict(region="us", transform="realized_vol", inputs=["spx"], weight=0.75, name="标普500 20日实际波动率"),
     "us_dd": dict(region="us", transform="drawdown", inputs=["spx"], weight=1.0, name="标普500 距52周高点回撤"),
-    "us_credit": dict(region="us", transform="level", inputs=["us_hy_oas"], weight=1.0, name="美国高收益债利差"),
+    "us_credit": dict(region="us", transform="ratio_drawdown", inputs=["hyg", "ief"], weight=1.0, name="高收益债相对国债回撤（HYG/IEF）"),
     # ---- 欧洲 ----
-    "eu_vstoxx": dict(region="eu", transform="level", inputs=["vstoxx"], weight=1.0, name="VSTOXX"),
-    "eu_rvol": dict(region="eu", transform="realized_vol", inputs=["sx5e"], weight=1.0, name="欧洲斯托克50 20日实际波动率"),
+    "eu_rvol": dict(region="eu", transform="realized_vol", inputs=["sx5e"], weight=1.25, name="欧洲斯托克50 20日实际波动率"),
     "eu_dd": dict(region="eu", transform="drawdown", inputs=["sx5e"], weight=1.0, name="欧洲斯托克50 回撤"),
-    "eu_credit": dict(region="eu", transform="level", inputs=["eu_hy_oas"], weight=1.0, name="欧元区高收益债利差"),
+    "eu_ma": dict(region="eu", transform="below_ma", inputs=["sx5e"], weight=0.75, name="欧洲斯托克50 低于125日均线幅度"),
     "eu_chf": dict(region="eu", transform="fall_20d", inputs=["eurchf"], weight=0.5, name="瑞郎避险升值"),
     # ---- 日本 ----
     "jp_rvol": dict(region="jp", transform="realized_vol", inputs=["n225"], weight=1.25, name="日经225 20日实际波动率"),

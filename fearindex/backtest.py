@@ -54,8 +54,11 @@ def event_capture(score, price, threshold=0.15, level=70):
         window = score.loc[peak: trough + pd.Timedelta(days=30)].dropna()
         if window.empty:
             continue
+        hit = _first_hit(window, level)
+        dd_at_hit = None if hit is None else round((1 - price.loc[pd.Timestamp(hit)] / price.loc[peak]) * 100, 1)
         rows.append(dict(peak=peak.date(), trough=trough.date(), drawdown=round(dd * 100, 1),
-                         max_score=round(window.max(), 1), first_hit=_first_hit(window, level),
+                         max_score=round(window.max(), 1), first_hit=hit, dd_at_hit=dd_at_hit,
+                         score_at_trough=round(score.get(trough, float("nan")), 1),
                          captured=bool(window.max() >= level)))
     return rows
 
@@ -87,6 +90,7 @@ def forward_table(score, price, horizons=(20, 60, 120)):
     df["mdd60"] = 1 - fwd_min / df["price"]
     g = df.groupby("bucket", observed=False)
     out = pd.DataFrame({"days": g.size()})
+    out.index.name = "分数段"
     for h in horizons:
         out[f"avg_r{h}%"] = (g[f"r{h}"].mean() * 100).round(2)
         out[f"win_r{h}%"] = (g[f"r{h}"].apply(lambda x: (x.dropna() > 0).mean()) * 100).round(1)
@@ -179,10 +183,12 @@ def to_markdown(report, index_df):
                      f"{r['capture_rate']}% | {len(r['alarms'])} | {r['false_alarm_rate']}% | {r['daily_change_median']} |")
     for region, r in report.items():
         lines += ["", f"## {names[region]}", "", "### 回撤事件", "",
-                  "| 峰值 | 谷底 | 回撤% | 期间最高分 | 首次≥70 | 捕捉 |", "| --- | --- | --- | --- | --- | --- |"]
+                  "| 峰值 | 谷底 | 回撤% | 期间最高分 | 谷底当天分 | 首次≥70 | 首次≥70时已跌% | 捕捉 |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- |"]
         for e in r["events"]:
-            lines.append(f"| {e['peak']} | {e['trough']} | {e['drawdown']} | {e['max_score']} | "
-                         f"{e['first_hit'] or '—'} | {'是' if e['captured'] else '否'} |")
+            lines.append(f"| {e['peak']} | {e['trough']} | {e['drawdown']} | {e['max_score']} | {e['score_at_trough']} | "
+                         f"{e['first_hit'] or '—'} | {e['dd_at_hit'] if e['dd_at_hit'] is not None else '—'} | "
+                         f"{'是' if e['captured'] else '否'} |")
         for title, key in (("分档未来收益（样本内）", "forward_in"), ("分档未来收益（样本外）", "forward_out")):
             lines += ["", f"### {title}", "", _md_table(r[key])]
         lines += ["", "### 仓位模拟", "", _md_table(r["positions"])]
