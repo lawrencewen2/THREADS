@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>全球市场恐慌指数</title>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.5.1/dist/echarts.min.js"></script>
+<style>
+  :root { --bg:#f8fafc; --card:#fff; --ink:#111827; --muted:#6b7280; --line:#e5e7eb; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#0b1120; --card:#111827; --ink:#f3f4f6; --muted:#9ca3af; --line:#1f2937; } }
+  body { margin:0; background:var(--bg); color:var(--ink); font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  main { max-width:1100px; margin:0 auto; padding:16px; }
+  h1 { font-size:22px; margin:8px 0 4px; } .sub { color:var(--muted); font-size:13px; margin-bottom:16px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:12px; }
+  .card .n { font-size:13px; color:var(--muted); } .card .v { font-size:32px; font-weight:600; }
+  .card .b { font-size:13px; } .card .c { font-size:12px; color:var(--muted); }
+  #chart { height:420px; margin-top:16px; background:var(--card); border:1px solid var(--line); border-radius:10px; }
+  table { width:100%; border-collapse:collapse; margin-top:16px; background:var(--card); font-size:13px; }
+  th,td { padding:6px 8px; border-bottom:1px solid var(--line); text-align:left; } td.s { text-align:right; font-variant-numeric:tabular-nums; }
+  .warn { color:#b45309; margin-top:10px; font-size:13px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>全球市场恐慌指数</h1>
+  <div class="sub" id="sub"></div>
+  <div class="cards" id="cards"></div>
+  <div class="warn" id="warn"></div>
+  <div id="chart"></div>
+  <table id="comps"><thead><tr><th>成分</th><th>区域</th><th>分位得分</th></tr></thead><tbody></tbody></table>
+</main>
+<script>
+const D = /*__DATA__*/null;
+const bandColor = s => s == null ? '#9ca3af' : s >= 80 ? '#dc2626' : s >= 60 ? '#f97316' : s >= 40 ? '#6b7280' : s >= 20 ? '#22c55e' : '#15803d';
+document.getElementById('sub').textContent = `数据截至 ${D.latest.date} 收盘 · 0 = 极度贪婪，100 = 极度恐慌 · 各成分为过去3年滚动分位`;
+const cards = document.getElementById('cards');
+for (const [k, r] of Object.entries(D.latest.regions)) {
+  const chg = r.change_5d == null ? '' : `5日 ${r.change_5d > 0 ? '+' : ''}${r.change_5d}`;
+  cards.insertAdjacentHTML('beforeend', `<div class="card"><div class="n">${r.name}</div>
+    <div class="v" style="color:${bandColor(r.score)}">${r.score == null ? '—' : Math.round(r.score)}</div>
+    <div class="b">${r.band || '数据缺失'}</div><div class="c">${chg}</div></div>`);
+}
+if (D.latest.status.warnings && D.latest.status.warnings.length) document.getElementById('warn').textContent = '⚠ ' + D.latest.status.warnings.join('；');
+const rn = Object.assign({}, D.names, {global: '全球公共'});
+const tb = document.querySelector('#comps tbody');
+for (const c of Object.values(D.latest.components))
+  tb.insertAdjacentHTML('beforeend', `<tr><td>${c.name}</td><td>${rn[c.region]}</td><td class="s" style="color:${bandColor(c.score)}">${c.score == null ? '缺失' : c.score.toFixed(0)}</td></tr>`);
+const chart = echarts.init(document.getElementById('chart'));
+chart.setOption({
+  tooltip: { trigger: 'axis' }, legend: { top: 6 },
+  grid: { left: 40, right: 16, top: 40, bottom: 60 },
+  xAxis: { type: 'category', data: D.dates },
+  yAxis: { type: 'value', min: 0, max: 100 },
+  dataZoom: [{ type: 'slider', start: 60, end: 100 }, { type: 'inside' }],
+  series: Object.keys(D.series).map(k => ({
+    name: D.names[k], type: 'line', data: D.series[k], showSymbol: false, connectNulls: false,
+    lineStyle: { width: k === 'global' ? 2.5 : 1.2, color: D.colors[k] }, itemStyle: { color: D.colors[k] },
+    markArea: k === 'global' ? { silent: true, data: [[{ yAxis: 80, itemStyle: { color: 'rgba(220,38,38,0.08)' } }, { yAxis: 100 }],
+                                                     [{ yAxis: 0, itemStyle: { color: 'rgba(34,197,94,0.08)' } }, { yAxis: 20 }]] } : undefined,
+  })),
+});
+addEventListener('resize', () => chart.resize());
+</script>
+</body>
+</html>
