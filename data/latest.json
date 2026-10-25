@@ -1,10 +1,10 @@
 {
   "date": "2026-10-23",
-  "method": "9bfb007288c1",
+  "method": "3df118fd3731",
   "regions": {
     "global": {
       "name": "全球",
-      "score": 36.9,
+      "score": 37.4,
       "band": "恐慌",
       "change_5d": -9.0,
       "risk_off": false,
@@ -28,9 +28,9 @@
     },
     "jp": {
       "name": "日本",
-      "score": 12.7,
+      "score": 18.5,
       "band": "极度恐慌",
-      "change_5d": -17.2,
+      "change_5d": -17.1,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -131,6 +131,11 @@
       "name": "日经225 10日急跌",
       "region": "jp",
       "score": 1.1
+    },
+    "jp_breadth": {
+      "name": "TOPIX 回撤（全市场）",
+      "region": "jp",
+      "score": 35.4
     },
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",

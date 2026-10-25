@@ -71,6 +71,8 @@ COMPONENTS = {
     "jp_ma": dict(region="jp", transform="below_ma", inputs=["n225"], weight=0.75, name="日经225 低于125日均线幅度"),
     "jp_yen": dict(region="jp", transform="fall_20d", inputs=["usdjpy"], weight=0.5, name="日元20日急升"),
     "jp_crash": dict(region="jp", transform="fall_10d", inputs=["n225"], weight=0.5, name="日经225 10日急跌"),
+    # 日经225 是价格加权，少数高价股（如迅销、东京电子）影响很大；TOPIX 覆盖全市场，更接近多数股票的感受
+    "jp_breadth": dict(region="jp", transform="drawdown", inputs=["topix"], weight=1.0, name="TOPIX 回撤（全市场）"),
     # ---- A股 ----
     "cn_qvix": dict(region="cn", transform="level", inputs=["qvix50"], weight=1.0, name="50ETF 期权波动率 QVIX"),
     "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=0.5, name="沪深300 20日实际波动率"),
