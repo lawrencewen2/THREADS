@@ -203,3 +203,19 @@ def write_dashboard(index_df, latest):
     template = (ROOT / "fearindex" / "dashboard.html").read_text()
     html = template.replace("/*__DATA__*/null", json.dumps(payload, ensure_ascii=False))
     (DOCS / "index.html").write_text(html)
+    write_page_data(index_df, latest)
+
+
+def write_page_data(index_df, latest):
+    """在线总表页面的数据：全部历史（每行一天）和最新读数（每行一个区域）。每日刷新时上传到页面。"""
+    out = DOCS / "page"
+    out.mkdir(exist_ok=True)
+    cols = ["global"] + list(config.REGIONS)
+    hist = index_df[cols].dropna(how="all")
+    rows = [dict(date=str(d.date()), **{k: None if pd.isna(v) else float(v) for k, v in r.items()})
+            for d, r in hist.iterrows()]
+    (out / "history.json").write_text(json.dumps(rows, ensure_ascii=False, separators=(",", ":")))
+    summary = [dict(key=k, name=r["name"], date=latest["date"], score=r["score"], band=r["band"],
+                    change_5d=r["change_5d"], signal="恐慌加深，减仓" if r.get("risk_off") else "正常")
+               for k, r in latest["regions"].items()]
+    (out / "latest.json").write_text(json.dumps(summary, ensure_ascii=False, indent=1))

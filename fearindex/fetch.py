@@ -166,6 +166,8 @@ def update_all(keys=None, start=config.START_DATE, full=False):
             merged = sanitize(key, _clean(merged))
             save_cached(key, merged)
             sources[key] = label
+            # 用存盘后的值计算（CSV 保留 6 位有效数字），离线重算才能和线上结果完全一致
+            merged = load_cached(key)
             out[key] = merged
             log.info("%s via %s: %d rows, last %s", key, label, len(merged), merged.index[-1].date())
             break

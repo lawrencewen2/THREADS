@@ -197,6 +197,28 @@ def _ak_sum(fn, symbols, value_col):
     return total.dropna()
 
 
+def _sina_us(symbol):
+    import akshare as ak
+
+    df = ak.stock_us_daily(symbol=symbol, adjust="")
+    s = pd.to_numeric(df["close"], errors="coerce")
+    s.index = pd.to_datetime(df.index).tz_localize(None).normalize()
+    return s.dropna().sort_index()
+
+
+def _first(*getters):
+    """依次尝试多个第二来源，返回第一个取到的。"""
+    def go():
+        errors = []
+        for g in getters:
+            try:
+                return g()
+            except Exception as exc:
+                errors.append(f"{type(exc).__name__}")
+        raise RuntimeError("、".join(errors))
+    return go
+
+
 def _sse_margin():
     end = pd.Timestamp.today()
     start = end - pd.Timedelta(days=60)
@@ -207,11 +229,12 @@ def _sse_margin():
 # (序列, 第二来源说明, 取数函数, 比较方式, 容差)
 # level：逐日比较数值，容差为相对偏差上限；ratio：两边单位可能不同（如手与股），比较两者比值的稳定性。
 CROSS_CHECKS = [
-    ("spx", "Stooq ^spx", lambda: _stooq("^spx"), "level", 0.005),
+    ("spx", "新浪 标普500", _first(lambda: _ak("index_us_stock_sina", symbol=".INX"), lambda: _stooq("^spx")),
+     "level", 0.005),
     ("vix", "CBOE 官方 VIX 历史", lambda: _cboe("VIX"), "level", 0.01),
     ("vix3m", "CBOE 官方 VIX3M 历史", lambda: _cboe("VIX3M"), "level", 0.01),
-    ("hyg", "Stooq hyg.us", lambda: _stooq("hyg.us"), "level", 0.005),
-    ("ief", "Stooq ief.us", lambda: _stooq("ief.us"), "level", 0.005),
+    ("hyg", "新浪 美股 HYG", _first(lambda: _sina_us("HYG"), lambda: _stooq("hyg.us")), "level", 0.005),
+    ("ief", "新浪 美股 IEF", _first(lambda: _sina_us("IEF"), lambda: _stooq("ief.us")), "level", 0.005),
     ("us10y", "美国财政部 10 年期收益率", _treasury10y, "level", 0.03),
     ("sx5e", "新浪 欧洲Stoxx50指数", lambda: _ak("index_global_hist_sina", symbol="欧洲Stoxx50指数"), "level", 0.005),
     ("eurchf", "欧洲央行参考汇率", lambda: _ecb("CHF"), "level", 0.015),
@@ -258,7 +281,7 @@ def cross_source(series):
         try:
             theirs = getter()
         except Exception as exc:
-            rows.append(dict(key=key, source=label, status="—", detail=f"第二来源取数失败：{type(exc).__name__}"))
+            rows.append(dict(key=key, source=label, status="—", detail=f"第二来源取数失败：{type(exc).__name__} {str(exc)[:60]}"))
             continue
         res = compare(series[key], theirs, mode, tol)
         if res["status"] == WARN and "ours" in res:
