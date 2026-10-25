@@ -169,13 +169,11 @@
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
       "region": "global",
-      "score": 16.0
+      "score": 15.9
     }
   },
   "status": {
-    "warnings": [
-      "算法参数已更新，本次跳过历史值漂移检查"
-    ],
+    "warnings": [],
     "failures": [],
     "ok": true
   }
