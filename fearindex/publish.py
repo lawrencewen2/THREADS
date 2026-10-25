@@ -43,7 +43,7 @@ def latest_snapshot(index_df, comp_df, status):
     for cid, spec in config.COMPONENTS.items():
         v = comp_df[cid].iloc[-1] if cid in comp_df else float("nan")
         comps[cid] = dict(name=spec["name"], region=spec["region"], score=None if pd.isna(v) else float(v))
-    return dict(date=str(last.date()), regions=regions, components=comps, status=status)
+    return dict(date=str(last.date()), method=config.fingerprint(), regions=regions, components=comps, status=status)
 
 
 def svg_chart(index_df, days=520, width=900, height=360):

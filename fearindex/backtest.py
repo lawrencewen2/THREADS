@@ -30,15 +30,20 @@ def price_panel(series, calendar):
     return px
 
 
-def drawdown_episodes(price, threshold=0.15):
-    """返回回撤超过 threshold 的 (峰值日, 谷底日, 最大回撤) 列表。"""
+def drawdown_episodes(price, threshold=0.15, rebound=0.25):
+    """返回回撤超过 threshold 的 (峰值日, 谷底日, 最大回撤) 列表。
+
+    一段回撤在创出新高时结束；若长期未回到前高（如 A股 2007 年后），
+    从谷底反弹超过 rebound 也算结束，之后重新找峰值，避免多次熊市被并成一段。
+    """
     price = price.dropna()
     episodes = []
     peak_date, peak = price.index[0], price.iloc[0]
     trough_date, trough = peak_date, peak
     for d, p in price.items():
-        if p > peak:
-            if 1 - trough / peak >= threshold:
+        deep = 1 - trough / peak >= threshold
+        if p > peak or (deep and p / trough - 1 >= rebound):
+            if deep:
                 episodes.append((peak_date, trough_date, 1 - trough / peak))
             peak_date, peak, trough_date, trough = d, p, d, p
         elif p < trough:

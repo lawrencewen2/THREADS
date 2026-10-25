@@ -109,3 +109,14 @@ def band(score):
         if score < upper:
             return label
     return BANDS[-1][1]
+
+
+def fingerprint():
+    """算法参数指纹。参数变化后历史分数本应改变，健康检查据此跳过“历史值漂移”。"""
+    import hashlib
+    import json
+
+    params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
+                  window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN)
+    return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]

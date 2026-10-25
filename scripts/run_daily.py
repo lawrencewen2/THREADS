@@ -1,6 +1,7 @@
 """每日任务：拉数据 → 算指数 → 检查 → 发布。失败时以非零退出码结束，让 GitHub Actions 发邮件提醒。"""
 
 import argparse
+import json
 import logging
 import sys
 from pathlib import Path
@@ -9,7 +10,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from fearindex import check, compute, fetch, publish  # noqa: E402
+from fearindex import check, compute, config, fetch, publish  # noqa: E402
 
 
 def main():
@@ -27,8 +28,12 @@ def main():
     prev_path = publish.DATA / "index.csv"
     previous = pd.read_csv(prev_path, parse_dates=["date"], index_col="date") if prev_path.exists() else None
 
+    latest_path = publish.DATA / "latest.json"
+    prev_method = json.loads(latest_path.read_text()).get("method") if latest_path.exists() else None
+
     index_df, comp_df, raw_df = compute.build(series)
-    status = check.run_checks(series, errors, index_df, previous)
+    status = check.run_checks(series, errors, index_df, previous,
+                              method_changed=prev_method != config.fingerprint())
     latest = publish.write_data(index_df, comp_df, raw_df, status)
     publish.write_dashboard(index_df, latest)
     publish.update_readme(latest)

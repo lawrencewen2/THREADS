@@ -9,7 +9,7 @@ JUMP = 25
 DRIFT = 1.0
 
 
-def run_checks(series, errors, index_df, previous_index=None):
+def run_checks(series, errors, index_df, previous_index=None, method_changed=False):
     warnings, failures = [], []
     for key, msg in errors.items():
         warnings.append(f"{key} 拉取失败，沿用缓存（{msg[:80]}）")
@@ -30,7 +30,9 @@ def run_checks(series, errors, index_df, previous_index=None):
                 warnings.append(f"{col} 单日变动 {d:.1f} 分，请核对数据")
 
     # 已发布的历史值不应改变（除最近几天可能因数据补录而修正）
-    if previous_index is not None and len(previous_index):
+    if method_changed:
+        warnings.append("算法参数已更新，本次跳过历史值漂移检查")
+    elif previous_index is not None and len(previous_index):
         cutoff = last - pd.Timedelta(days=10)
         common = previous_index.index.intersection(index_df.index)
         common = common[common < cutoff]

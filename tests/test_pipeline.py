@@ -91,6 +91,10 @@ def test_drawdown_episodes():
     eps = backtest.drawdown_episodes(p, 0.15)
     assert len(eps) == 2
     assert eps[0][2] == pytest.approx(1 - 80 / 110)
+    # 未回到前高，但反弹超过 25% 后再跌，算两段
+    p = pd.Series([100, 60, 80, 90, 70], index=pd.bdate_range("2020-01-01", periods=5))
+    eps = backtest.drawdown_episodes(p, 0.15)
+    assert [round(e[2], 3) for e in eps] == [0.4, round(1 - 70 / 90, 3)]
 
 
 def test_fetch_falls_back_and_refetches_on_source_change(tmp_path, monkeypatch):
@@ -137,3 +141,14 @@ def test_short_series_does_not_break_build():
     series["hstech"] = series["hstech"].iloc[-1:]
     idx, comp, _ = compute.build(series)
     assert "hk_tech" not in comp.columns and idx["hk"].notna().any()
+
+
+def test_drift_check(built):
+    from fearindex import check
+
+    series, (idx, _, _) = built
+    tampered = idx.copy()
+    tampered.loc[tampered.index[100], "global"] += 5
+    assert not check.run_checks(series, {}, idx, tampered)["ok"]
+    assert check.run_checks(series, {}, idx, tampered, method_changed=True)["ok"]
+    assert check.run_checks(series, {}, idx, idx)["ok"]
