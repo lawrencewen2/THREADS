@@ -16,5 +16,11 @@
   "hstech": "yahoo:3033.HK",
   "gold": "yahoo:GC=F",
   "move": "yahoo:^MOVE",
-  "us10y": "yahoo:^TNX"
+  "us10y": "yahoo:^TNX",
+  "rsp": "yahoo:RSP",
+  "iwm": "yahoo:IWM",
+  "topix": "yahoo:1306.T",
+  "csi1000": "akshare:tx_close:sh000852",
+  "csi500": "akshare:tx_close:sh000905",
+  "hscomp": "yahoo:2833.HK"
 }

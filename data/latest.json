@@ -1,6 +1,6 @@
 {
   "date": "2026-10-23",
-  "method": "5d206209d4b7",
+  "method": "9bfb007288c1",
   "regions": {
     "global": {
       "name": "全球",
@@ -28,9 +28,9 @@
     },
     "jp": {
       "name": "日本",
-      "score": 12.8,
+      "score": 12.7,
       "band": "极度恐慌",
-      "change_5d": -17.1,
+      "change_5d": -17.2,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -125,7 +125,7 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 24.0
+      "score": 22.9
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
@@ -204,7 +204,9 @@
     }
   },
   "status": {
-    "warnings": [],
+    "warnings": [
+      "算法参数已更新，本次跳过历史值漂移检查"
+    ],
     "failures": [],
     "ok": true
   }
