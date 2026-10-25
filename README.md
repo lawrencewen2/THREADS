@@ -3,7 +3,20 @@
 每天自动更新的 0–100 恐慌指数，覆盖美国、欧洲、日本、A股、港股。0 = 极度贪婪，100 = 极度恐慌。仅供个人判断市场情绪参考，不构成投资建议。
 
 <!-- latest:start -->
-（首次运行后自动生成）
+**最新读数（2026-10-23 收盘）**
+
+| 区域 | 恐慌指数 | 状态 | 5日变化 |
+| --- | --- | --- | --- |
+| 全球 | 67 | 恐慌 | +9.4 |
+| 美国 | 62 | 恐慌 | +6.0 |
+| 欧洲 | 79 | 恐慌 | +8.6 |
+| 日本 | 82 | 极度恐慌 | +15.9 |
+| A股 | — | — | — |
+| 港股 | 63 | 恐慌 | +13.5 |
+
+⚠️ us_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）；vstoxx 拉取失败，沿用缓存（ValueError: empty yahoo data for ^V2TX）；eu_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）；csi300 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）；a_turnover 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）；hstech 拉取失败，沿用缓存（ValueError: empty yahoo data for ^HSTECH）；缺少序列：us_hy_oas, vstoxx, eu_hy_oas, csi300, a_turnover, hstech
+
+![近两年走势](docs/chart.svg)
 <!-- latest:end -->
 
 ## 怎么算的

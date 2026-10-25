@@ -1,0 +1,186 @@
+{
+  "date": "2026-10-23",
+  "regions": {
+    "global": {
+      "name": "全球",
+      "score": 67.2,
+      "band": "恐慌",
+      "change_5d": 9.4
+    },
+    "us": {
+      "name": "美国",
+      "score": 61.9,
+      "band": "恐慌",
+      "change_5d": 6.0
+    },
+    "eu": {
+      "name": "欧洲",
+      "score": 79.0,
+      "band": "恐慌",
+      "change_5d": 8.6
+    },
+    "jp": {
+      "name": "日本",
+      "score": 82.3,
+      "band": "极度恐慌",
+      "change_5d": 15.9
+    },
+    "cn": {
+      "name": "A股",
+      "score": null,
+      "band": null,
+      "change_5d": null
+    },
+    "hk": {
+      "name": "港股",
+      "score": 63.2,
+      "band": "恐慌",
+      "change_5d": 13.5
+    }
+  },
+  "components": {
+    "us_vix": {
+      "name": "VIX",
+      "region": "us",
+      "score": 80.1
+    },
+    "us_term": {
+      "name": "VIX/VIX3M 期限结构",
+      "region": "us",
+      "score": 82.0
+    },
+    "us_rvol": {
+      "name": "标普500 20日实际波动率",
+      "region": "us",
+      "score": 23.9
+    },
+    "us_dd": {
+      "name": "标普500 距52周高点回撤",
+      "region": "us",
+      "score": 74.5
+    },
+    "us_credit": {
+      "name": "美国高收益债利差",
+      "region": "us",
+      "score": null
+    },
+    "eu_vstoxx": {
+      "name": "VSTOXX",
+      "region": "eu",
+      "score": null
+    },
+    "eu_rvol": {
+      "name": "欧洲斯托克50 20日实际波动率",
+      "region": "eu",
+      "score": 65.7
+    },
+    "eu_dd": {
+      "name": "欧洲斯托克50 回撤",
+      "region": "eu",
+      "score": 93.9
+    },
+    "eu_credit": {
+      "name": "欧元区高收益债利差",
+      "region": "eu",
+      "score": null
+    },
+    "eu_chf": {
+      "name": "瑞郎避险升值",
+      "region": "eu",
+      "score": 96.2
+    },
+    "jp_rvol": {
+      "name": "日经225 20日实际波动率",
+      "region": "jp",
+      "score": 80.0
+    },
+    "jp_dd": {
+      "name": "日经225 回撤",
+      "region": "jp",
+      "score": 94.7
+    },
+    "jp_ma": {
+      "name": "日经225 低于125日均线幅度",
+      "region": "jp",
+      "score": 94.2
+    },
+    "jp_yen": {
+      "name": "日元20日急升",
+      "region": "jp",
+      "score": 73.3
+    },
+    "cn_qvix": {
+      "name": "50ETF 期权波动率 QVIX",
+      "region": "cn",
+      "score": 43.3
+    },
+    "cn_rvol": {
+      "name": "沪深300 20日实际波动率",
+      "region": "cn",
+      "score": null
+    },
+    "cn_dd": {
+      "name": "沪深300 回撤",
+      "region": "cn",
+      "score": null
+    },
+    "cn_turnover": {
+      "name": "两市成交额萎缩",
+      "region": "cn",
+      "score": null
+    },
+    "cn_margin": {
+      "name": "沪市融资余额下降",
+      "region": "cn",
+      "score": 95.9
+    },
+    "hk_rvol": {
+      "name": "恒指 20日实际波动率",
+      "region": "hk",
+      "score": 42.5
+    },
+    "hk_dd": {
+      "name": "恒指 回撤",
+      "region": "hk",
+      "score": 79.9
+    },
+    "hk_ma": {
+      "name": "恒指 低于125日均线幅度",
+      "region": "hk",
+      "score": 91.3
+    },
+    "hk_tech": {
+      "name": "恒生科技跑输恒指",
+      "region": "hk",
+      "score": null
+    },
+    "gl_move": {
+      "name": "MOVE 美债波动率",
+      "region": "global",
+      "score": 70.6
+    },
+    "gl_gold": {
+      "name": "黄金跑赢股票",
+      "region": "global",
+      "score": 17.7
+    },
+    "gl_bond": {
+      "name": "美债收益率急跌（避险买盘）",
+      "region": "global",
+      "score": 83.1
+    }
+  },
+  "status": {
+    "warnings": [
+      "us_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）",
+      "vstoxx 拉取失败，沿用缓存（ValueError: empty yahoo data for ^V2TX）",
+      "eu_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）",
+      "csi300 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）",
+      "a_turnover 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）",
+      "hstech 拉取失败，沿用缓存（ValueError: empty yahoo data for ^HSTECH）",
+      "缺少序列：us_hy_oas, vstoxx, eu_hy_oas, csi300, a_turnover, hstech"
+    ],
+    "failures": [],
+    "ok": true
+  }
+}

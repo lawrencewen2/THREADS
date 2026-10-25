@@ -1,0 +1,32 @@
+{
+  "global": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 0.0,
+    "events": 7,
+    "alarms": 39
+  },
+  "us": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 6.6,
+    "events": 6,
+    "alarms": 61
+  },
+  "eu": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 0.0,
+    "events": 3,
+    "alarms": 34
+  },
+  "jp": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 0.0,
+    "events": 8,
+    "alarms": 32
+  },
+  "hk": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 0.0,
+    "events": 3,
+    "alarms": 36
+  }
+}
