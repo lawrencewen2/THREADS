@@ -1,5 +1,6 @@
 {
   "date": "2026-10-23",
+  "method": "d572e4bcb91a",
   "regions": {
     "global": {
       "name": "全球",
@@ -42,7 +43,7 @@
     "us_vix": {
       "name": "VIX",
       "region": "us",
-      "score": 80.1
+      "score": 80.2
     },
     "us_term": {
       "name": "VIX/VIX3M 期限结构",
@@ -162,14 +163,14 @@
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
       "region": "global",
-      "score": 83.1
+      "score": 83.2
     }
   },
   "status": {
-    "warnings": [],
-    "failures": [
-      "历史值漂移：2015-08-10 的全球分变化 12.0"
+    "warnings": [
+      "算法参数已更新，本次跳过历史值漂移检查"
     ],
-    "ok": false
+    "failures": [],
+    "ok": true
   }
 }

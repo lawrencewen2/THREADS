@@ -1,38 +1,38 @@
 {
   "global": {
-    "capture_rate": 100.0,
+    "capture_rate": 88.9,
     "false_alarm_rate": 0.0,
-    "events": 7,
+    "events": 9,
     "alarms": 31
   },
   "us": {
-    "capture_rate": 100.0,
+    "capture_rate": 87.5,
     "false_alarm_rate": 10.5,
-    "events": 6,
+    "events": 8,
     "alarms": 57
   },
   "eu": {
     "capture_rate": 100.0,
     "false_alarm_rate": 0.0,
-    "events": 3,
+    "events": 9,
     "alarms": 29
   },
   "jp": {
-    "capture_rate": 100.0,
+    "capture_rate": 93.3,
     "false_alarm_rate": 0.0,
-    "events": 8,
+    "events": 15,
     "alarms": 32
   },
   "cn": {
-    "capture_rate": 100.0,
+    "capture_rate": 85.7,
     "false_alarm_rate": 0.0,
-    "events": 3,
+    "events": 14,
     "alarms": 9
   },
   "hk": {
-    "capture_rate": 100.0,
+    "capture_rate": 72.2,
     "false_alarm_rate": 0.0,
-    "events": 3,
+    "events": 18,
     "alarms": 35
   }
 }
