@@ -1,0 +1,6 @@
+pandas>=2.2
+numpy>=1.26
+yfinance>=0.2.50
+akshare>=1.15
+requests>=2.31
+pytest>=8

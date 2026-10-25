@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-23",
+  "method": "b13378407172",
+  "regions": {
+    "global": {
+      "name": "全球",
+      "score": 60.8,
+      "band": "恐慌",
+      "change_5d": 8.3,
+      "risk_off": true
+    },
+    "us": {
+      "name": "美国",
+      "score": 52.9,
+      "band": "中性",
+      "change_5d": 6.8,
+      "risk_off": false
+    },
+    "eu": {
+      "name": "欧洲",
+      "score": 68.1,
+      "band": "恐慌",
+      "change_5d": 7.4,
+      "risk_off": true
+    },
+    "jp": {
+      "name": "日本",
+      "score": 85.6,
+      "band": "极度恐慌",
+      "change_5d": 16.1,
+      "risk_off": true
+    },
+    "cn": {
+      "name": "A股",
+      "score": 70.7,
+      "band": "恐慌",
+      "change_5d": 2.3,
+      "risk_off": true
+    },
+    "hk": {
+      "name": "港股",
+      "score": 55.0,
+      "band": "中性",
+      "change_5d": 14.3,
+      "risk_off": false
+    }
+  },
+  "components": {
+    "us_vix": {
+      "name": "VIX",
+      "region": "us",
+      "score": 64.1
+    },
+    "us_term": {
+      "name": "VIX/VIX3M 期限结构",
+      "region": "us",
+      "score": 79.8
+    },
+    "us_rvol": {
+      "name": "标普500 20日实际波动率",
+      "region": "us",
+      "score": 17.9
+    },
+    "us_dd": {
+      "name": "标普500 距52周高点回撤",
+      "region": "us",
+      "score": 53.7
+    },
+    "us_credit": {
+      "name": "高收益债相对国债回撤（HYG/IEF）",
+      "region": "us",
+      "score": 66.0
+    },
+    "eu_rvol": {
+      "name": "欧洲斯托克50 20日实际波动率",
+      "region": "eu",
+      "score": 50.0
+    },
+    "eu_dd": {
+      "name": "欧洲斯托克50 回撤",
+      "region": "eu",
+      "score": 77.8
+    },
+    "eu_ma": {
+      "name": "欧洲斯托克50 低于125日均线幅度",
+      "region": "eu",
+      "score": 83.3
+    },
+    "eu_chf": {
+      "name": "瑞郎避险升值",
+      "region": "eu",
+      "score": 94.7
+    },
+    "jp_rvol": {
+      "name": "日经225 20日实际波动率",
+      "region": "jp",
+      "score": 87.6
+    },
+    "jp_dd": {
+      "name": "日经225 回撤",
+      "region": "jp",
+      "score": 93.3
+    },
+    "jp_ma": {
+      "name": "日经225 低于125日均线幅度",
+      "region": "jp",
+      "score": 92.5
+    },
+    "jp_yen": {
+      "name": "日元20日急升",
+      "region": "jp",
+      "score": 76.0
+    },
+    "cn_qvix": {
+      "name": "50ETF 期权波动率 QVIX",
+      "region": "cn",
+      "score": 30.6
+    },
+    "cn_rvol": {
+      "name": "沪深300 20日实际波动率",
+      "region": "cn",
+      "score": 62.1
+    },
+    "cn_dd": {
+      "name": "沪深300 回撤",
+      "region": "cn",
+      "score": 81.4
+    },
+    "cn_turnover": {
+      "name": "两市成交额萎缩",
+      "region": "cn",
+      "score": 98.7
+    },
+    "cn_margin": {
+      "name": "沪市融资余额下降",
+      "region": "cn",
+      "score": 97.0
+    },
+    "hk_rvol": {
+      "name": "恒指 20日实际波动率",
+      "region": "hk",
+      "score": 32.4
+    },
+    "hk_dd": {
+      "name": "恒指 回撤",
+      "region": "hk",
+      "score": 59.8
+    },
+    "hk_ma": {
+      "name": "恒指 低于125日均线幅度",
+      "region": "hk",
+      "score": 81.3
+    },
+    "hk_tech": {
+      "name": "恒生科技跑输恒指",
+      "region": "hk",
+      "score": 83.2
+    },
+    "gl_move": {
+      "name": "MOVE 美债波动率",
+      "region": "global",
+      "score": 52.5
+    },
+    "gl_gold": {
+      "name": "黄金跑赢股票",
+      "region": "global",
+      "score": 15.2
+    },
+    "gl_bond": {
+      "name": "美债收益率急跌（避险买盘）",
+      "region": "global",
+      "score": 84.1
+    }
+  },
+  "status": {
+    "warnings": [
+      "算法参数已更新，本次跳过历史值漂移检查"
+    ],
+    "failures": [],
+    "ok": true
+  }
+}
