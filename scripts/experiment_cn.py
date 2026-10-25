@@ -133,7 +133,8 @@ def evaluate(score, price):
 
 def main():
     series = fetch.load_all()
-    base = copy.deepcopy(config.COMPONENTS)
+    # “现行”指 2026-10-25 加入急跌成分之前的配置
+    base = {c: s for c, s in copy.deepcopy(config.COMPONENTS).items() if not c.endswith("_crash")}
     tables = {}
     for region, variants in VARIANTS.items():
         rows = {}

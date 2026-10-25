@@ -38,6 +38,8 @@ SERIES = {
 }
 
 # 成分：id -> 定义
+# *_crash（10 日急跌）于 2026-10-25 加入，让指数对急跌反应更快；A股、港股缺少快速反应的成分，权重取 1，
+# 其余区域取 0.5。依据只用 2018 年以前的回测（见 scripts/experiment_sensitivity.py）。
 #   transform: 见 compute.TRANSFORMS
 #   inputs: 用到的原始序列
 #   weight: 区域内相对权重（缺失时剩余成分重新归一）
@@ -48,27 +50,32 @@ COMPONENTS = {
     "us_rvol": dict(region="us", transform="realized_vol", inputs=["spx"], weight=0.75, name="标普500 20日实际波动率"),
     "us_dd": dict(region="us", transform="drawdown", inputs=["spx"], weight=1.0, name="标普500 距52周高点回撤"),
     "us_credit": dict(region="us", transform="ratio_drawdown", inputs=["hyg", "ief"], weight=1.0, name="高收益债相对国债回撤（HYG/IEF）"),
+    "us_crash": dict(region="us", transform="fall_10d", inputs=["spx"], weight=0.5, name="标普500 10日急跌"),
     # ---- 欧洲 ----
     "eu_rvol": dict(region="eu", transform="realized_vol", inputs=["sx5e"], weight=1.25, name="欧洲斯托克50 20日实际波动率"),
     "eu_dd": dict(region="eu", transform="drawdown", inputs=["sx5e"], weight=1.0, name="欧洲斯托克50 回撤"),
     "eu_ma": dict(region="eu", transform="below_ma", inputs=["sx5e"], weight=0.75, name="欧洲斯托克50 低于125日均线幅度"),
     "eu_chf": dict(region="eu", transform="fall_20d", inputs=["eurchf"], weight=0.5, name="瑞郎避险升值"),
+    "eu_crash": dict(region="eu", transform="fall_10d", inputs=["sx5e"], weight=0.5, name="欧洲斯托克50 10日急跌"),
     # ---- 日本 ----
     "jp_rvol": dict(region="jp", transform="realized_vol", inputs=["n225"], weight=1.25, name="日经225 20日实际波动率"),
     "jp_dd": dict(region="jp", transform="drawdown", inputs=["n225"], weight=1.0, name="日经225 回撤"),
     "jp_ma": dict(region="jp", transform="below_ma", inputs=["n225"], weight=0.75, name="日经225 低于125日均线幅度"),
     "jp_yen": dict(region="jp", transform="fall_20d", inputs=["usdjpy"], weight=0.5, name="日元20日急升"),
+    "jp_crash": dict(region="jp", transform="fall_10d", inputs=["n225"], weight=0.5, name="日经225 10日急跌"),
     # ---- A股 ----
     "cn_qvix": dict(region="cn", transform="level", inputs=["qvix50"], weight=1.0, name="50ETF 期权波动率 QVIX"),
     "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=0.5, name="沪深300 20日实际波动率"),
     "cn_dd": dict(region="cn", transform="drawdown", inputs=["csi300"], weight=1.0, name="沪深300 回撤"),
     "cn_turnover": dict(region="cn", transform="turnover_shrink", inputs=["a_turnover"], weight=0.75, name="两市成交量萎缩"),
     "cn_margin": dict(region="cn", transform="fall_20d", inputs=["sh_margin"], weight=0.75, name="沪市融资余额下降"),
+    "cn_crash": dict(region="cn", transform="fall_10d", inputs=["csi300"], weight=1.0, name="沪深300 10日急跌"),
     # ---- 港股 ----
     "hk_rvol": dict(region="hk", transform="realized_vol", inputs=["hsi"], weight=1.25, name="恒指 20日实际波动率"),
     "hk_dd": dict(region="hk", transform="drawdown", inputs=["hsi"], weight=1.0, name="恒指 回撤"),
     "hk_ma": dict(region="hk", transform="below_ma", inputs=["hsi"], weight=0.75, name="恒指 低于125日均线幅度"),
     "hk_tech": dict(region="hk", transform="underperform_20d", inputs=["hstech", "hsi"], weight=0.5, name="恒生科技跑输恒指"),
+    "hk_crash": dict(region="hk", transform="fall_10d", inputs=["hsi"], weight=1.0, name="恒指 10日急跌"),
     # ---- 全球公共 ----
     "gl_move": dict(region="global", transform="level", inputs=["move"], weight=1.0, name="MOVE 美债波动率"),
     "gl_gold": dict(region="global", transform="underperform_20d", inputs=["spx", "gold"], weight=0.5, name="黄金跑赢股票"),
@@ -104,6 +111,7 @@ SPIKE_FILTER = {"usdjpy": 0.04, "eurchf": 0.04}
 # 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
 RISK_OFF_LEVEL = 40
 RISK_OFF_LOOKBACK = 20
+RISK_OFF_CONFIRM = 2     # 条件连续成立几天才发出信号，减少来回开关
 
 BANDS = [
     (20, "极度恐慌"),
@@ -128,10 +136,13 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK))
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
 def risk_off(score):
-    """返回布尔序列：True 表示恐慌在加深，建议降低仓位。"""
-    return (score <= RISK_OFF_LEVEL) & (score.diff(RISK_OFF_LOOKBACK) < 0)
+    """返回布尔序列：True 表示恐慌在加深，建议降低仓位（条件需连续 RISK_OFF_CONFIRM 天成立）。"""
+    raw = (score <= RISK_OFF_LEVEL) & (score.diff(RISK_OFF_LOOKBACK) < 0)
+    if RISK_OFF_CONFIRM <= 1:
+        return raw
+    return raw.astype(int).rolling(RISK_OFF_CONFIRM, min_periods=RISK_OFF_CONFIRM).min().fillna(0).astype(bool)

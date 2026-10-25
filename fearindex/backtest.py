@@ -120,7 +120,7 @@ def position_sim(score, price):
     """两种简单仓位规则，t 日收盘的分数决定 t+1 日仓位（无交易成本）。
 
     逆向：仓位 = 0.3 + 0.7 × (100 − 分数)/100，越恐慌（分数越低）越重仓。
-    避险：config.risk_off 为真（分数 ≤ 40 且低于 20 日前）时半仓，否则满仓。
+    避险：config.risk_off 为真（分数 ≤ 40 且低于 20 日前，连续 2 天）时半仓，否则满仓。
     对照：买入持有，以及与逆向规则平均仓位相同的固定仓位。
     """
     df = pd.DataFrame({"score": score, "price": price}).dropna()
@@ -182,7 +182,8 @@ def to_markdown(report, index_df):
              f"数据区间：{index_df.index[0].date()} 至 {index_df.index[-1].date()}。"
              "样本内 2018 年底以前，样本外 2019 年以后。", "",
              f"当前参数：分位窗口 {config.RANK_WINDOW} 个交易日，平滑 {config.SMOOTH_SPAN} 日，"
-             f"分数 0 = 极度恐慌、100 = 极度贪婪；减仓信号为分数 ≤ {config.RISK_OFF_LEVEL} 且低于 {config.RISK_OFF_LOOKBACK} 日前。"
+             f"分数 0 = 极度恐慌、100 = 极度贪婪；减仓信号为分数 ≤ {config.RISK_OFF_LEVEL} 且低于 {config.RISK_OFF_LOOKBACK} 日前，"
+             f"连续 {config.RISK_OFF_CONFIRM} 天成立。"
              "参数只依据样本内结果选定，复现见 `scripts/tune_params.py`。", ""]
     lines += ["## 汇总", "", "| 区域 | 起始 | 回撤>15% 事件数 | 覆盖率(≤30) | 下穿20 次数 | 误报率 | 日变动中位数 |",
               "| --- | --- | --- | --- | --- | --- | --- |"]

@@ -25,6 +25,7 @@ TRANSFORMS = {
     "drawdown": lambda s: 1 - s / s.rolling(252, min_periods=20).max(),
     "below_ma": lambda s: 1 - s / s.rolling(125, min_periods=60).mean(),
     "ratio_drawdown": lambda a, b: (lambda a, b: 1 - (a / b) / (a / b).rolling(252, min_periods=20).max())(*_align(a, b)),
+    "fall_10d": lambda s: -_ret(s, 10),
     "fall_20d": lambda s: -_ret(s, 20),
     "drop_20d": lambda s: -(s - s.shift(20)),
     # inputs [x, y]：x 跑输 y 越多越恐慌

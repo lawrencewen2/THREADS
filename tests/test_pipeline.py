@@ -195,3 +195,9 @@ def test_verify_recomputes_match():
     assert (verify.recompute_index(comp_df).loc[tail] - index_df.loc[tail]).abs().max().max() < 0.2
     _, replay = verify.realtime_replay(series, index_df)
     assert replay.max() < 0.1
+
+
+def test_risk_off_needs_two_days():
+    s = pd.Series([60.0] * 25 + [35.0, 50.0, 35.0, 34.0], index=pd.bdate_range("2020-01-01", periods=29))
+    on = config.risk_off(s)
+    assert not on.iloc[25] and not on.iloc[27] and on.iloc[28]
