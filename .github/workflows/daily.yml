@@ -2,8 +2,9 @@ name: daily-update
 
 on:
   schedule:
-    # 北京时间周二至周六 07:30（美股收盘后），覆盖周一至周五交易日
-    - cron: "30 23 * * 1-5"
+    # 北京时间周一至周五 07:30（UTC 周日至周四 23:30），A股/港股开盘前更新；
+    # 周一早上用的是上周五收盘数据
+    - cron: "30 23 * * 0-4"
   workflow_dispatch:
     inputs:
       full:
