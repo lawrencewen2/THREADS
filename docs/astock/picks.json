@@ -1,0 +1,192 @@
+{
+ "signal_date": "2026-10-23",
+ "trade_date": "2026-10-26",
+ "fear_cn": 24.2,
+ "fear_date": "2026-10-23",
+ "fear_floor": 30,
+ "gate_open": false,
+ "top_n": 1,
+ "universe_size": 4039,
+ "picks": [
+  {
+   "rank": 1,
+   "code": "sz.300452",
+   "name": "山河药辅",
+   "score": 0.3974,
+   "selected": false,
+   "close": 11.52,
+   "limit_up": 13.82,
+   "factors": {
+    "rev5": -0.0886,
+    "overnight20": -0.0032,
+    "clv": 0.6234,
+    "ma20gap": -0.1078,
+    "ret1": -0.0448,
+    "size": 21.551,
+    "amount20": 17.7889
+   }
+  },
+  {
+   "rank": 2,
+   "code": "sz.300970",
+   "name": "华绿生物",
+   "score": 0.3952,
+   "selected": false,
+   "close": 13.28,
+   "limit_up": 15.94,
+   "factors": {
+    "rev5": -0.1558,
+    "overnight20": -0.0063,
+    "clv": 0.6279,
+    "ma20gap": -0.2053,
+    "ret1": -0.0984,
+    "size": 21.2196,
+    "amount20": 18.7691
+   }
+  },
+  {
+   "rank": 3,
+   "code": "sz.300989",
+   "name": "蕾奥规划",
+   "score": 0.3789,
+   "selected": false,
+   "close": 12.9,
+   "limit_up": 15.48,
+   "factors": {
+    "rev5": -0.2487,
+    "overnight20": -0.0029,
+    "clv": 0.365,
+    "ma20gap": -0.1689,
+    "ret1": -0.1325,
+    "size": 21.4658,
+    "amount20": 18.3718
+   }
+  },
+  {
+   "rank": 4,
+   "code": "sh.603334",
+   "name": "丰倍生物",
+   "score": 0.3778,
+   "selected": false,
+   "close": 29.48,
+   "limit_up": 32.43,
+   "factors": {
+    "rev5": -0.0816,
+    "overnight20": -0.0046,
+    "clv": 0.8116,
+    "ma20gap": -0.0763,
+    "ret1": -0.0216,
+    "size": 20.6592,
+    "amount20": 18.083
+   }
+  },
+  {
+   "rank": 5,
+   "code": "sh.600319",
+   "name": "亚星化学",
+   "score": 0.3763,
+   "selected": false,
+   "close": 5.98,
+   "limit_up": 6.58,
+   "factors": {
+    "rev5": -0.1333,
+    "overnight20": -0.0064,
+    "clv": 0.4545,
+    "ma20gap": -0.0567,
+    "ret1": -0.0685,
+    "size": 21.5642,
+    "amount20": 18.3023
+   }
+  },
+  {
+   "rank": 6,
+   "code": "sz.300272",
+   "name": "开能健康",
+   "score": 0.3665,
+   "selected": false,
+   "close": 4.99,
+   "limit_up": 5.99,
+   "factors": {
+    "rev5": -0.1337,
+    "overnight20": -0.0015,
+    "clv": 0.4416,
+    "ma20gap": -0.1427,
+    "ret1": -0.0976,
+    "size": 21.5638,
+    "amount20": 17.7338
+   }
+  },
+  {
+   "rank": 7,
+   "code": "sz.301227",
+   "name": "森鹰窗业",
+   "score": 0.3659,
+   "selected": false,
+   "close": 25.38,
+   "limit_up": 30.46,
+   "factors": {
+    "rev5": -0.1607,
+    "overnight20": -0.0033,
+    "clv": 0.5734,
+    "ma20gap": -0.186,
+    "ret1": -0.0328,
+    "size": 21.3523,
+    "amount20": 18.6483
+   }
+  },
+  {
+   "rank": 8,
+   "code": "sz.301098",
+   "name": "金埔园林",
+   "score": 0.3637,
+   "selected": false,
+   "close": 7.25,
+   "limit_up": 8.7,
+   "factors": {
+    "rev5": -0.0764,
+    "overnight20": -0.0028,
+    "clv": 0.8966,
+    "ma20gap": -0.1257,
+    "ret1": -0.0176,
+    "size": 21.0591,
+    "amount20": 17.7721
+   }
+  },
+  {
+   "rank": 9,
+   "code": "sz.001368",
+   "name": "通达创智",
+   "score": 0.3624,
+   "selected": false,
+   "close": 28.94,
+   "limit_up": 31.83,
+   "factors": {
+    "rev5": -0.2464,
+    "overnight20": -0.0126,
+    "clv": 0.0,
+    "ma20gap": -0.2027,
+    "ret1": -0.1001,
+    "size": 21.8636,
+    "amount20": 19.3047
+   }
+  },
+  {
+   "rank": 10,
+   "code": "sz.002395",
+   "name": "双象股份",
+   "score": 0.3592,
+   "selected": false,
+   "close": 11.86,
+   "limit_up": 13.05,
+   "factors": {
+    "rev5": -0.1764,
+    "overnight20": -0.0087,
+    "clv": 0.4904,
+    "ma20gap": -0.1132,
+    "ret1": -0.0595,
+    "size": 21.8804,
+    "amount20": 18.8899
+   }
+  }
+ ]
+}
