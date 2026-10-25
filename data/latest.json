@@ -1,47 +1,47 @@
 {
   "date": "2026-10-23",
-  "method": "b13378407172",
+  "method": "25bb978faad9",
   "regions": {
     "global": {
       "name": "全球",
-      "score": 60.8,
+      "score": 39.2,
       "band": "恐慌",
-      "change_5d": 8.3,
+      "change_5d": -8.3,
       "risk_off": true
     },
     "us": {
       "name": "美国",
-      "score": 52.9,
+      "score": 47.1,
       "band": "中性",
-      "change_5d": 6.8,
+      "change_5d": -6.8,
       "risk_off": false
     },
     "eu": {
       "name": "欧洲",
-      "score": 68.1,
+      "score": 31.9,
       "band": "恐慌",
-      "change_5d": 7.4,
+      "change_5d": -7.4,
       "risk_off": true
     },
     "jp": {
       "name": "日本",
-      "score": 85.6,
+      "score": 14.4,
       "band": "极度恐慌",
-      "change_5d": 16.1,
+      "change_5d": -16.1,
       "risk_off": true
     },
     "cn": {
       "name": "A股",
-      "score": 70.7,
+      "score": 29.3,
       "band": "恐慌",
-      "change_5d": 2.3,
+      "change_5d": -2.3,
       "risk_off": true
     },
     "hk": {
       "name": "港股",
-      "score": 55.0,
+      "score": 45.0,
       "band": "中性",
-      "change_5d": 14.3,
+      "change_5d": -14.3,
       "risk_off": false
     }
   },
@@ -49,27 +49,27 @@
     "us_vix": {
       "name": "VIX",
       "region": "us",
-      "score": 64.1
+      "score": 35.9
     },
     "us_term": {
       "name": "VIX/VIX3M 期限结构",
       "region": "us",
-      "score": 79.8
+      "score": 20.2
     },
     "us_rvol": {
       "name": "标普500 20日实际波动率",
       "region": "us",
-      "score": 17.9
+      "score": 82.1
     },
     "us_dd": {
       "name": "标普500 距52周高点回撤",
       "region": "us",
-      "score": 53.7
+      "score": 46.3
     },
     "us_credit": {
       "name": "高收益债相对国债回撤（HYG/IEF）",
       "region": "us",
-      "score": 66.0
+      "score": 34.0
     },
     "eu_rvol": {
       "name": "欧洲斯托克50 20日实际波动率",
@@ -79,101 +79,103 @@
     "eu_dd": {
       "name": "欧洲斯托克50 回撤",
       "region": "eu",
-      "score": 77.8
+      "score": 22.2
     },
     "eu_ma": {
       "name": "欧洲斯托克50 低于125日均线幅度",
       "region": "eu",
-      "score": 83.3
+      "score": 16.7
     },
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 94.7
+      "score": 5.3
     },
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 87.6
+      "score": 12.4
     },
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 93.3
+      "score": 6.7
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 92.5
+      "score": 7.5
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 76.0
+      "score": 24.0
     },
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
       "region": "cn",
-      "score": 30.6
+      "score": 69.4
     },
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
       "region": "cn",
-      "score": 62.1
+      "score": 37.9
     },
     "cn_dd": {
       "name": "沪深300 回撤",
       "region": "cn",
-      "score": 81.4
+      "score": 18.6
     },
     "cn_turnover": {
       "name": "两市成交额萎缩",
       "region": "cn",
-      "score": 98.7
+      "score": 1.3
     },
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 97.0
+      "score": 3.0
     },
     "hk_rvol": {
       "name": "恒指 20日实际波动率",
       "region": "hk",
-      "score": 32.4
+      "score": 67.6
     },
     "hk_dd": {
       "name": "恒指 回撤",
       "region": "hk",
-      "score": 59.8
+      "score": 40.2
     },
     "hk_ma": {
       "name": "恒指 低于125日均线幅度",
       "region": "hk",
-      "score": 81.3
+      "score": 18.7
     },
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 83.2
+      "score": 16.8
     },
     "gl_move": {
       "name": "MOVE 美债波动率",
       "region": "global",
-      "score": 52.5
+      "score": 47.5
     },
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 15.2
+      "score": 84.8
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
       "region": "global",
-      "score": 84.1
+      "score": 15.9
     }
   },
   "status": {
-    "warnings": [],
+    "warnings": [
+      "算法参数已更新，本次跳过历史值漂移检查"
+    ],
     "failures": [],
     "ok": true
   }
