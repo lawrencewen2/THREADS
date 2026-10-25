@@ -17,11 +17,14 @@ SERIES = {
     "vix3m": [("yahoo", "^VIX3M")],
     "hyg": [("yahoo", "HYG")],
     "ief": [("yahoo", "IEF")],
+    "rsp": [("yahoo", "RSP")],     # 标普500 等权 ETF：反映多数成分股，而不是少数权重股
+    "iwm": [("yahoo", "IWM")],     # 罗素2000 小盘 ETF
     # 欧洲
     "sx5e": [("yahoo", "^STOXX50E")],
     "eurchf": [("yahoo", "EURCHF=X")],
     # 日本
     "n225": [("yahoo", "^N225")],
+    "topix": [("yahoo", "1306.T"), ("yahoo", "^TOPX")],  # TOPIX（市值加权、覆盖全市场；日经225 为价格加权，受少数高价股左右）
     "usdjpy": [("yahoo", "JPY=X")],
     # A股（东方财富常拒绝境外 IP，依次退到腾讯、新浪、Yahoo）
     "csi300": [("akshare", "em_close:sh000300"), ("akshare", "tx_close:sh000300"),
@@ -29,10 +32,13 @@ SERIES = {
     "a_turnover": [("akshare", "em_amount:sh000001+sz399001"), ("akshare", "tx_amount:sh000001+sz399001"),
                    ("akshare", "sina_volume:sh000001+sz399001")],
     "sh_margin": [("akshare", "sh_margin")],
+    "csi1000": [("akshare", "tx_close:sh000852"), ("akshare", "sina_close:sh000852"), ("yahoo", "000852.SS")],
+    "csi500": [("akshare", "tx_close:sh000905"), ("akshare", "sina_close:sh000905"), ("yahoo", "000905.SS")],
     "qvix50": [("akshare", "qvix50")],
     # 港股
     "hsi": [("yahoo", "^HSI")],
     "hstech": [("yahoo", "HSTECH.HK"), ("yahoo", "3033.HK")],
+    "hscomp": [("yahoo", "^HSCI"), ("yahoo", "2833.HK")],  # 恒生综合指数（覆盖大中小盘）
     # 全球公共
     "gold": [("yahoo", "GC=F")],
     "move": [("yahoo", "^MOVE")],
