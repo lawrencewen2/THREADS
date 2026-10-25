@@ -137,3 +137,15 @@ def test_exit_rolls_past_suspension(synth):
     entry = p.open.at[T, code] * (1 + config.SLIPPAGE) * (1 + config.COMMISSION)
     sell = p.open.at[T2, code] * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - config.STAMP_DUTY_OLD)
     assert out["next_open_net"].at[t, code] == pytest.approx(sell / entry - 1, rel=1e-4)
+
+
+def test_hold_exit_uses_open_h_days_later(synth):
+    k, basic = synth
+    p = Panel(k)
+    out = trade_outcomes(p)
+    code = p.codes[0]
+    i = p.dates.get_loc(pd.Timestamp("2015-03-03"))
+    T, Th = p.dates[i + 1], p.dates[i + 1 + 5]
+    entry = p.open.at[T, code] * (1 + config.SLIPPAGE) * (1 + config.COMMISSION)
+    sell = p.open.at[Th, code] * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - config.STAMP_DUTY_OLD)
+    assert out["hold5_net"].iloc[i][code] == pytest.approx(sell / entry - 1, rel=1e-4)

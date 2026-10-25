@@ -119,6 +119,33 @@ def evaluate(picks, out, start, end):
     )
 
 
+def evaluate_hold(picks, out, h, start, end):
+    """持有 h 天的表现。资金分成 h 份轮流入场，每天的组合收益近似为当天入场那一批的平均收益 / h。"""
+    sel = picks.loc[start:end] & out["buyable"].loc[start:end]
+    ret = out[f"hold{h}_net"].loc[start:end].where(sel)
+    trades = int(ret.notna().values.sum())
+    if trades == 0:
+        return dict(trades=0)
+    trade_day = ret.notna().any(axis=1)
+    daily = (ret.mean(axis=1) / h).where(trade_day, 0.0).fillna(0.0)
+    equity = (1 + daily).cumprod()
+    years = max(len(sel) / 244, 1e-9)
+    return dict(
+        trades=trades, trade_day_share=float(trade_day.mean()),
+        hit=float((ret > 0).sum().sum() / trades), avg_net=float(np.nanmean(ret.values)),
+        ann_return=float(equity.iloc[-1] ** (1 / years) - 1),
+        max_drawdown=float((equity / equity.cummax() - 1).min()), _equity=equity,
+    )
+
+
+def choose_hold(grid_train):
+    """持有期的参数同样只看训练期：有足够交易日、平均收益为正的组合中，胜率最高的。"""
+    ok = [g for g in grid_train if g["train"].get("trade_day_share", 0) >= config.MIN_TRADE_DAY_SHARE]
+    pos = [g for g in ok if g["train"].get("avg_net", -1) > 0]
+    pool = pos or ok or grid_train
+    return max(pool, key=lambda g: g["train"].get("hit", 0))
+
+
 def public(stats):
     return {k: v for k, v in stats.items() if not k.startswith("_")}
 

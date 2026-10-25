@@ -167,4 +167,8 @@ def trade_outcomes(p):
         "next_open_net": next_open_T.where(entry_ok).shift(-1),
         "next_close_net": next_close_T.where(entry_ok).shift(-1),
     }
+    # 持有 h 个交易日：T 开盘买，T+h 开盘卖（停牌或跌停开盘顺延），用于比较持有期长短
+    for h in config.HOLD_DAYS_GRID:
+        held = net(open_exit.shift(-h), open_when.shift(-h, fill_value=-1))
+        out[f"hold{h}_net"] = held.where(entry_ok).shift(-1)
     return out

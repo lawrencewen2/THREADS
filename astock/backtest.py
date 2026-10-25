@@ -31,9 +31,10 @@ def run(kline, basic):
         ic = model.daily_ic(r, out["day_ret"], label_mask).loc[config.TEST_START:].dropna()
         stats[name]["test_ic_mean"] = float(ic.mean()) if len(ic) else None
     sc = model.score(ranks, weights, elig)
-    del ranks
     order = sc.rank(axis=1, ascending=False, method="first")
     fear = model.load_fear(p.dates)
+    holding = holding_study(p, ranks, elig, out, fear)
+    del ranks
 
     end = p.dates[-1]
     grid = []
@@ -50,7 +51,38 @@ def run(kline, basic):
     m = model.save_model(weights, stats, chosen, extra=dict(
         fitted_on=str(end.date()),
         test=model.public(chosen["test"]), train_stats=model.public(chosen["stats"])))
-    return dict(p=p, out=out, sc=sc, order=order, fear=fear, grid=grid, chosen=chosen, baseline=baseline, model=m)
+    return dict(p=p, out=out, sc=sc, order=order, fear=fear, grid=grid, chosen=chosen, baseline=baseline, model=m,
+                holding=holding)
+
+
+def holding_study(p, ranks, elig, out, fear):
+    """多日持有对照：每个持有期单独在训练期定因子权重和参数，样本外检验。"""
+    end = p.dates[-1]
+    rows = []
+    for h in config.HOLD_DAYS_GRID:
+        target = out[f"hold{h}_net"]
+        mask = elig & out["buyable"]
+        # 训练期最后 h 天的标签会用到 2021 年的价格，剔掉，避免把样本外信息带进训练
+        train_end = p.dates[p.dates <= pd.Timestamp(config.TRAIN_END)][-(h + 1)]
+        w, _ = model.fit_weights(ranks, target, mask, config.TRAIN_START, train_end)
+        if not any(w.values()):
+            rows.append(dict(hold=h, weights=w, train={}, test={}, baseline={}))
+            continue
+        sc = model.score(ranks, w, elig)
+        order = sc.rank(axis=1, ascending=False, method="first")
+        grid = []
+        for n in config.TOP_N_GRID:
+            for floor in config.FEAR_FLOOR_GRID:
+                picks = model.pick_mask(sc, n, fear, floor, order)
+                grid.append(dict(top_n=n, fear_floor=floor,
+                                 train=model.evaluate_hold(picks, out, h, config.TRAIN_START, train_end),
+                                 test=model.evaluate_hold(picks, out, h, config.TEST_START, end)))
+        c = model.choose_hold(grid)
+        base = model.evaluate_hold(elig & sc.notna(), out, h, config.TEST_START, end)
+        rows.append(dict(hold=h, weights=w, top_n=c["top_n"], fear_floor=c["fear_floor"],
+                         train=c["train"], test=c["test"], baseline=base))
+        log.info("hold %d: top %s floor %s test %s", h, c["top_n"], c["fear_floor"], model.public(c["test"]))
+    return rows
 
 
 def _pct(x, digits=1):
@@ -119,6 +151,20 @@ def to_markdown(res):
         lines.append(f"| {r['year']} | {r['trades']} | {_pct(r['hit_net'])} | {_pct(r['hit_next_open_net'])} | "
                      f"{_pct(r['avg_next_open_net'], 2)} | {_pct(r['ann_return'])} |")
 
+    lines += ["", "## 对照：持有更久，费用占比更小", "",
+              "同样的因子、同样的成本，每个持有期单独在训练期定权重和参数，下表是样本外。T 开盘买，T+h 开盘卖。", "",
+              "| 持有 | 训练期选定 | 交易笔数 | 胜率（扣费） | 每笔平均 | 年化 | 最大回撤 | 对照：全部可买股票每笔平均 |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in res.get("holding", []):
+        t, bb = r["test"], r["baseline"]
+        if not t.get("trades"):
+            lines.append(f"| {r['hold']} 天 | 没有显著因子 | 0 | — | — | — | — | — |")
+            continue
+        gate = "不设开关" if r["fear_floor"] is None else f"指数≥{r['fear_floor']}"
+        lines.append(f"| {r['hold']} 天 | 前 {r['top_n']} 只，{gate} | {t['trades']} | {_pct(t['hit'])} | "
+                     f"{_pct(t['avg_net'], 2)} | {_pct(t['ann_return'])} | {_pct(t['max_drawdown'])} | "
+                     f"{_pct(bb.get('avg_net'), 2)} |")
+
     lines += ["", "## 因子（训练期 IC 定权重，|t| < 2 的不用）", "",
               "| 因子 | 含义 | 训练期 IC | t 值 | 权重 | 样本外 IC |", "| --- | --- | --- | --- | --- | --- |"]
     for k, desc in FACTORS.items():
@@ -158,6 +204,9 @@ def page_data(res):
                           baseline=None if np.isnan(bv) else round(float(bv), 4))
                      for d, v, bv in zip(roll.index, roll.values, base_hit.values)],
         selectivity=curve,
+        holding=[dict(hold=r["hold"], top_n=r.get("top_n"), fear_floor=r.get("fear_floor"),
+                      train=model.public(r["train"]), test=model.public(r["test"]),
+                      baseline=model.public(r["baseline"])) for r in res.get("holding", [])],
     )
 
 
