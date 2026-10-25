@@ -62,7 +62,7 @@ COMPONENTS = {
     "cn_qvix": dict(region="cn", transform="level", inputs=["qvix50"], weight=1.0, name="50ETF 期权波动率 QVIX"),
     "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=0.5, name="沪深300 20日实际波动率"),
     "cn_dd": dict(region="cn", transform="drawdown", inputs=["csi300"], weight=1.0, name="沪深300 回撤"),
-    "cn_turnover": dict(region="cn", transform="turnover_shrink", inputs=["a_turnover"], weight=0.75, name="两市成交额萎缩"),
+    "cn_turnover": dict(region="cn", transform="turnover_shrink", inputs=["a_turnover"], weight=0.75, name="两市成交量萎缩"),
     "cn_margin": dict(region="cn", transform="fall_20d", inputs=["sh_margin"], weight=0.75, name="沪市融资余额下降"),
     # ---- 港股 ----
     "hk_rvol": dict(region="hk", transform="realized_vol", inputs=["hsi"], weight=1.25, name="恒指 20日实际波动率"),
@@ -96,6 +96,10 @@ SMOOTH_SPAN = 3          # 最终指数的 EMA 平滑跨度；1 表示不平滑
 
 START_DATE = "2000-01-01"
 
+# 单日坏点过滤：当天偏离前后两天均值超过阈值、而前后两天彼此接近（差距小于阈值一半）时剔除。
+# 只用于外汇：Yahoo 2008 年的 USDJPY/EURCHF 有日月颠倒的报价。股指和波动率指数的单日暴跌暴涨是真实行情，不过滤。
+SPIKE_FILTER = {"usdjpy": 0.04, "eurchf": 0.04}
+
 # 仓位信号：分数 ≤ RISK_OFF_LEVEL 且低于 RISK_OFF_LOOKBACK 个交易日前（恐慌在加深）→ 建议仓位减半。
 # 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
 RISK_OFF_LEVEL = 40
@@ -124,7 +128,7 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK))
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 

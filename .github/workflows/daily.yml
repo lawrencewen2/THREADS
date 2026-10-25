@@ -34,11 +34,15 @@ jobs:
         id: run
         run: python scripts/run_daily.py ${{ inputs.full && '--full' || '' }}
         continue-on-error: true
+      - name: Verify data
+        # 只报告不改数据：重算分数、核对发布文件、与第二数据源比对，结果写入 reports/verification.md
+        run: python scripts/verify_data.py
+        continue-on-error: true
       - name: Commit results
         run: |
           git config user.name "fear-index-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data docs README.md
+          git add data docs README.md reports
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "data: daily update $(date -u +%F)"
           git push

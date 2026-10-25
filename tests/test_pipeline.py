@@ -167,3 +167,31 @@ def test_region_tables(built):
     assert md.count("](docs/regions/") == 5
     svg = publish.svg_recent(idx["us"], "#2563eb")
     assert svg.count("<circle") == 21
+
+
+def test_sanitize_drops_weekend_and_fx_bad_ticks():
+    from fearindex import fetch
+
+    idx = pd.bdate_range("2020-01-01", periods=10)
+    fx = pd.Series(100.0, index=idx)
+    fx.iloc[5] = 110.0  # 单日跳出又回到原位：坏点
+    fx.loc[pd.Timestamp("2020-01-04")] = 100.0  # 周六
+    fx = fx.sort_index()
+    clean = fetch.sanitize("usdjpy", fx)
+    assert len(clean) == 9 and clean.max() == 100.0
+    # 股指的单日暴跌是真实行情，保留
+    eq = pd.Series(100.0, index=idx)
+    eq.iloc[5] = 88.0
+    assert fetch.sanitize("spx", eq).min() == 88.0
+
+
+def test_verify_recomputes_match():
+    from fearindex import verify
+
+    series = synthetic_series()
+    index_df, comp_df, _ = compute.build(series)
+    assert max(verify.recompute_percentiles(series, comp_df).values()) < 0.1
+    tail = index_df.index[-21:]
+    assert (verify.recompute_index(comp_df).loc[tail] - index_df.loc[tail]).abs().max().max() < 0.2
+    _, replay = verify.realtime_replay(series, index_df)
+    assert replay.max() < 0.1

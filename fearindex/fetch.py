@@ -37,6 +37,19 @@ def _clean(s):
     return s
 
 
+def sanitize(key, s):
+    """剔除周末日期（各市场周末都不交易，出现即为接口杂质），外汇序列再剔除单日坏点。"""
+    s = s[s.index.dayofweek < 5]
+    thr = config.SPIKE_FILTER.get(key)
+    if thr and len(s) > 2:
+        prev, nxt = s.shift(1), s.shift(-1)
+        bad = ((s / ((prev + nxt) / 2) - 1).abs() > thr) & ((prev / nxt - 1).abs() < thr / 2)
+        if bad.any():
+            log.info("%s: dropped %d bad ticks %s", key, bad.sum(), [d.date() for d in s.index[bad]][:5])
+        s = s[~bad]
+    return s
+
+
 def fetch_yahoo(ticker, start):
     import yfinance as yf
 
@@ -150,7 +163,7 @@ def update_all(keys=None, start=config.START_DATE, full=False):
                 log.warning("%s via %s failed: %s", key, label, failures[-1])
                 continue
             merged = pd.concat([cached[cached.index < fresh.index[0]], fresh]) if same_source else fresh
-            merged = _clean(merged)
+            merged = sanitize(key, _clean(merged))
             save_cached(key, merged)
             sources[key] = label
             out[key] = merged
@@ -160,7 +173,7 @@ def update_all(keys=None, start=config.START_DATE, full=False):
             errors[key] = "; ".join(failures)
             log.error("%s failed on all sources", key)
             if cached is not None:
-                out[key] = cached
+                out[key] = sanitize(key, cached)
     RAW_DIR.mkdir(parents=True, exist_ok=True)
     SOURCES_FILE.write_text(json.dumps(sources, indent=2))
     return out, errors
@@ -171,5 +184,5 @@ def load_all():
     for key in config.SERIES:
         s = load_cached(key)
         if s is not None:
-            out[key] = s
+            out[key] = sanitize(key, s)
     return out
