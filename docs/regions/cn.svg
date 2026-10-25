@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 220" font-family="sans-serif" font-size="10">
+<rect width="640" height="220" fill="#ffffff"/>
+<rect x="34" y="158.0" width="590" height="36.0" fill="#fee2e2"/>
+<rect x="34" y="14.0" width="590" height="36.0" fill="#dcfce7"/>
+<line x1="34" x2="624" y1="194.0" y2="194.0" stroke="#e5e7eb"/>
+<text x="29" y="197.0" text-anchor="end" fill="#6b7280">0</text>
+<line x1="34" x2="624" y1="158.0" y2="158.0" stroke="#e5e7eb"/>
+<text x="29" y="161.0" text-anchor="end" fill="#6b7280">20</text>
+<line x1="34" x2="624" y1="122.0" y2="122.0" stroke="#e5e7eb"/>
+<text x="29" y="125.0" text-anchor="end" fill="#6b7280">40</text>
+<line x1="34" x2="624" y1="86.0" y2="86.0" stroke="#e5e7eb"/>
+<text x="29" y="89.0" text-anchor="end" fill="#6b7280">60</text>
+<line x1="34" x2="624" y1="50.0" y2="50.0" stroke="#e5e7eb"/>
+<text x="29" y="53.0" text-anchor="end" fill="#6b7280">80</text>
+<line x1="34" x2="624" y1="14.0" y2="14.0" stroke="#e5e7eb"/>
+<text x="29" y="17.0" text-anchor="end" fill="#6b7280">100</text>
+<text x="38" y="190.4" fill="#b91c1c">恐慌</text>
+<text x="38" y="28.4" fill="#15803d">贪婪</text>
+<polyline fill="none" stroke="#d97706" stroke-width="2" points="34.0,99.3 63.5,107.2 93.0,109.9 122.5,111.0 152.0,111.6 181.5,111.9 211.0,112.1 240.5,112.1 270.0,112.1 299.5,117.0 329.0,121.6 358.5,126.1 388.0,125.8 417.5,130.1 447.0,137.7 476.5,137.1 506.0,136.0 535.5,134.4 565.0,134.6 594.5,138.2 624.0,141.3"/>
+<circle cx="34.0" cy="99.3" r="2.5" fill="#d97706"/>
+<text x="34.0" y="93.3" text-anchor="middle" fill="#374151">53</text>
+<text x="34.0" y="212" text-anchor="middle" fill="#6b7280">09/25</text>
+<circle cx="63.5" cy="107.2" r="2.5" fill="#d97706"/>
+<text x="63.5" y="101.2" text-anchor="middle" fill="#374151">48</text>
+<circle cx="93.0" cy="109.9" r="2.5" fill="#d97706"/>
+<text x="93.0" y="103.9" text-anchor="middle" fill="#374151">47</text>
+<circle cx="122.5" cy="111.0" r="2.5" fill="#d97706"/>
+<text x="122.5" y="105.0" text-anchor="middle" fill="#374151">46</text>
+<circle cx="152.0" cy="111.6" r="2.5" fill="#d97706"/>
+<text x="152.0" y="105.6" text-anchor="middle" fill="#374151">46</text>
+<circle cx="181.5" cy="111.9" r="2.5" fill="#d97706"/>
+<text x="181.5" y="105.9" text-anchor="middle" fill="#374151">46</text>
+<text x="181.5" y="212" text-anchor="middle" fill="#6b7280">10/02</text>
+<circle cx="211.0" cy="112.1" r="2.5" fill="#d97706"/>
+<text x="211.0" y="106.1" text-anchor="middle" fill="#374151">46</text>
+<circle cx="240.5" cy="112.1" r="2.5" fill="#d97706"/>
+<text x="240.5" y="106.1" text-anchor="middle" fill="#374151">46</text>
+<circle cx="270.0" cy="112.1" r="2.5" fill="#d97706"/>
+<text x="270.0" y="106.1" text-anchor="middle" fill="#374151">46</text>
+<circle cx="299.5" cy="117.0" r="2.5" fill="#d97706"/>
+<text x="299.5" y="111.0" text-anchor="middle" fill="#374151">43</text>
+<circle cx="329.0" cy="121.6" r="2.5" fill="#d97706"/>
+<text x="329.0" y="115.6" text-anchor="middle" fill="#374151">40</text>
+<text x="329.0" y="212" text-anchor="middle" fill="#6b7280">10/09</text>
+<circle cx="358.5" cy="126.1" r="2.5" fill="#d97706"/>
+<text x="358.5" y="120.1" text-anchor="middle" fill="#374151">38</text>
+<circle cx="388.0" cy="125.8" r="2.5" fill="#d97706"/>
+<text x="388.0" y="119.8" text-anchor="middle" fill="#374151">38</text>
+<circle cx="417.5" cy="130.1" r="2.5" fill="#d97706"/>
+<text x="417.5" y="124.1" text-anchor="middle" fill="#374151">36</text>
+<circle cx="447.0" cy="137.7" r="2.5" fill="#d97706"/>
+<text x="447.0" y="131.7" text-anchor="middle" fill="#374151">31</text>
+<circle cx="476.5" cy="137.1" r="2.5" fill="#d97706"/>
+<text x="476.5" y="131.1" text-anchor="middle" fill="#374151">32</text>
+<text x="476.5" y="212" text-anchor="middle" fill="#6b7280">10/16</text>
+<circle cx="506.0" cy="136.0" r="2.5" fill="#d97706"/>
+<text x="506.0" y="130.0" text-anchor="middle" fill="#374151">32</text>
+<circle cx="535.5" cy="134.4" r="2.5" fill="#d97706"/>
+<text x="535.5" y="128.4" text-anchor="middle" fill="#374151">33</text>
+<circle cx="565.0" cy="134.6" r="2.5" fill="#d97706"/>
+<text x="565.0" y="128.6" text-anchor="middle" fill="#374151">33</text>
+<circle cx="594.5" cy="138.2" r="2.5" fill="#d97706"/>
+<text x="594.5" y="132.2" text-anchor="middle" fill="#374151">31</text>
+<circle cx="624.0" cy="141.3" r="2.5" fill="#d97706"/>
+<text x="624.0" y="135.3" text-anchor="middle" fill="#374151">29</text>
+<text x="624.0" y="212" text-anchor="middle" fill="#6b7280">10/23</text>
+</svg>
