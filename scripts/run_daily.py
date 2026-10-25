@@ -36,7 +36,7 @@ def main():
                               method_changed=prev_method != config.fingerprint())
     latest = publish.write_data(index_df, comp_df, raw_df, status)
     publish.write_dashboard(index_df, latest)
-    publish.update_readme(latest)
+    publish.update_readme(latest, index_df, comp_df)
 
     for w in status["warnings"]:
         logging.warning(w)

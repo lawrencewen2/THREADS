@@ -152,3 +152,14 @@ def test_drift_check(built):
     assert not check.run_checks(series, {}, idx, tampered)["ok"]
     assert check.run_checks(series, {}, idx, tampered, method_changed=True)["ok"]
     assert check.run_checks(series, {}, idx, idx)["ok"]
+
+
+def test_region_tables(built):
+    from fearindex import publish
+
+    _, (idx, comp, _) = built
+    latest = publish.latest_snapshot(idx, comp, dict(warnings=[], failures=[], ok=True))
+    md = publish.region_tables(idx, comp, latest)
+    for name in config.REGIONS.values():
+        assert f"### {name}：" in md
+    assert md.count("| 成分 | 今日 | 5日前 | 20日前 | 权重 |") == 5

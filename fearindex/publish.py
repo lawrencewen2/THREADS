@@ -114,10 +114,44 @@ def readme_block(latest):
     return "\n".join(lines)
 
 
-def update_readme(latest):
+def _fmt(v):
+    return "—" if pd.isna(v) else f"{v:.0f}"
+
+
+def region_tables(index_df, comp_df, latest):
+    """每个区域一张表：区域分与各成分在今天、5日前、20日前的得分，以及近10个交易日走势。"""
+    lines = ["## 分区域明细", ""]
+    for key, name in config.REGIONS.items():
+        r = latest["regions"][key]
+        score = index_df[key]
+        head = f"### {name}：{_fmt(r['score'])}（{r['band'] or '数据缺失'}）"
+        chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
+        signal = "恐慌升温，减仓" if r.get("risk_off") else "正常"
+        lines += [head, "", f"5日变化 {chg} · 仓位信号：{signal}", "",
+                  "| 成分 | 今日 | 5日前 | 20日前 | 权重 |", "| --- | --- | --- | --- | --- |",
+                  f"| **{name}恐慌指数** | **{_fmt(score.iloc[-1])}** | {_fmt(score.iloc[-6])} | "
+                  f"{_fmt(score.iloc[-21])} | — |"]
+        for cid, spec in config.COMPONENTS.items():
+            if spec["region"] != key:
+                continue
+            if cid in comp_df:
+                c = comp_df[cid]
+                lines.append(f"| {spec['name']} | {_fmt(c.iloc[-1])} | {_fmt(c.iloc[-6])} | {_fmt(c.iloc[-21])} | "
+                             f"{spec['weight']:g} |")
+            else:
+                lines.append(f"| {spec['name']} | 缺失 | — | — | {spec['weight']:g} |")
+        recent = score.iloc[-10:]
+        lines += ["", "近10个交易日：" + " → ".join(f"{d:%m/%d} {_fmt(v)}" for d, v in recent.items()), ""]
+    return "\n".join(lines).rstrip()
+
+
+def update_readme(latest, index_df=None, comp_df=None):
     path = ROOT / "README.md"
     text = path.read_text()
-    block = f"<!-- latest:start -->\n{readme_block(latest)}\n<!-- latest:end -->"
+    body = readme_block(latest)
+    if index_df is not None and comp_df is not None:
+        body += "\n\n" + region_tables(index_df, comp_df, latest)
+    block = f"<!-- latest:start -->\n{body}\n<!-- latest:end -->"
     text = re.sub(r"<!-- latest:start -->.*<!-- latest:end -->", lambda _: block, text, flags=re.S)
     path.write_text(text)
 
