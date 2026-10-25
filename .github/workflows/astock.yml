@@ -1,0 +1,66 @@
+name: astock-screen
+
+# A股开盘前选股，与恐慌指数的 daily-update 互不影响：只读 data/index.csv，只写 astock 相关文件
+on:
+  schedule:
+    # 北京时间周一至周五 08:00（UTC 周一至周五 00:00），恐慌指数 07:30 更新之后、09:30 开盘之前
+    - cron: "0 0 * * 1-5"
+  workflow_dispatch:
+    inputs:
+      backtest:
+        description: "先重跑完整回测（重新拟合 astock/model.json，约 1 小时）"
+        type: boolean
+        default: false
+  push:
+    branches-ignore: [main]
+    paths: ["astock/**", "scripts/astock_*", "tests/test_astock.py", ".github/workflows/astock.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock
+  cancel-in-progress: false
+
+jobs:
+  screen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock.py
+      - name: Restore price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}
+          restore-keys: astock-kline-
+      - name: Backtest
+        if: github.event_name == 'push' || inputs.backtest
+        run: python scripts/astock_backtest.py
+      - name: Save price cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}
+      - name: Daily screen
+        # 分支上推送时按最近一个交易日出一份清单，用来检查流程
+        run: python scripts/astock_daily.py ${{ github.event_name == 'push' && '--offline' || '' }}
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add astock/model.json data/astock reports/astock docs/astock
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: screen $(date -u +%F)"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
