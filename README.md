@@ -7,14 +7,12 @@
 
 | 区域 | 恐慌指数 | 状态 | 5日变化 |
 | --- | --- | --- | --- |
-| 全球 | 67 | 恐慌 | +9.4 |
-| 美国 | 62 | 恐慌 | +6.0 |
-| 欧洲 | 79 | 恐慌 | +8.6 |
+| 全球 | 69 | 恐慌 | +9.3 |
+| 美国 | 64 | 恐慌 | +7.7 |
+| 欧洲 | 80 | 极度恐慌 | +8.8 |
 | 日本 | 82 | 极度恐慌 | +15.9 |
-| A股 | — | — | — |
-| 港股 | 63 | 恐慌 | +13.5 |
-
-⚠️ us_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）；vstoxx 拉取失败，沿用缓存（ValueError: empty yahoo data for ^V2TX）；eu_hy_oas 拉取失败，沿用缓存（ReadTimeout: HTTPSConnectionPool(host='fred.stlouisfed.org', port=443): Read tim）；csi300 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）；a_turnover 拉取失败，沿用缓存（ConnectionError: ('Connection aborted.', RemoteDisconnected('Remote end closed c）；hstech 拉取失败，沿用缓存（ValueError: empty yahoo data for ^HSTECH）；缺少序列：us_hy_oas, vstoxx, eu_hy_oas, csi300, a_turnover, hstech
+| A股 | 75 | 恐慌 | +2.6 |
+| 港股 | 66 | 恐慌 | +13.7 |
 
 ![近两年走势](docs/chart.svg)
 <!-- latest:end -->

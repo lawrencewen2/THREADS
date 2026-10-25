@@ -1,0 +1,20 @@
+{
+  "spx": "yahoo:^GSPC",
+  "vix": "yahoo:^VIX",
+  "vix3m": "yahoo:^VIX3M",
+  "hyg": "yahoo:HYG",
+  "ief": "yahoo:IEF",
+  "sx5e": "yahoo:^STOXX50E",
+  "eurchf": "yahoo:EURCHF=X",
+  "n225": "yahoo:^N225",
+  "usdjpy": "yahoo:JPY=X",
+  "csi300": "akshare:tx_close:sh000300",
+  "a_turnover": "akshare:tx_amount:sh000001+sz399001",
+  "sh_margin": "akshare:sh_margin",
+  "qvix50": "akshare:qvix50",
+  "hsi": "yahoo:^HSI",
+  "hstech": "yahoo:3033.HK",
+  "gold": "yahoo:GC=F",
+  "move": "yahoo:^MOVE",
+  "us10y": "yahoo:^TNX"
+}

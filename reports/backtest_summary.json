@@ -3,19 +3,19 @@
     "capture_rate": 100.0,
     "false_alarm_rate": 0.0,
     "events": 7,
-    "alarms": 39
+    "alarms": 31
   },
   "us": {
     "capture_rate": 100.0,
-    "false_alarm_rate": 6.6,
+    "false_alarm_rate": 10.5,
     "events": 6,
-    "alarms": 61
+    "alarms": 57
   },
   "eu": {
     "capture_rate": 100.0,
     "false_alarm_rate": 0.0,
     "events": 3,
-    "alarms": 34
+    "alarms": 29
   },
   "jp": {
     "capture_rate": 100.0,
@@ -23,10 +23,16 @@
     "events": 8,
     "alarms": 32
   },
+  "cn": {
+    "capture_rate": 100.0,
+    "false_alarm_rate": 0.0,
+    "events": 3,
+    "alarms": 9
+  },
   "hk": {
     "capture_rate": 100.0,
     "false_alarm_rate": 0.0,
     "events": 3,
-    "alarms": 36
+    "alarms": 35
   }
 }
