@@ -209,9 +209,7 @@
     }
   },
   "status": {
-    "warnings": [
-      "算法参数已更新，本次跳过历史值漂移检查"
-    ],
+    "warnings": [],
     "failures": [],
     "ok": true
   }
