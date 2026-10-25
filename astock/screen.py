@@ -13,15 +13,16 @@ LOG_FILE = config.DATA_DIR / "picks_log.csv"
 WATCH_N = 10  # 面板上列出的候选数量；只有前 top_n 只算入选
 
 
-def screen(kline, universe, basic, trade_date, m=None):
+def screen(kline, basic, trade_date, m=None):
     """用最后一个交易日 t 收盘后的数据，给 trade_date（T）开盘买入出候选清单。"""
     m = m or model.load_model()
     recent = kline[kline["date"] >= kline["date"].max() - pd.Timedelta(days=200)]
-    p, f, elig, ranks = prepare(recent, universe, basic)
+    p, f, elig, ranks = prepare(recent, basic)
     sc = model.score(ranks, m["weights"], elig)
     t = p.dates[-1]
     fear = model.load_fear(p.dates)
     fear_t = fear.iloc[-1]
+    fear_date = model.fear_date()
     floor = m.get("fear_floor")
     gate_open = floor is None or (not np.isnan(fear_t) and fear_t >= floor)
 
@@ -41,7 +42,7 @@ def screen(kline, universe, basic, trade_date, m=None):
         ))
     return dict(
         signal_date=str(t.date()), trade_date=str(pd.Timestamp(trade_date).date()),
-        fear_cn=None if np.isnan(fear_t) else round(float(fear_t), 1), fear_floor=floor,
+        fear_cn=None if np.isnan(fear_t) else round(float(fear_t), 1), fear_date=fear_date, fear_floor=floor,
         gate_open=bool(gate_open), top_n=m["top_n"], universe_size=int(elig.loc[t].sum()), picks=picks,
     )
 

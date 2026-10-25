@@ -3,12 +3,13 @@ name: astock-screen
 # A股开盘前选股，与恐慌指数的 daily-update 互不影响：只读 data/index.csv，只写 astock 相关文件
 on:
   schedule:
-    # 北京时间周一至周五 08:00（UTC 周一至周五 00:00），恐慌指数 07:30 更新之后、09:30 开盘之前
-    - cron: "0 0 * * 1-5"
+    # 北京时间周一至周五 07:40（UTC 周日至周四 23:40）开始拉全 A股行情（约 20 分钟），
+    # 拉完行情后脚本会再拉一次仓库，用上 07:30 更新的恐慌指数；09:30 开盘前出清单
+    - cron: "40 23 * * 0-4"
   workflow_dispatch:
     inputs:
       backtest:
-        description: "先重跑完整回测（重新拟合 astock/model.json，约 1 小时）"
+        description: "先重跑完整回测（重新拟合 astock/model.json，首次约 2–3 小时）"
         type: boolean
         default: false
   push:
@@ -25,7 +26,7 @@ concurrency:
 jobs:
   screen:
     runs-on: ubuntu-latest
-    timeout-minutes: 300
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -42,6 +43,8 @@ jobs:
           restore-keys: astock-kline-
       - name: Backtest
         if: github.event_name == 'push' || inputs.backtest
+        # 首次要拉 2014 年以来约 5500 只股票；超时也会先保存已下载的缓存，重跑时接着拉
+        timeout-minutes: 320
         run: python scripts/astock_backtest.py
       - name: Save price cache
         if: always()

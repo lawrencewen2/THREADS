@@ -1,4 +1,4 @@
-"""从 baostock 拉取 A股日线、指数成分、上市日期和交易日历。
+"""从 baostock 拉取 A股日线、上市退市日期和交易日历。
 
 baostock 是免费的 TCP 接口，GitHub Actions 上可以访问（东方财富会拒绝 Actions 的 IP）。
 日线用不复权价格，涨跌停判断要用真实价格；复权收益由 close / preclose 自行算出。
@@ -16,7 +16,6 @@ log = logging.getLogger(__name__)
 KLINE_FIELDS = "date,code,open,high,low,close,preclose,volume,amount,turn,tradestatus,isST"
 NUMERIC = ["open", "high", "low", "close", "preclose", "volume", "amount", "turn"]
 KLINE_FILE = config.CACHE_DIR / "kline.pkl.gz"
-UNIVERSE_FILE = config.DATA_DIR / "universe.csv"
 BASIC_FILE = config.DATA_DIR / "basic.csv"
 
 
@@ -66,13 +65,6 @@ class Session:
         df = self.query("query_trade_dates", start_date=start, end_date=end)
         return pd.to_datetime(df.loc[df["is_trading_day"] == "1", "calendar_date"]).tolist()
 
-    def constituents(self, date):
-        codes = set()
-        for name in config.INDEXES:
-            df = self.query(f"query_{name}_stocks", date=date)
-            codes |= set(df["code"])
-        return sorted(codes)
-
     def basic(self):
         df = self.query("query_stock_basic")
         return df[["code", "code_name", "ipoDate", "outDate", "type", "status"]]
@@ -93,36 +85,6 @@ def clean_kline(df):
     return df
 
 
-def snapshot_dates(sess, start, end):
-    """每年 1 月、7 月的第一个交易日，对应指数半年一次的成分调整。"""
-    days = pd.Series(sess.trade_dates(start, end))
-    first = days.groupby([days.dt.year, (days.dt.month - 1) // 6]).min()
-    return [d.strftime("%Y-%m-%d") for d in first]
-
-
-def update_universe(sess, start=config.HISTORY_START, end=None):
-    end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
-    old = load_universe()
-    done = set(old["snapshot"]) if old is not None else set()
-    rows = [] if old is None else [old]
-    for d in snapshot_dates(sess, start, end):
-        if d in done:
-            continue
-        codes = sess.constituents(d)
-        log.info("universe %s: %d codes", d, len(codes))
-        rows.append(pd.DataFrame({"snapshot": d, "code": codes}))
-    uni = pd.concat(rows, ignore_index=True).drop_duplicates()
-    config.DATA_DIR.mkdir(parents=True, exist_ok=True)
-    uni.to_csv(UNIVERSE_FILE, index=False)
-    return uni
-
-
-def load_universe():
-    if not UNIVERSE_FILE.exists():
-        return None
-    return pd.read_csv(UNIVERSE_FILE, dtype=str)
-
-
 def update_basic(sess):
     df = sess.basic()
     config.DATA_DIR.mkdir(parents=True, exist_ok=True)
@@ -132,6 +94,14 @@ def update_basic(sess):
 
 def load_basic():
     return pd.read_csv(BASIC_FILE, dtype=str)
+
+
+def stock_codes(basic, listed_only=False):
+    """全 A股代码（type 1 = 股票），含已退市；listed_only 时只要仍在上市的。"""
+    b = basic[(basic["type"] == "1") & basic["code"].str[:5].isin(config.BOARD_PREFIXES)]
+    if listed_only:
+        b = b[b["status"] == "1"]
+    return sorted(b["code"])
 
 
 def load_kline():
@@ -145,28 +115,50 @@ def save_kline(df):
     df.to_pickle(KLINE_FILE)
 
 
-def update_kline(sess, codes, start=config.HISTORY_START, end=None, overlap_days=10):
-    """增量更新日线缓存：已有的股票从缓存末尾往前 overlap_days 天重拉，新股票从 start 拉。"""
+def _fetch_chunk(job):
+    """在独立进程里登录 baostock 拉一批股票；返回 (数据列表, 失败代码)。"""
+    items, end = job
+    parts, failed = [], []
+    with Session() as sess:
+        for code, start in items:
+            try:
+                df = sess.kline(code, start, end)
+            except Exception as exc:
+                log.warning("kline %s failed: %s", code, exc)
+                failed.append(code)
+                continue
+            if len(df):
+                parts.append(clean_kline(df))
+    return parts, failed
+
+
+def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, workers=config.FETCH_WORKERS):
+    """增量更新日线缓存：已有的股票从缓存末尾往前 overlap_days 天重拉，新股票从 start 拉。
+
+    多个进程各开一个 baostock 连接并行拉取，每完成约 600 只落盘一次，任务超时也不丢已下载的数据。
+    """
+    from multiprocessing import Pool
+
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
     old = load_kline()
     last = old.groupby("code")["date"].max() if old is not None else pd.Series(dtype="datetime64[ns]")
-    parts, failed = [], []
-    for i, code in enumerate(codes):
+    items = []
+    for code in codes:
         s = start
         if code in last.index:
             s = max(pd.Timestamp(start), last[code] - pd.Timedelta(days=overlap_days)).strftime("%Y-%m-%d")
-        try:
-            df = sess.kline(code, s, end)
-        except Exception as exc:
-            log.warning("kline %s failed: %s", code, exc)
-            failed.append(code)
-            continue
-        if len(df):
-            parts.append(clean_kline(df))
-        if i % 200 == 0:
-            log.info("kline %d/%d", i, len(codes))
-        if len(parts) >= 300:  # 定期落盘，任务超时也不丢已下载的数据
-            old, parts = _merge(old, parts), []
+        items.append((code, s))
+    chunk = 150
+    jobs = [(items[i:i + chunk], end) for i in range(0, len(items), chunk)]
+    parts, failed, done = [], [], 0
+    with Pool(max(1, workers)) as pool:
+        for got, bad in pool.imap_unordered(_fetch_chunk, jobs):
+            parts += got
+            failed += bad
+            done += 1
+            log.info("kline chunks %d/%d", done, len(jobs))
+            if len(parts) >= 600:
+                old, parts = _merge(old, parts), []
     if old is None and not parts:
         raise RuntimeError("no kline data")
     return _merge(old, parts), failed

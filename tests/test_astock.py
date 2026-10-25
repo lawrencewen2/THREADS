@@ -21,9 +21,9 @@ def synthetic_kline(n_codes=60, start="2014-01-01", end="2016-12-31", seed=0):
                              close=close, preclose=pre, volume=1e7, amount=close * 1e7, turn=1.0 + rng.random(),
                              tradestatus=1, isST=0))
     k = pd.DataFrame(rows)
-    uni = pd.DataFrame({"snapshot": "2014-01-02", "code": k["code"].unique()})
-    basic = pd.DataFrame({"code": k["code"].unique(), "code_name": "测试", "ipoDate": "2000-01-01"})
-    return k, uni, basic
+    basic = pd.DataFrame({"code": k["code"].unique(), "code_name": "测试", "ipoDate": "2000-01-01",
+                          "outDate": "", "type": "1", "status": "1"})
+    return k, basic
 
 
 @pytest.fixture(scope="module")
@@ -32,7 +32,7 @@ def synth():
 
 
 def test_factors_have_no_lookahead(synth):
-    k, uni, basic = synth
+    k, basic = synth
     cut = pd.Timestamp("2015-06-30")
     p1 = Panel(k)
     f1 = compute_factors(p1)
@@ -43,12 +43,12 @@ def test_factors_have_no_lookahead(synth):
     for name in f1:
         a, b = f1[name].loc[:cut], f2[name].loc[:cut]
         pd.testing.assert_frame_equal(a, b, check_exact=False, rtol=1e-5)
-    e1, e2 = eligible(p1, uni, basic), eligible(Panel(k2), uni, basic)
+    e1, e2 = eligible(p1, basic), eligible(Panel(k2), basic)
     pd.testing.assert_frame_equal(e1.loc[:cut], e2.loc[:cut])
 
 
 def test_limit_up_open_not_buyable(synth):
-    k, uni, basic = synth
+    k, basic = synth
     k = k.copy()
     code = k["code"].iloc[0]
     T = pd.Timestamp("2015-03-03")
@@ -63,7 +63,7 @@ def test_limit_up_open_not_buyable(synth):
 
 
 def test_costs_make_flat_trade_negative(synth):
-    k, uni, basic = synth
+    k, basic = synth
     k = k.copy()
     code = k["code"].iloc[0]
     T = pd.Timestamp("2015-03-04")
@@ -78,7 +78,7 @@ def test_costs_make_flat_trade_negative(synth):
 
 
 def test_backtest_and_screen_end_to_end(synth, monkeypatch, tmp_path):
-    k, uni, basic = synth
+    k, basic = synth
     monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
     monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
     monkeypatch.setattr(config, "TEST_START", "2016-01-01")
@@ -88,7 +88,7 @@ def test_backtest_and_screen_end_to_end(synth, monkeypatch, tmp_path):
     monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
     monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
     monkeypatch.setattr(screen, "LOG_FILE", tmp_path / "data" / "log.csv")
-    res = backtest.run(k, uni, basic)
+    res = backtest.run(k, basic)
     backtest.write(res)
     md = (tmp_path / "rep" / "backtest.md").read_text()
     assert "样本外" in md
@@ -99,7 +99,41 @@ def test_backtest_and_screen_end_to_end(synth, monkeypatch, tmp_path):
     m = model.load_model()
     if not any(m["weights"].values()):
         m["weights"]["rev5"] = 1.0
-    r = screen.screen(k, uni, basic, "2017-01-02", m=m)
+    r = screen.screen(k, basic, "2017-01-02", m=m)
     assert r["signal_date"] == "2016-12-30" and len(r["picks"]) == screen.WATCH_N
     log_df = screen.append_log(r)
     screen.write(r, screen.track(k, log_df))
+
+
+def test_delisting_window_excluded(synth):
+    k, basic = synth
+    basic = basic.copy()
+    code = basic["code"].iloc[0]
+    basic.loc[basic["code"] == code, "outDate"] = "2015-06-30"
+    e = eligible(Panel(k), basic)
+    assert not e.loc["2015-06-10", code]
+    assert e.loc["2015-04-01", code] or not e.loc["2015-04-01"].any()
+
+
+def test_stock_codes_keeps_boards_and_delisted():
+    from astock import data
+    basic = pd.DataFrame({"code": ["sh.600000", "sz.300750", "sh.688981", "sz.000001", "sh.000001", "sz.200002", "sh.900901", "sz.002001"],
+                          "type": ["1", "1", "1", "1", "2", "1", "1", "1"],
+                          "status": ["1", "1", "1", "1", "1", "1", "1", "0"]})
+    assert data.stock_codes(basic) == ["sh.600000", "sh.688981", "sz.000001", "sz.002001", "sz.300750"]
+    assert "sz.002001" not in data.stock_codes(basic, listed_only=True)
+
+
+def test_exit_rolls_past_suspension(synth):
+    k, basic = synth
+    k = k.copy()
+    code = k["code"].iloc[0]
+    T1 = pd.Timestamp("2015-03-05")  # T = 03-04，T+1 停牌，应在 03-06 开盘卖出
+    k.loc[(k["code"] == code) & (k["date"] == T1), ["tradestatus", "volume"]] = 0
+    p = Panel(k)
+    out = trade_outcomes(p)
+    t = pd.Timestamp("2015-03-03")
+    T, T2 = pd.Timestamp("2015-03-04"), pd.Timestamp("2015-03-06")
+    entry = p.open.at[T, code] * (1 + config.SLIPPAGE) * (1 + config.COMMISSION)
+    sell = p.open.at[T2, code] * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - config.STAMP_DUTY_OLD)
+    assert out["next_open_net"].at[t, code] == pytest.approx(sell / entry - 1, rel=1e-4)

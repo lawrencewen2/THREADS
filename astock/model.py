@@ -11,7 +11,7 @@ from .factors import FACTORS
 
 def xs_rank(f, mask):
     """横截面百分位排名，居中到 [-0.5, 0.5]；不在可选范围的为 NaN。"""
-    return f.where(mask).rank(axis=1, pct=True) - 0.5
+    return (f.where(mask).rank(axis=1, pct=True) - 0.5).astype("float32")
 
 
 def daily_ic(rank_f, target, mask):
@@ -63,8 +63,19 @@ def load_fear(dates):
     return df["cn"].reindex(dates, method="ffill", tolerance=pd.Timedelta(days=7))
 
 
-def pick_mask(sc, top_n, fear=None, floor=None):
-    m = sc.rank(axis=1, ascending=False, method="first") <= top_n
+def fear_date():
+    """恐慌指数 A股分数的最新日期，面板上标出来，便于看出指数是否当天已更新。"""
+    try:
+        df = pd.read_csv(config.FEAR_INDEX_FILE, usecols=["date", "cn"]).dropna()
+        return str(df["date"].iloc[-1])
+    except (FileNotFoundError, IndexError, ValueError):
+        return None
+
+
+def pick_mask(sc, top_n, fear=None, floor=None, order=None):
+    """每天得分前 top_n 只；order 是预先算好的名次（省得每组参数重排一次）。"""
+    order = sc.rank(axis=1, ascending=False, method="first") if order is None else order
+    m = order <= top_n
     if floor is not None and fear is not None:
         m = m & (fear >= floor).values[:, None]
     return m & sc.notna()

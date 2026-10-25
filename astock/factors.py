@@ -29,7 +29,7 @@ class Panel:
     """各字段的宽表（行 = 交易日，列 = 股票代码）。"""
 
     def __init__(self, kline):
-        k = kline[kline["code"].str[:3].isin(["sh.", "sz."])]
+        k = kline[kline["code"].str[:5].isin(config.BOARD_PREFIXES)]
         self.dates = pd.DatetimeIndex(sorted(k["date"].unique()))
         self.codes = pd.Index(sorted(k["code"].unique()))
 
@@ -89,31 +89,22 @@ def compute_factors(p):
     return {k: v.where(p.traded).astype("float32") for k, v in f.items()}
 
 
-def membership(p, universe):
-    """每个交易日的股票池：最近一次半年快照的成分股。"""
-    snaps = sorted(universe["snapshot"].unique())
-    mem = pd.DataFrame(False, index=p.dates, columns=p.codes)
-    for i, s in enumerate(snaps):
-        start = pd.Timestamp(s)
-        end = pd.Timestamp(snaps[i + 1]) if i + 1 < len(snaps) else p.dates[-1] + pd.Timedelta(days=1)
-        rows = (p.dates >= start) & (p.dates < end)
-        cols = p.codes.isin(universe.loc[universe["snapshot"] == s, "code"])
-        mem.loc[rows, cols] = True
-    return mem
+def eligible(p, basic):
+    """t 日收盘后已知的可选条件：非 ST、上市满半年、不在退市整理期、流动性够、近期正常交易。
 
-
-def eligible(p, universe, basic):
-    """t 日收盘后已知的可选条件：在股票池、非 ST、上市满半年、流动性够、近期正常交易。"""
-    mem = membership(p, universe)
-    ipo = pd.to_datetime(basic.set_index("code")["ipoDate"], errors="coerce").reindex(p.codes)
-    age = pd.DataFrame(p.dates.values[:, None] - ipo.values[None, :], index=p.dates, columns=p.codes)
-    old_enough = age >= pd.Timedelta(days=config.MIN_LISTED_DAYS)
+    股票池是全 A股（沪深主板、创业板、科创板），包括后来退市的股票，避免幸存者偏差。
+    """
+    b = basic.set_index("code").reindex(p.codes)
+    ipo = pd.to_datetime(b["ipoDate"], errors="coerce")
+    out = pd.to_datetime(b["outDate"], errors="coerce")
+    d = p.dates.values[:, None]
+    old_enough = d - ipo.values[None, :] >= pd.Timedelta(days=config.MIN_LISTED_DAYS)
+    # 退市整理期（约 15 个交易日）提前公告，开盘前已知
+    delisting = d >= (out - pd.Timedelta(days=config.DELIST_EXCLUDE_DAYS)).values[None, :]
+    flags = pd.DataFrame(old_enough & ~delisting, index=p.dates, columns=p.codes)
     liquid = p.amount.rolling(20, min_periods=15).mean() >= config.MIN_AMOUNT_20D
     active = p.traded.rolling(60, min_periods=1).sum() >= config.MIN_TRADED_DAYS_60
-    # 股票池按 T 日所属快照判断：成分调整提前公告，开盘前已知
-    mem_next = mem.shift(-1, fill_value=False)
-    mem_next.iloc[-1] = mem.iloc[-1]
-    return mem_next & ~p.is_st & old_enough & liquid & active & p.traded
+    return flags & ~p.is_st & liquid & active & p.traded
 
 
 def trade_outcomes(p):
@@ -138,16 +129,17 @@ def trade_outcomes(p):
 
     def forward_exit(price, ok):
         """从每个日期起向后找第一个可卖出的价格（最多 MAX_HOLD_SCAN 天）；返回价格和对应日期序号。"""
-        val = price.where(ok)
-        out = pd.DataFrame(np.nan, index=p.dates, columns=p.codes, dtype="float64")
-        when = pd.DataFrame(np.nan, index=p.dates, columns=p.codes, dtype="float64")
-        idx = pd.DataFrame(np.arange(n)[:, None].repeat(len(p.codes), 1), index=p.dates, columns=p.codes)
+        val = price.where(ok).to_numpy(dtype="float32")
+        out = np.full(val.shape, np.nan, dtype="float32")
+        when = np.full(val.shape, -1, dtype="int32")
         for k in range(config.MAX_HOLD_SCAN, -1, -1):
-            v = val.shift(-k)
-            w = idx.shift(-k).where(v.notna())
-            out = v.where(v.notna(), out)
-            when = w.where(w.notna(), when)
-        return out, when
+            v = np.full(val.shape, np.nan, dtype="float32")
+            v[: n - k] = val[k:]
+            hit = ~np.isnan(v)
+            out[hit] = v[hit]
+            when[hit] = np.broadcast_to(np.arange(n, dtype="int32")[:, None] + k, val.shape)[hit]
+        return (pd.DataFrame(out, index=p.dates, columns=p.codes),
+                pd.DataFrame(when, index=p.dates, columns=p.codes))
 
     # T+1 开盘卖：T+1 正常交易且开盘不在跌停价
     open_ok = p.traded & (p.open > down + 0.005)
@@ -156,15 +148,16 @@ def trade_outcomes(p):
     close_exit, close_when = forward_exit(p.close, close_ok)
 
     def net(exit_px, when):
-        sv = stamp.values[when.fillna(0).astype(int).values]
+        w = when.to_numpy()
+        sv = stamp.values[np.clip(w, 0, n - 1)]
         value = exit_px * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - sv)
-        return (value / (entry * cost_in) - 1).where(when.notna())
+        return (value / (entry * cost_in) - 1).where(w >= 0).astype("float32")
 
     # 以 T 为行的结果
     day_ret_T = p.close / entry - 1
     day_net_T = (p.close * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - stamp.values[:, None])) / (entry * cost_in) - 1
-    next_open_T = net(open_exit.shift(-1), open_when.shift(-1))
-    next_close_T = net(close_exit.shift(-1), close_when.shift(-1))
+    next_open_T = net(open_exit.shift(-1), open_when.shift(-1, fill_value=-1))
+    next_close_T = net(close_exit.shift(-1), close_when.shift(-1, fill_value=-1))
 
     # 平移到信号日 t（T 的前一个交易日）
     out = {

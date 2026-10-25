@@ -21,13 +21,13 @@ def main():
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if not args.offline:
         with data.Session() as sess:
-            universe = data.update_universe(sess)
-            data.update_basic(sess)
-            codes = sorted(universe["code"].unique())
-            _, failed = data.update_kline(sess, codes)
-            if failed:
-                logging.warning("%d codes failed: %s", len(failed), failed[:20])
-    res = backtest.run(data.load_kline(), data.load_universe(), data.load_basic())
+            basic = data.update_basic(sess)
+        codes = data.stock_codes(basic)
+        logging.info("fetching %d codes", len(codes))
+        _, failed = data.update_kline(codes)
+        if failed:
+            logging.warning("%d codes failed: %s", len(failed), failed[:20])
+    res = backtest.run(data.load_kline(), data.load_basic())
     backtest.write(res)
     print(backtest.to_markdown(res))
     print(model.public(res["chosen"]["test"]))
