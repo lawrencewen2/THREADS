@@ -43,7 +43,7 @@ def main():
     for f in status["failures"]:
         logging.error(f)
     g = latest["regions"]["global"]
-    logging.info("%s 全球恐慌指数 %s（%s）", latest["date"], g["score"], g["band"])
+    logging.info("%s 全球恐慌贪婪指数 %s（%s）", latest["date"], g["score"], g["band"])
     return 0 if status["ok"] else 1
 
 

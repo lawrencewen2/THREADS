@@ -53,7 +53,7 @@ def drawdown_episodes(price, threshold=0.15, rebound=0.25):
     return episodes
 
 
-def event_capture(score, price, threshold=0.15, level=70):
+def event_capture(score, price, threshold=0.15, level=30):
     rows = []
     for peak, trough, dd in drawdown_episodes(price, threshold):
         window = score.loc[peak: trough + pd.Timedelta(days=30)].dropna()
@@ -62,21 +62,21 @@ def event_capture(score, price, threshold=0.15, level=70):
         hit = _first_hit(window, level)
         dd_at_hit = None if hit is None else round((1 - price.loc[pd.Timestamp(hit)] / price.loc[peak]) * 100, 1)
         rows.append(dict(peak=peak.date(), trough=trough.date(), drawdown=round(dd * 100, 1),
-                         max_score=round(window.max(), 1), first_hit=hit, dd_at_hit=dd_at_hit,
+                         min_score=round(window.min(), 1), first_hit=hit, dd_at_hit=dd_at_hit,
                          score_at_trough=round(score.get(trough, float("nan")), 1),
-                         captured=bool(window.max() >= level)))
+                         captured=bool(window.min() <= level)))
     return rows
 
 
 def _first_hit(window, level):
-    hit = window[window >= level]
+    hit = window[window <= level]
     return hit.index[0].date() if len(hit) else None
 
 
-def false_alarms(score, price, level=80, min_dd=0.05):
-    """分数上穿 level 时，前20日到后60日内市场从高点回撤从未超过 min_dd，记为误报。"""
+def false_alarms(score, price, level=20, min_dd=0.05):
+    """分数下穿 level（进入极度恐慌）时，前20日到后60日内市场从高点回撤从未超过 min_dd，记为误报。"""
     s = score.dropna()
-    entries = s.index[(s >= level) & (s.shift(1) < level)]
+    entries = s.index[(s <= level) & (s.shift(1) > level)]
     roll_dd = 1 - price / price.rolling(252, min_periods=20).max()
     rows = []
     for d in entries:
@@ -119,20 +119,20 @@ def _perf(ret):
 def position_sim(score, price):
     """两种简单仓位规则，t 日收盘的分数决定 t+1 日仓位（无交易成本）。
 
-    逆向：仓位 = 0.3 + 0.7 × 分数/100，越恐慌越重仓。
-    避险：config.risk_off 为真（分数 ≥ 60 且高于 20 日前）时半仓，否则满仓。
+    逆向：仓位 = 0.3 + 0.7 × (100 − 分数)/100，越恐慌（分数越低）越重仓。
+    避险：config.risk_off 为真（分数 ≤ 40 且低于 20 日前）时半仓，否则满仓。
     对照：买入持有，以及与逆向规则平均仓位相同的固定仓位。
     """
     df = pd.DataFrame({"score": score, "price": price}).dropna()
     r = df["price"].pct_change()
-    contra = (0.3 + 0.7 * df["score"] / 100).shift(1)
+    contra = (0.3 + 0.7 * (100 - df["score"]) / 100).shift(1)
     riskoff = np.where(config.risk_off(df["score"]), 0.5, 1.0)
     riskoff = pd.Series(riskoff, index=df.index).shift(1)
     rules = {
         "买入持有": r,
         "逆向加仓": contra * r,
         f"固定仓位{contra.mean():.0%}": contra.mean() * r,
-        "恐慌升温减仓": riskoff * r,
+        "恐慌加深减仓": riskoff * r,
     }
     rows = {}
     for period, mask in (("样本内(–2018)", df.index < SPLIT), ("样本外(2019–)", df.index >= SPLIT)):
@@ -182,19 +182,19 @@ def to_markdown(report, index_df):
              f"数据区间：{index_df.index[0].date()} 至 {index_df.index[-1].date()}。"
              "样本内 2018 年底以前，样本外 2019 年以后。", "",
              f"当前参数：分位窗口 {config.RANK_WINDOW} 个交易日，平滑 {config.SMOOTH_SPAN} 日，"
-             f"减仓信号为分数 ≥ {config.RISK_OFF_LEVEL} 且高于 {config.RISK_OFF_LOOKBACK} 日前。"
+             f"分数 0 = 极度恐慌、100 = 极度贪婪；减仓信号为分数 ≤ {config.RISK_OFF_LEVEL} 且低于 {config.RISK_OFF_LOOKBACK} 日前。"
              "参数只依据样本内结果选定，复现见 `scripts/tune_params.py`。", ""]
-    lines += ["## 汇总", "", "| 区域 | 起始 | 回撤>15% 事件数 | 覆盖率(≥70) | 上穿80 次数 | 误报率 | 日变动中位数 |",
+    lines += ["## 汇总", "", "| 区域 | 起始 | 回撤>15% 事件数 | 覆盖率(≤30) | 下穿20 次数 | 误报率 | 日变动中位数 |",
               "| --- | --- | --- | --- | --- | --- | --- |"]
     for region, r in report.items():
         lines.append(f"| {names[region]} | {r['start']} | {len(r['events'])} | "
                      f"{r['capture_rate']}% | {len(r['alarms'])} | {r['false_alarm_rate']}% | {r['daily_change_median']} |")
     for region, r in report.items():
         lines += ["", f"## {names[region]}", "", "### 回撤事件", "",
-                  "| 峰值 | 谷底 | 回撤% | 期间最高分 | 谷底当天分 | 首次≥70 | 首次≥70时已跌% | 捕捉 |",
+                  "| 峰值 | 谷底 | 回撤% | 期间最低分 | 谷底当天分 | 首次≤30 | 首次≤30时已跌% | 捕捉 |",
                   "| --- | --- | --- | --- | --- | --- | --- | --- |"]
         for e in r["events"]:
-            lines.append(f"| {e['peak']} | {e['trough']} | {e['drawdown']} | {e['max_score']} | {e['score_at_trough']} | "
+            lines.append(f"| {e['peak']} | {e['trough']} | {e['drawdown']} | {e['min_score']} | {e['score_at_trough']} | "
                          f"{e['first_hit'] or '—'} | {e['dd_at_hit'] if e['dd_at_hit'] is not None else '—'} | "
                          f"{'是' if e['captured'] else '否'} |")
         for title, key in (("分档未来收益（样本内）", "forward_in"), ("分档未来收益（样本外）", "forward_out")):

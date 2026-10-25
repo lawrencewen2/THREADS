@@ -61,7 +61,7 @@ def svg_chart(index_df, days=520, width=900, height=360):
 
     parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" font-family="sans-serif" font-size="11">',
              f'<rect width="{width}" height="{height}" fill="#ffffff"/>']
-    for lo, hi, fill in ((80, 100, "#fee2e2"), (0, 20, "#dcfce7")):
+    for lo, hi, fill in ((0, 20, "#fee2e2"), (80, 100, "#dcfce7")):
         parts.append(f'<rect x="{pad_l}" y="{y(hi):.1f}" width="{w}" height="{y(lo) - y(hi):.1f}" fill="{fill}"/>')
     for v in (0, 20, 40, 60, 80, 100):
         parts.append(f'<line x1="{pad_l}" x2="{pad_l + w}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="#e5e7eb"/>')
@@ -100,12 +100,12 @@ def svg_chart(index_df, days=520, width=900, height=360):
 
 
 def readme_block(latest):
-    lines = [f"**最新读数（{latest['date']} 收盘）**", "",
-             "| 区域 | 恐慌指数 | 状态 | 5日变化 | 仓位信号 |", "| --- | --- | --- | --- | --- |"]
+    lines = [f"**最新读数（{latest['date']} 收盘，0 = 极度恐慌，100 = 极度贪婪）**", "",
+             "| 区域 | 恐慌贪婪指数 | 状态 | 5日变化 | 仓位信号 |", "| --- | --- | --- | --- | --- |"]
     for r in latest["regions"].values():
         score = "—" if r["score"] is None else f"{r['score']:.0f}"
         chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
-        signal = "恐慌升温，减仓" if r.get("risk_off") else "正常"
+        signal = "恐慌加深，减仓" if r.get("risk_off") else "正常"
         lines.append(f"| {r['name']} | {score} | {r['band'] or '—'} | {chg} | {signal} |")
     st = latest["status"]
     if st.get("warnings"):
@@ -126,10 +126,10 @@ def region_tables(index_df, comp_df, latest):
         score = index_df[key]
         head = f"### {name}：{_fmt(r['score'])}（{r['band'] or '数据缺失'}）"
         chg = "—" if r["change_5d"] is None else f"{r['change_5d']:+.1f}"
-        signal = "恐慌升温，减仓" if r.get("risk_off") else "正常"
+        signal = "恐慌加深，减仓" if r.get("risk_off") else "正常"
         lines += [head, "", f"5日变化 {chg} · 仓位信号：{signal}", "",
                   "| 成分 | 今日 | 5日前 | 20日前 | 权重 |", "| --- | --- | --- | --- | --- |",
-                  f"| **{name}恐慌指数** | **{_fmt(score.iloc[-1])}** | {_fmt(score.iloc[-6])} | "
+                  f"| **{name}恐慌贪婪指数** | **{_fmt(score.iloc[-1])}** | {_fmt(score.iloc[-6])} | "
                   f"{_fmt(score.iloc[-21])} | — |"]
         for cid, spec in config.COMPONENTS.items():
             if spec["region"] != key:

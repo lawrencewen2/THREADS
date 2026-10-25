@@ -37,6 +37,7 @@ def evaluate(series, base, window, span, weak_w):
     for c in WEAK:
         config.COMPONENTS[c]["weight"] = weak_w
     idx, _, _ = compute.build(series)
+    idx = 100 - idx  # 诊断按“越高越恐慌”计算
     px = backtest.price_panel(series, idx.index)
     rows = {}
     for r in REGIONS:

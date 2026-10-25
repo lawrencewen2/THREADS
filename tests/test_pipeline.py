@@ -45,12 +45,13 @@ def test_scores_in_range(built):
     assert set(["global", "us", "eu", "jp", "cn", "hk"]).issubset(idx.columns)
 
 
-def test_crash_produces_high_fear(built):
+def test_crash_produces_extreme_fear(built):
+    """0 = 极度恐慌：暴跌期间分数应接近 0。"""
     _, (idx, _, _) = built
-    peak = idx.loc["2020-02-20":"2020-04-30", "global"].max()
+    low = idx.loc["2020-02-20":"2020-04-30", "global"].min()
     calm = idx.loc["2019-01-01":"2019-12-31", "global"].median()
-    assert peak > 75
-    assert calm < 60
+    assert low < 25
+    assert calm > 40
 
 
 def test_no_lookahead(built):

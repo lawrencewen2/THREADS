@@ -1,6 +1,7 @@
 """指数定义：原始数据序列、成分指标、区域与权重。
 
-所有成分都调成“数值越高越恐慌”，再做滚动分位数标准化。
+成分内部都调成“数值越高越恐慌”再做滚动分位数标准化，发布前整体翻转：
+0 = 极度恐慌，100 = 极度贪婪（与 CNN 恐惧贪婪指数方向一致）。
 """
 
 # 原始序列：key -> [(数据源, 代码), ...]，按顺序尝试，第一个成功的生效。
@@ -95,17 +96,17 @@ SMOOTH_SPAN = 3          # 最终指数的 EMA 平滑跨度；1 表示不平滑
 
 START_DATE = "2000-01-01"
 
-# 仓位信号：分数 ≥ RISK_OFF_LEVEL 且高于 RISK_OFF_LOOKBACK 个交易日前 → 建议仓位减半。
+# 仓位信号：分数 ≤ RISK_OFF_LEVEL 且低于 RISK_OFF_LOOKBACK 个交易日前（恐慌在加深）→ 建议仓位减半。
 # 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
-RISK_OFF_LEVEL = 60
+RISK_OFF_LEVEL = 40
 RISK_OFF_LOOKBACK = 20
 
 BANDS = [
-    (20, "极度贪婪"),
-    (40, "贪婪"),
+    (20, "极度恐慌"),
+    (40, "恐慌"),
     (60, "中性"),
-    (80, "恐慌"),
-    (101, "极度恐慌"),
+    (80, "贪婪"),
+    (101, "极度贪婪"),
 ]
 
 
@@ -128,5 +129,5 @@ def fingerprint():
 
 
 def risk_off(score):
-    """返回布尔序列：True 表示恐慌在升温，建议降低仓位。"""
-    return (score >= RISK_OFF_LEVEL) & (score.diff(RISK_OFF_LOOKBACK) > 0)
+    """返回布尔序列：True 表示恐慌在加深，建议降低仓位。"""
+    return (score <= RISK_OFF_LEVEL) & (score.diff(RISK_OFF_LOOKBACK) < 0)

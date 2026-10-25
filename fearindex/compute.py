@@ -111,6 +111,8 @@ def smooth(df, span=None):
 def build(series):
     """series: dict key->Series。返回 (index_df, component_score_df, component_raw_df)。
 
+    分数 0 = 极度恐慌，100 = 极度贪婪。
+
     index_df 列：global, us, eu, jp, cn, hk, common
     """
     comp, raw = component_scores(series)
@@ -118,6 +120,7 @@ def build(series):
     idx = reg[list(config.REGIONS)].copy()
     idx.insert(0, "global", global_score(reg))
     idx["common"] = reg["global"]
-    idx = smooth(idx).round(1)
+    idx = smooth(idx)
     idx = idx.dropna(how="all")
-    return idx, comp.loc[idx.index].round(1), raw.loc[idx.index]
+    # 以上按“越高越恐慌”计算；对外发布时翻转为 0 = 极度恐慌、100 = 极度贪婪
+    return (100 - idx).round(1), (100 - comp.loc[idx.index]).round(1), raw.loc[idx.index]
