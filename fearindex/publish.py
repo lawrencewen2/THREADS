@@ -119,7 +119,7 @@ def _fmt(v):
 
 
 def region_tables(index_df, comp_df, latest):
-    """每个区域一张表：区域分与各成分在今天、5日前、20日前的得分，以及近10个交易日走势。"""
+    """每个区域一张表：区域分与各成分在今天、5日前、20日前的得分，下附近21个交易日折线图。"""
     lines = ["## 分区域明细", ""]
     for key, name in config.REGIONS.items():
         r = latest["regions"][key]
@@ -140,9 +140,41 @@ def region_tables(index_df, comp_df, latest):
                              f"{spec['weight']:g} |")
             else:
                 lines.append(f"| {spec['name']} | 缺失 | — | — | {spec['weight']:g} |")
-        recent = score.iloc[-10:]
-        lines += ["", "近10个交易日：" + " → ".join(f"{d:%m/%d} {_fmt(v)}" for d, v in recent.items()), ""]
+        lines += ["", f"![{name}近21个交易日](docs/regions/{key}.svg)", ""]
     return "\n".join(lines).rstrip()
+
+
+def svg_recent(series, color, days=21, width=640, height=220):
+    """单个区域近 days 个交易日的折线图：0–20 极度恐慌区标红，80–100 极度贪婪区标绿，每个点标数值。"""
+    s = series.dropna().iloc[-days:]
+    pad_l, pad_r, pad_t, pad_b = 34, 16, 14, 26
+    w, h = width - pad_l - pad_r, height - pad_t - pad_b
+    n = len(s)
+
+    def x(i):
+        return pad_l + w * i / max(n - 1, 1)
+
+    def y(v):
+        return pad_t + h * (1 - v / 100)
+
+    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {width} {height}" font-family="sans-serif" font-size="10">',
+             f'<rect width="{width}" height="{height}" fill="#ffffff"/>',
+             f'<rect x="{pad_l}" y="{y(20):.1f}" width="{w}" height="{y(0) - y(20):.1f}" fill="#fee2e2"/>',
+             f'<rect x="{pad_l}" y="{y(100):.1f}" width="{w}" height="{y(80) - y(100):.1f}" fill="#dcfce7"/>']
+    for v, label in ((0, "0"), (20, "20"), (40, "40"), (60, "60"), (80, "80"), (100, "100")):
+        parts.append(f'<line x1="{pad_l}" x2="{pad_l + w}" y1="{y(v):.1f}" y2="{y(v):.1f}" stroke="#e5e7eb"/>')
+        parts.append(f'<text x="{pad_l - 5}" y="{y(v) + 3:.1f}" text-anchor="end" fill="#6b7280">{label}</text>')
+    parts.append(f'<text x="{pad_l + 4}" y="{y(2):.1f}" fill="#b91c1c">恐慌</text>')
+    parts.append(f'<text x="{pad_l + 4}" y="{y(92):.1f}" fill="#15803d">贪婪</text>')
+    pts = " ".join(f"{x(i):.1f},{y(v):.1f}" for i, v in enumerate(s))
+    parts.append(f'<polyline fill="none" stroke="{color}" stroke-width="2" points="{pts}"/>')
+    for i, (d, v) in enumerate(s.items()):
+        parts.append(f'<circle cx="{x(i):.1f}" cy="{y(v):.1f}" r="2.5" fill="{color}"/>')
+        parts.append(f'<text x="{x(i):.1f}" y="{y(v) - 6:.1f}" text-anchor="middle" fill="#374151">{v:.0f}</text>')
+        if i % 5 == 0 or i == n - 1:
+            parts.append(f'<text x="{x(i):.1f}" y="{height - 8}" text-anchor="middle" fill="#6b7280">{d:%m/%d}</text>')
+    parts.append("</svg>")
+    return "\n".join(parts)
 
 
 def update_readme(latest, index_df=None, comp_df=None):
@@ -159,6 +191,9 @@ def update_readme(latest, index_df=None, comp_df=None):
 def write_dashboard(index_df, latest):
     DOCS.mkdir(exist_ok=True)
     (DOCS / "chart.svg").write_text(svg_chart(index_df))
+    (DOCS / "regions").mkdir(exist_ok=True)
+    for key in config.REGIONS:
+        (DOCS / "regions" / f"{key}.svg").write_text(svg_recent(index_df[key], COLORS[key]))
     hist = index_df[["global"] + list(config.REGIONS)].iloc[-1500:]
     payload = dict(
         dates=[str(d.date()) for d in hist.index],

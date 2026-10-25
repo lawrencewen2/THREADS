@@ -164,3 +164,6 @@ def test_region_tables(built):
     for name in config.REGIONS.values():
         assert f"### {name}：" in md
     assert md.count("| 成分 | 今日 | 5日前 | 20日前 | 权重 |") == 5
+    assert md.count("](docs/regions/") == 5
+    svg = publish.svg_recent(idx["us"], "#2563eb")
+    assert svg.count("<circle") == 21
