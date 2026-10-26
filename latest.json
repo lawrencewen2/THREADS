@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-26T08:23+00:00",
+  "as_of": "2026-10-26T09:26+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 36.8,
+      "score": 36.9,
       "band": "恐慌",
       "date": "2026-10-26",
       "official": 37.4,
       "official_date": "2026-10-23",
-      "change": -0.6,
+      "change": -0.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -39,12 +39,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 29.6,
+      "score": 30.0,
       "band": "恐慌",
       "date": "2026-10-26",
       "official": 31.5,
       "official_date": "2026-10-23",
-      "change": -1.9,
+      "change": -1.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -113,8 +113,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 19.700001,
-      "time": "2026-10-26T08:08+00:00",
+      "value": 19.219999,
+      "time": "2026-10-26T09:11+00:00",
       "date": "2026-10-26",
       "fresh": false
     },
@@ -137,14 +137,14 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6075.160156,
-      "time": "2026-10-26T08:07+00:00",
+      "value": 6093.830078,
+      "time": "2026-10-26T09:11+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.9248,
-      "time": "2026-10-26T08:23+00:00",
+      "value": 0.92595,
+      "time": "2026-10-26T09:26+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -155,8 +155,8 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.162994,
-      "time": "2026-10-26T08:23+00:00",
+      "value": 157.270004,
+      "time": "2026-10-26T09:26+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -167,20 +167,20 @@
       "fresh": true
     },
     "hsi": {
-      "value": 23219.140625,
-      "time": "2026-10-26T08:07+00:00",
+      "value": 23211.810547,
+      "time": "2026-10-26T08:08+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "hstech": {
-      "value": 3.784,
-      "time": "2026-10-26T07:58+00:00",
+      "value": 3.778,
+      "time": "2026-10-26T08:08+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "gold": {
-      "value": 4027.600098,
-      "time": "2026-10-26T08:13+00:00",
+      "value": 4030.100098,
+      "time": "2026-10-26T09:16+00:00",
       "date": "2026-10-26",
       "fresh": false
     },
