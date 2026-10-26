@@ -4,6 +4,7 @@
 0 = 极度恐慌，100 = 极度贪婪（与 CNN 恐惧贪婪指数方向一致）。
 """
 
+import numpy as np
 import pandas as pd
 
 # 原始序列：key -> [(数据源, 代码), ...]，按顺序尝试，第一个成功的生效。
@@ -132,7 +133,16 @@ TOP_LEVEL, TOP_EXIT = 85, 65
 EXTREME_MEMORY = 60
 EXTREME_SHOW = 5
 EXTREME_GAP = 20
+# 短期触底（参考）：过去 SHORT_WINDOW 个交易日里分数从高点下跌至少 SHORT_DROP 分、低点不高于 SHORT_LEVEL，
+# 之后从低点回升至少 SHORT_REBOUND 分。不要求跌到极度恐慌。参数只依据 2018 年以前的回测选定
+# （scripts/experiment_short_bottom.py）：在每区域每年至少约 1 次的方案里，前几名守住低点的比例相差不到 1 个百分点，
+# 取触发最早（触发时价格离低点最近）的一个。2018 年以前触发后 20 日内守住前期低点约 65%，平时约 46%。
+SHORT_WINDOW = 10
+SHORT_DROP = 10
+SHORT_REBOUND = 8
+SHORT_LEVEL = 50
 SIGNAL_TEXT = {"risk_off": "恐慌加深，减仓", "bottom": "恐慌解除（可能触底，仅供参考）",
+               "short_bottom": "短期触底（仅供参考）",
                "top": "贪婪退潮（可能触顶，仅供参考）", "normal": "正常"}
 
 BANDS = [
@@ -159,7 +169,8 @@ def fingerprint():
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
                   ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM),
-                  extremes=(BOTTOM_LEVEL, BOTTOM_EXIT, TOP_LEVEL, TOP_EXIT, EXTREME_MEMORY, EXTREME_SHOW, EXTREME_GAP))
+                  extremes=(BOTTOM_LEVEL, BOTTOM_EXIT, TOP_LEVEL, TOP_EXIT, EXTREME_MEMORY, EXTREME_SHOW, EXTREME_GAP),
+                  short=(SHORT_WINDOW, SHORT_DROP, SHORT_REBOUND, SHORT_LEVEL))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
@@ -172,9 +183,11 @@ def risk_off(score):
 
 
 def extreme_events(score, kind):
-    """触底（kind='bottom'）或触顶（kind='top'）提示的触发日期列表。"""
+    """触底（kind='bottom'）、短期触底（'short_bottom'）或触顶（'top'）提示的触发日期列表。"""
     s = score.dropna()
-    if kind == "bottom":
+    if kind == "short_bottom":
+        fire = _short_bottom_fire(s)
+    elif kind == "bottom":
         seen = (s <= BOTTOM_LEVEL).astype(int).rolling(EXTREME_MEMORY, min_periods=1).max().shift(1, fill_value=0) > 0
         fire = seen & (s >= BOTTOM_EXIT) & (s.shift(1) < BOTTOM_EXIT)
     else:
@@ -187,12 +200,26 @@ def extreme_events(score, kind):
     return out
 
 
+def _short_bottom_fire(s):
+    vals = s.to_numpy()
+    fire = np.zeros(len(s), dtype=bool)
+    for i in range(SHORT_WINDOW, len(s)):
+        seg = vals[i - SHORT_WINDOW: i + 1]
+        j = int(np.argmin(seg))
+        trough = seg[j]
+        if trough > SHORT_LEVEL or seg[: j + 1].max() - trough < SHORT_DROP:
+            continue
+        fire[i] = vals[i] - trough >= SHORT_REBOUND and vals[i - 1] - trough < SHORT_REBOUND
+    return pd.Series(fire, index=s.index)
+
+
 def signals(score):
-    """每天的仓位信号：risk_off / bottom / top / normal。减仓优先，提示在触发后显示 EXTREME_SHOW 天。"""
+    """每天的仓位信号：risk_off / bottom / short_bottom / top / normal。
+    减仓优先，其次是触底，再次是短期触底；提示在触发后显示 EXTREME_SHOW 天。"""
     s = score.dropna()
     out = pd.Series("normal", index=s.index)
     pos = pd.Series(range(len(s)), index=s.index)
-    for kind in ("top", "bottom"):
+    for kind in ("top", "short_bottom", "bottom"):
         for d in extreme_events(s, kind):
             i = pos[d]
             out.iloc[i:i + EXTREME_SHOW] = kind

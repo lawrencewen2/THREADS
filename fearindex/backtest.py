@@ -170,7 +170,7 @@ def extreme_stats(index_df, series):
     """触底/触顶提示的历史表现（全球及各区域合并统计）。"""
     px = price_panel(series, index_df.index)
     rows = []
-    for kind, label in (("bottom", "触底提示"), ("top", "触顶提示")):
+    for kind, label in (("bottom", "触底提示"), ("short_bottom", "短期触底提示"), ("top", "触顶提示")):
         for per, in_per in (("样本内(–2018)", lambda d: d < SPLIT), ("样本外(2019–)", lambda d: d >= SPLIT)):
             r60, drops, base_r60, base_drop = [], [], [], []
             for region in ["global"] + list(config.REGIONS):
@@ -203,8 +203,11 @@ def extremes_markdown(stats):
     return "\n".join([
         "## 触底、触顶提示的历史表现", "",
         f"触底：分数在 {config.EXTREME_MEMORY} 个交易日内曾 ≤ {config.BOTTOM_LEVEL}，之后回升到 {config.BOTTOM_EXIT} 以上。"
+        f"短期触底：{config.SHORT_WINDOW} 个交易日内分数下跌至少 {config.SHORT_DROP} 分、低点 ≤ {config.SHORT_LEVEL}，"
+        f"之后从低点回升至少 {config.SHORT_REBOUND} 分。"
         f"触顶：曾 ≥ {config.TOP_LEVEL}，之后回落到 {config.TOP_EXIT} 以下。全球与五个区域合并统计。",
-        "两种提示都没有可靠的预测力，仅供参考，不参与减仓规则。", "",
+        "这些提示仅供参考，不参与减仓规则。触底、触顶提示没有可靠的预测力；短期触底提示之后多数时候守住了前期低点"
+        "（scripts/experiment_short_bottom.py），但之后 60 日的表现并不比平时好，不是买入信号。", "",
         _md_table(stats), ""])
 
 

@@ -214,6 +214,18 @@ def test_extreme_hints():
     assert sig.iloc[44] == "top"
 
 
+def test_short_bottom_hint():
+    """短期触底：10 日内下跌至少 10 分后回升 8 分，不要求跌到 20 以下。"""
+    idx = pd.bdate_range("2020-01-01", periods=40)
+    s = pd.Series([60.0] * 10 + [52.0, 46.0, 42.0, 40.0, 44.0, 49.0] + [49.0] * 24, index=idx)
+    assert config.extreme_events(s, "bottom") == []
+    assert config.extreme_events(s, "short_bottom") == [idx[15]]
+    sig = config.signals(s)
+    assert sig.iloc[15] == "short_bottom" and sig.iloc[19] == "short_bottom" and sig.iloc[20] == "normal"
+    # 低点高于 50 的回调不算
+    assert config.extreme_events(s + 15, "short_bottom") == []
+
+
 def test_sanitize_drops_unfinished_today():
     from fearindex import fetch
 
