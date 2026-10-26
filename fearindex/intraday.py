@@ -230,7 +230,9 @@ def estimate(series, quotes):
         )
     now = datetime.now(timezone.utc)
     for r in config.REGIONS:
-        regions[r]["session"] = market_session(r, now)
+        sess = market_session(r, now)
+        # 当地已跨过午夜、新一天还没开盘，但上一交易日的收盘还没并入正式指数
+        regions[r]["session"] = "已收盘" if sess == "未开盘" and regions[r]["fresh"] else sess
     sessions = [regions[r]["session"] for r in config.REGIONS]
     regions["global"]["session"] = ("盘中" if "盘中" in sessions or "午休" in sessions
                                     else "已收盘" if regions["global"]["fresh"] else "未开盘")
