@@ -4,6 +4,7 @@
   python scripts/astock_insight.py --offline    # 全部用本地文件
   python scripts/astock_insight.py --fetch-days 500  # 没有行情缓存时先拉近 500 天行情和估值（单独测试用）
   python scripts/astock_insight.py --news-only  # 只更新行情新闻
+最后还会算主线行情（docs/astock/themes.json，见 astock/themes.py）。
 """
 
 import argparse
@@ -16,7 +17,8 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import config, data, insight, news  # noqa: E402
+from astock import config, data, insight, news, themes  # noqa: E402
+from astock.factors import Panel  # noqa: E402
 
 
 def update_news(out):
@@ -31,6 +33,22 @@ def update_news(out):
         print(json.dumps(res["status"], ensure_ascii=False))
     except Exception as exc:
         logging.exception("news failed: %s", exc)
+
+
+def update_themes(kline, basic, offline):
+    """主线行情出错只记日志。用到行情新闻抓到的快讯算题材热度，所以放在新闻之后。"""
+    try:
+        if not offline:
+            themes.update_members()
+        if not themes.CONCEPT_FILE.exists():
+            logging.warning("no concepts.csv, skip themes")
+            return
+        recent = kline[kline["date"] >= kline["date"].max() - pd.Timedelta(days=200)]
+        out = themes.build(Panel(recent), themes.load_members(), basic.set_index("code")["code_name"], news.LAST_RAW or None)
+        themes.write(out)
+        print(json.dumps([(t["theme"], t["stage"], t["leaders"]) for t in out["themes"]], ensure_ascii=False))
+    except Exception as exc:
+        logging.exception("themes failed: %s", exc)
 
 
 def main():
@@ -68,6 +86,7 @@ def main():
     insight.write(out)
     if not args.offline and not args.no_news:
         update_news(out)
+    update_themes(kline, data.load_basic(), args.offline)
     print(json.dumps({k: out[k] for k in ("signal_date", "temperature", "contrarian", "checklist")},
                      ensure_ascii=False, indent=1))
 
