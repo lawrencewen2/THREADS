@@ -1,0 +1,4 @@
+pandas>=2.2
+numpy>=1.26
+baostock>=0.8.9
+pytest>=8

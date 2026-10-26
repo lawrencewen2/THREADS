@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 .cache/
 .pytest_cache/
+data/astock/cache/
