@@ -54,7 +54,7 @@ def main():
     result = screen.screen(kline, basic, trade_date, valuation=data.load_valuation())
     log_df = screen.append_log(result)
     screen.write(result, screen.track(kline, log_df))
-    print(result)
+    print({k: v for k, v in result.items() if k != "ranking"})
 
 
 if __name__ == "__main__":

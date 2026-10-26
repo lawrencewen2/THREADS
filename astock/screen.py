@@ -28,8 +28,12 @@ def screen(kline, basic, trade_date, m=None, valuation=None):
     floor = m.get("fear_floor")
     gate_open = floor is None or (not np.isnan(fear_t) and fear_t >= floor)
 
-    row = sc.loc[t].dropna().sort_values(ascending=False).head(WATCH_N)
+    full = sc.loc[t].dropna().sort_values(ascending=False)
+    row = full.head(WATCH_N)
     names = basic.set_index("code")["code_name"]
+    ranking = pd.DataFrame(dict(rank=np.arange(1, len(full) + 1), code=full.index,
+                                name=[names.get(c, "") for c in full.index], score=full.round(4).values))
+    ranking["pct"] = (1 - (ranking["rank"] - 1) / len(full)).round(4)  # 1 = 全市场最高
     up_pct = p.limit_pct().loc[t]
     picks = []
     for rank, (code, s) in enumerate(row.items(), 1):
@@ -46,6 +50,7 @@ def screen(kline, basic, trade_date, m=None, valuation=None):
         signal_date=str(t.date()), trade_date=str(pd.Timestamp(trade_date).date()),
         fear_cn=None if np.isnan(fear_t) else round(float(fear_t), 1), fear_date=fear_date, fear_floor=floor,
         gate_open=bool(gate_open), top_n=m["top_n"], universe_size=int(elig.loc[t].sum()), picks=picks,
+        ranking=ranking,
     )
 
 
@@ -110,6 +115,11 @@ def write(result, tracked):
         if any("next_open_net" in t for t in sel) else None,
     )
     clean = [{k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in t.items()} for t in tracked]
+    result = dict(result)
+    ranking = result.pop("ranking", None)
+    if ranking is not None:
+        # 全部可选股票的当日得分和排名，方便查任意一只
+        ranking.to_csv(config.PAGE_DIR / "scores.csv", index=False)
     (config.PAGE_DIR / "picks.json").write_text(json.dumps(result, ensure_ascii=False, indent=1))
     (config.PAGE_DIR / "live.json").write_text(json.dumps(dict(summary=summary, rows=clean[-300:]),
                                                           ensure_ascii=False, default=str))
