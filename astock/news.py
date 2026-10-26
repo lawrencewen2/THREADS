@@ -348,6 +348,10 @@ def short_industry(name):
     return re.sub(r"(制造业|业)$", "", s)
 
 
+# 最近一次抓到的近 7 天快讯，主线行情用来算题材热度
+LAST_RAW = []
+
+
 def build(picks, sectors):
     status = []
     market = []
@@ -365,6 +369,7 @@ def build(picks, sectors):
     week = []
     try:
         raw = sina_live_pages()
+        LAST_RAW[:] = raw
         tag_count = pd.Series([t for r in raw for t in r["tags"]]).value_counts().head(15).to_dict()
         week = week_events(raw, [n for _, n in cands], [i for i in inds if len(i) >= 2])
         status.append(dict(source="本周大事（新浪 7x24 近 7 天）", ok=True, rows=len(raw), tags=tag_count,
