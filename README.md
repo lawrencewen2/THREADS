@@ -139,6 +139,6 @@ python scripts/run_backtest.py       # 生成回测报告
 python -m pytest -q                  # 单元测试（合成数据）
 ```
 
-GitHub Actions 每周一至周五北京时间 07:30 自动运行 `daily-update`，失败时 GitHub 会发邮件提醒。
+GitHub Actions 每周一至周五北京时间 06:30 自动运行 `daily-update`，07:20 再跑一次备用（GitHub 定时常延迟一小时以上，重复运行无副作用），失败时 GitHub 会发邮件提醒。
 
 数据源：Yahoo Finance、AkShare（东方财富 / 腾讯 / 新浪指数行情、金十融资余额、期权论坛 QVIX），A股行情按顺序自动切换备用源。
