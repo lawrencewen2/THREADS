@@ -279,6 +279,8 @@ def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
             s, d = "好", f"A股恐慌贪婪指数 {fear:.0f}，处于极度恐慌，按“恐慌时买”的原则是分批买入的区间"
         elif fear >= 70:
             s, d = "差", f"A股恐慌贪婪指数 {fear:.0f}，偏贪婪，按“贪婪时卖”的原则应减仓"
+        elif fear <= 30:
+            s, d = "中", f"A股恐慌贪婪指数 {fear:.0f}，恐慌但还没到买入线 20，可以准备、先不急"
         else:
             s, d = "中", f"A股恐慌贪婪指数 {fear:.0f}，不在买卖线附近"
         items.append(dict(item="市场情绪", status=s, detail=d))
@@ -292,7 +294,8 @@ def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
         label = temperature_label(tv)
         s = "中" if label in ("正常", "未知") else ("好" if label in ("冰点", "偏冷") else "差")
         d = (f"市场温度 {tv:.0f}（{label}）：上涨 {int(temp_row['up'])} 家、下跌 {int(temp_row['down'])} 家，"
-             f"涨停 {int(temp_row['limit_up'])}、跌停 {int(temp_row['limit_down'])}，成交额 {temp_row['amount']:.0f} 亿")
+             f"涨停 {int(temp_row['limit_up'])}、跌停 {int(temp_row['limit_down'])}，成交额 {temp_row['amount']:.0f} 亿"
+             + {"冰点": "；逆向看是机会", "偏冷": "；逆向看偏向机会", "偏热": "；追高要小心", "过热": "；过热，追高风险大"}.get(label, ""))
         items.append(dict(item="市场温度", status=s, detail=d))
     test = ((bt or {}).get("chosen") or {}).get("test") or {}
     if test.get("avg_next_open_net") is not None:
