@@ -1,52 +1,52 @@
 {
-  "date": "2026-10-26",
+  "date": "2026-10-23",
   "method": "3df118fd3731",
   "regions": {
     "global": {
       "name": "全球",
-      "score": 35.8,
+      "score": 37.4,
       "band": "恐慌",
-      "change_5d": -9.7,
-      "risk_off": true,
-      "signal": "risk_off"
+      "change_5d": -9.0,
+      "risk_off": false,
+      "signal": "normal"
     },
     "us": {
       "name": "美国",
-      "score": 42.3,
+      "score": 44.5,
       "band": "中性",
-      "change_5d": -8.7,
+      "change_5d": -8.2,
       "risk_off": false,
       "signal": "normal"
     },
     "eu": {
       "name": "欧洲",
-      "score": 29.7,
+      "score": 31.5,
       "band": "恐慌",
-      "change_5d": -9.0,
+      "change_5d": -7.2,
       "risk_off": true,
       "signal": "risk_off"
     },
     "jp": {
       "name": "日本",
-      "score": 18.2,
+      "score": 18.5,
       "band": "极度恐慌",
-      "change_5d": -13.2,
+      "change_5d": -17.1,
       "risk_off": true,
       "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
-      "score": 23.5,
+      "score": 24.2,
       "band": "恐慌",
-      "change_5d": -3.4,
+      "change_5d": -1.5,
       "risk_off": true,
       "signal": "risk_off"
     },
     "hk": {
       "name": "港股",
-      "score": 39.3,
-      "band": "恐慌",
-      "change_5d": -18.9,
+      "score": 40.5,
+      "band": "中性",
+      "change_5d": -16.5,
       "risk_off": false,
       "signal": "normal"
     }
@@ -110,32 +110,32 @@
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 13.2
+      "score": 12.4
     },
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 7.5
+      "score": 6.7
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 7.9
+      "score": 7.5
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 34.8
+      "score": 22.9
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 1.2
+      "score": 1.1
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
       "region": "jp",
-      "score": 41.3
+      "score": 35.4
     },
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
