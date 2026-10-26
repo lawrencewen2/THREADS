@@ -78,12 +78,15 @@ def sina_live(n=MARKET_N):
 def sina_live_pages(days=WEEK_DAYS, page_size=100, max_pages=WEEK_PAGES):
     """往回翻新浪 7x24，直到早于 days 天前。保留标签，用来判断重要性。"""
     cutoff = (pd.Timestamp.now(tz="Asia/Shanghai") - pd.Timedelta(days=days)).strftime("%Y-%m-%d %H:%M")
-    rows = []
+    rows, seen = [], set()
     for page in range(1, max_pages + 1):
         url = f"https://zhibo.sina.com.cn/api/zhibo/feed?zhibo_id=152&page={page}&page_size={page_size}&type=0"
         items = json.loads(_get(url, headers={"Referer": "https://finance.sina.com.cn/7x24/"}))["result"]["data"]["feed"]["list"]
+        # 翻过新浪能给的最深一页后，接口会一直返回同一页，按 id 去重并在没有新内容时停下
+        items = [it for it in items if it.get("id") not in seen]
         if not items:
             break
+        seen.update(it.get("id") for it in items)
         for it in items:
             title, body = _title_and_body(_text(it.get("rich_text")))
             tags = [t.get("name", "") for t in (it.get("tag") or []) if t.get("name")]
