@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-26T06:23+00:00",
+  "as_of": "2026-10-26T06:26+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 35.8,
+      "score": 37.1,
       "band": "恐慌",
       "date": "2026-10-26",
       "official": 37.4,
       "official_date": "2026-10-23",
-      "change": -1.6,
+      "change": -0.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -55,13 +55,13 @@
     },
     "jp": {
       "name": "日本",
-      "fresh": false,
-      "score": 18.5,
+      "fresh": true,
+      "score": 17.8,
       "band": "极度恐慌",
-      "date": "2026-10-23",
+      "date": "2026-10-26",
       "official": 18.5,
       "official_date": "2026-10-23",
-      "change": 0.0,
+      "change": -0.7,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -73,12 +73,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 24.1,
+      "score": 24.4,
       "band": "恐慌",
       "date": "2026-10-26",
       "official": 24.2,
       "official_date": "2026-10-23",
-      "change": -0.1,
+      "change": 0.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -89,13 +89,13 @@
     },
     "hk": {
       "name": "港股",
-      "fresh": false,
-      "score": 40.5,
-      "band": "中性",
-      "date": "2026-10-23",
+      "fresh": true,
+      "score": 38.1,
+      "band": "恐慌",
+      "date": "2026-10-26",
       "official": 40.5,
       "official_date": "2026-10-23",
-      "change": 0.0,
+      "change": -2.4,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -106,21 +106,105 @@
     }
   },
   "quotes": {
+    "spx": {
+      "value": 7622.990234,
+      "time": "2026-10-23T19:59+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "vix": {
+      "value": 19.450001,
+      "time": "2026-10-23T20:14+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "vix3m": {
+      "value": 20.709999,
+      "time": "2026-10-23T19:59+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "hyg": {
+      "value": 77.050003,
+      "time": "2026-10-23T19:59+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "ief": {
+      "value": 91.050003,
+      "time": "2026-10-23T19:59+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "sx5e": {
+      "value": 6059.379883,
+      "time": "2026-10-23T15:29+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
+    "eurchf": {
+      "value": 0.92405,
+      "time": "2026-10-26T06:26+00:00",
+      "date": "2026-10-26",
+      "fresh": false
+    },
+    "n225": {
+      "value": 62441.25,
+      "time": "2026-10-26T06:11+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "usdjpy": {
+      "value": 157.009003,
+      "time": "2026-10-26T06:26+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "topix": {
+      "value": 418.799988,
+      "time": "2026-10-26T06:11+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "hsi": {
+      "value": 23205.179688,
+      "time": "2026-10-26T06:11+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "hstech": {
+      "value": 3.782,
+      "time": "2026-10-26T06:11+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "gold": {
+      "value": 4022.100098,
+      "time": "2026-10-26T06:16+00:00",
+      "date": "2026-10-26",
+      "fresh": false
+    },
+    "us10y": {
+      "value": 4.988,
+      "time": "2026-10-23T18:59+00:00",
+      "date": "2026-10-23",
+      "fresh": false
+    },
     "csi300": {
-      "value": 4082.62,
-      "time": "2026-10-26T06:23+00:00",
+      "value": 4092.01,
+      "time": "2026-10-26T06:26+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "a_turnover": {
-      "value": 137433299.0,
-      "time": "2026-10-26T06:23+00:00",
+      "value": 138854280.0,
+      "time": "2026-10-26T06:26+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "qvix50": {
-      "value": 16.33,
-      "time": "2026-10-26T06:22+00:00",
+      "value": 16.19,
+      "time": "2026-10-26T06:25+00:00",
       "date": "2026-10-26",
       "fresh": true
     }
@@ -128,22 +212,12 @@
   "fresh": [
     "a_turnover",
     "csi300",
-    "qvix50"
+    "hsi",
+    "hstech",
+    "n225",
+    "qvix50",
+    "topix",
+    "usdjpy"
   ],
-  "errors": {
-    "spx": "yahoo ^GSPC: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EGS",
-    "vix": "yahoo ^VIX: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EVI",
-    "vix3m": "yahoo ^VIX3M: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EVI",
-    "hyg": "yahoo HYG: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/HYG?i",
-    "ief": "yahoo IEF: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/IEF?i",
-    "sx5e": "yahoo ^STOXX50E: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EST",
-    "eurchf": "yahoo EURCHF=X: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/EURCH",
-    "n225": "yahoo ^N225: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EN2",
-    "usdjpy": "yahoo JPY=X: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/JPY=X",
-    "topix": "yahoo 1306.T: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/1306.",
-    "hsi": "yahoo ^HSI: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EHS",
-    "hstech": "yahoo 3033.HK: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/3033.",
-    "gold": "yahoo GC=F: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/GC=F?",
-    "us10y": "yahoo ^TNX: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5ETN"
-  }
+  "errors": {}
 }
