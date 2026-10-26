@@ -83,3 +83,26 @@ def test_bootstrap_interval_contains_actual():
     b = insight.bootstrap(r)
     assert b["ci_low"] < b["ann"] < b["ci_high"]
     assert 0 <= b["p_positive"] <= 1
+
+
+def test_news_helpers():
+    from astock import news
+    assert news._title_and_body("【央行降准】央行宣布降准0.5个百分点") == ("央行降准", "央行宣布降准0.5个百分点")
+    t, b = news._title_and_body("没有标题的快讯")
+    assert t == "没有标题的快讯" and b == t
+    assert news.short_industry("计算机、通信和其他电子设备制造业") == "计算机"
+    assert news.short_industry("汽车制造业") == "汽车"
+    rows = news.tag_market([dict(title="众兴菌业公告", body="汽车板块走强")], ["众兴菌业", "鑫磊股份"], ["汽车"])
+    assert rows[0]["related"] == "众兴菌业、汽车"
+
+
+def test_news_build_survives_failures(monkeypatch):
+    from astock import news
+
+    def boom(*a, **k):
+        raise OSError("blocked")
+    monkeypatch.setattr(news, "_get", boom)
+    monkeypatch.setattr(news.time, "sleep", lambda s: None)
+    out = news.build(dict(picks=[dict(code="sz.002772", name="众兴菌业")]), [])
+    assert out["market"] == [] and out["stocks"] == []
+    assert all(not s["ok"] for s in out["status"])
