@@ -11,8 +11,8 @@
 | hsliuping/TradingAgents-CN（约 3.2 万星） | 多智能体大模型做 A股个股研究 | 借鉴行业/板块视角：做了行业强弱板块；多智能体辩论成本高、无回测，不引入 | 否 |
 | virattt/dexter（约 2.8 万星） | 财务数据研究和 DCF 估值智能体 | 美股为主，依赖付费数据接口，暂不引入 | 否 |
 | HKUDS/AI-Trader（约 2.3 万星） | 智能体交易信号平台（模拟盘） | 思路是信号跟踪和实盘对照；选股面板已有“实盘跟踪” | 否 |
-| xbtlin/ai-berkshire（约 1.7 万星） | 价值投资研究：20 个 skill（财报精读、质量筛选、投资清单、组合复盘） | 借鉴投资清单和质量筛选：做了决策清单和风险提示 | 是（Claude Code 命令） |
-| simonlin1212/a-stock-data（约 1.1 万星） | A股行情、财报、公告、资金流取数说明 | 腾讯行情在 Actions 上可用，已在用；东方财富接口拒绝 Actions 的 IP；融资融券、龙虎榜等可作为后续数据源 | 是（SKILL.md） |
+| xbtlin/ai-berkshire（约 1.5 万星） | 价值投资研究：20 个 skill（财报精读、质量筛选、投资清单、组合复盘） | 借鉴投资清单和质量筛选：做了决策清单和风险提示 | 是（Claude Code 命令） |
+| simonlin1212/a-stock-data（约 1 万星） | A股行情、财报、公告、资金流取数说明 | 腾讯行情在 Actions 上可用，已在用；东方财富接口拒绝 Actions 的 IP；融资融券、龙虎榜等可作为后续数据源 | 是（SKILL.md） |
 | TraderAlice/OpenAlice（约 0.7 万星） | 市场数据、技术分析、研究管理的交易助手 | 与现有功能重叠，不引入 | 部分（有 MCP） |
 
 ## 已落地（分支 claude/project-thread-sfpfl5，基于选股分支）
