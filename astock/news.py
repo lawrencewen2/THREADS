@@ -28,7 +28,7 @@ TIMEOUT = 20
 MARKET_N = 60  # 市场快讯条数
 WEEK_DAYS = 7  # 本周大事回看天数
 WEEK_N = 15  # 本周大事列几件
-WEEK_PAGES = 60  # 往回翻快讯的最多页数（每页 100 条）
+WEEK_PAGES = 160  # 往回翻快讯的最多页数（每页 100 条，一天约 1700 条）
 STOCK_DAYS = 30  # 候选股公告、新闻回看天数
 STOCK_N = 5  # 每只候选股最多列几条
 
@@ -113,13 +113,18 @@ def cls_telegraph(n=MARKET_N):
 CATEGORIES = [
     ("货币政策", 5, r"降准|降息|LPR|MLF|逆回购利率|央行宣布|人民银行宣布|美联储|加息|议息|利率决议|欧洲央行|日本央行|日银"),
     ("重大政策", 5, r"国务院|政治局|中央经济工作会议|国常会|全会|两会|特别国债|财政部.*(发行|赤字)|发改委.*(出台|印发)|稳增长|刺激"),
-    ("监管与资本市场", 4, r"证监会|印花税|汇金|平准|国家队|减持|IPO|退市|交易所.*(发布|修订)|融资融券|程序化交易"),
+    ("监管与资本市场", 4, r"证监会|印花税|汇金|平准|国家队|减持新规|退市新规|交易所.*(发布|修订)|融资融券|程序化交易"),
     ("地缘与贸易", 4, r"关税|制裁|贸易战|出口管制|实体清单|停火|战争|冲突升级|导弹|空袭"),
     ("宏观数据", 3, r"GDP|CPI|PPI|PMI|社融|新增贷款|M2|非农|失业率|零售销售|工业增加值|出口同比|进口同比|外汇储备"),
     ("市场大波动", 3, r"暴跌|暴涨|大跌|大涨|熔断|跌停潮|涨停潮|千股|创.{0,6}(新高|新低)|成交额.{0,6}(突破|超|万亿)|汇率.{0,6}(破|跌破|升破)"),
     ("大宗商品", 2, r"原油|油价|OPEC|金价|黄金|铜价|铁矿石"),
     ("海外市场", 2, r"美股|纳指|标普|道指|日经|恒指|港股|欧股|美债收益率"),
+    ("公司大事", 2, r"IPO|递交.{0,6}上市申请|并购|重组|破产|财报|业绩预告"),
 ]
+# 行情自动播报（某合约日内涨 X%、资金净买入）和每日固定栏目不算“大事”，否则会把真正的新闻挤下去
+ROUTINE_RE = re.compile(r"日内(涨|跌)|现报|涨超|跌超|涨幅扩大|跌幅扩大|净(买入|卖出)|异动|逆回购操作|新闻联播|头版|主要内容"
+                        r"|早餐|晚报|午报|早报|收评|午评|盘前|要闻|一览|汇总|集锦")
+INDUSTRY_STOP = {"研究", "专业", "其他", "综合", "批发", "零售", "商务服务", "食品"}
 CAT_RE = [(n, w, re.compile(k)) for n, w, k in CATEGORIES]
 FOCUS_TAGS = ("焦点", "重要", "头条")
 
@@ -129,7 +134,7 @@ def importance(text, tags):
     hits = [(n, w) for n, w, rx in CAT_RE if rx.search(text)]
     score = (max(w for _, w in hits) + 0.5 * (len(hits) - 1)) if hits else 0.0
     if any(f in t for t in tags for f in FOCUS_TAGS):
-        score += 3
+        score += 2
     return score, [n for n, _ in hits]
 
 
@@ -143,6 +148,8 @@ def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
     events = []
     for r in sorted(rows, key=lambda r: r["time"]):
         text = r["title"] + r["body"]
+        if ROUTINE_RE.search(r["title"]):
+            continue
         score, cats = importance(text, r.get("tags") or [])
         if score <= 0:
             continue
@@ -162,7 +169,7 @@ def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
     for e in events:
         top = max(e["items"], key=lambda x: (x["score"], len(x["body"])))
         text = " ".join(x["title"] + x["body"] for x in e["items"])
-        related = [k for k in list(names) + list(industries) if k and k in text]
+        related = [k for k in list(names) + [i for i in industries if i not in INDUSTRY_STOP] if k and k in text]
         weight = top["score"] + 2 * math.log(len(e["items"]))
         weight += 1 if related else 0
         out.append(dict(title=top["title"], body=top["body"][:300], first=e["items"][0]["time"], last=e["items"][-1]["time"],
