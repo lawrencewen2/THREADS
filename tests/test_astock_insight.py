@@ -106,3 +106,29 @@ def test_news_build_survives_failures(monkeypatch):
     out = news.build(dict(picks=[dict(code="sz.002772", name="众兴菌业")]), [])
     assert out["market"] == [] and out["stocks"] == []
     assert all(not s["ok"] for s in out["status"])
+
+
+def test_week_events_merge_and_rank():
+    from astock import news
+    rows = [dict(time="2026-10-20 09:00", title="央行宣布降准0.5个百分点", body="释放长期资金约1万亿元", tags=["焦点"]),
+            dict(time="2026-10-20 09:05", title="央行宣布降准0.5个百分点 释放资金1万亿", body="", tags=[]),
+            dict(time="2026-10-21 10:00", title="某公司召开股东大会", body="审议议案", tags=[]),
+            dict(time="2026-10-22 15:00", title="美国宣布对华加征关税", body="涉及汽车", tags=[]),
+            dict(time="2026-10-23 15:00", title="9月CPI同比上涨0.3%", body="", tags=[])]
+    ev = news.week_events(rows, ["众兴菌业"], ["汽车"])
+    assert [e["title"] for e in ev] == ["央行宣布降准0.5个百分点", "美国宣布对华加征关税", "9月CPI同比上涨0.3%"]
+    assert ev[0]["reports"] == 2 and ev[0]["focus"] and ev[0]["category"] == "货币政策"
+    assert ev[1]["related"] == "汽车"
+
+
+def test_week_events_merge_split_document():
+    from astock import news
+    rows = [dict(time="2026-10-23 19:13", title="李强主持召开国务院常务会议", body="", tags=["焦点"]),
+            dict(time="2026-10-23 19:15", title="李强主持召开国务院常务会议，会议指出，要进一步发挥服务业对经济发展的支撑作用", body="", tags=[]),
+            dict(time="2026-10-21 18:04", title="中办、国办：全面实施“人工智能+”行动", body="", tags=[]),
+            dict(time="2026-10-21 18:04", title="中办、国办：推动集成电路等关键核心技术攻关", body="", tags=[]),
+            dict(time="2026-10-25 04:00", title="美国务院更新中东多国旅行警告", body="", tags=[]),
+            dict(time="2026-10-26 09:54", title="ETF两市成交额超5000亿元", body="", tags=["焦点"])]
+    ev = news.week_events(rows)
+    assert [e["reports"] for e in ev] == [2, 2]
+    assert ev[0]["category"].startswith("重大会议")
