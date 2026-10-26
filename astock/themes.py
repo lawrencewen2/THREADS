@@ -26,13 +26,13 @@ log = logging.getLogger(__name__)
 
 CONCEPT_FILE = config.DATA_DIR / "concepts.csv"
 OUT_FILE = config.PAGE_DIR / "themes.json"
-MIN_MEMBERS, MAX_MEMBERS = 8, 400
+MIN_MEMBERS, MAX_MEMBERS = 10, 400
 TOP_THEMES = 6
 PICKS = 3
 CHART_DAYS = 60
 # 不是题材的“概念”：资金通道、指数成分、财务状态、行情标签
 NOT_THEME = re.compile(r"融资融券|转融|沪股通|深股通|港股通|MSCI|富时|标普|道琼斯|证金|汇金|社保|QFII|养老金|基金重仓|机构重仓|"
-                       r"昨日|连板|涨停|跌停|首板|破净|破发|ST|次新|新股|预增|预亏|扭亏|高送转|送转|股权转让|举牌|AH股|AB股|GDR|"
+                       r"龙头股|昨日|连板|涨停|跌停|首板|破净|破发|ST|次新|新股|预增|预亏|扭亏|高送转|送转|股权转让|举牌|AH股|AB股|GDR|"
                        r"创业板综|深成500|上证180|上证380|中证500|沪深300|央视50|同花顺漂亮|百元股|低价股|高股息|红利|微盘|"
                        r"大盘|小盘|中盘|注册制|核准制|北交所|科创次新|专精特新|独角兽|参股|壳资源|并购重组|业绩")
 
