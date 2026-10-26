@@ -138,8 +138,9 @@ def test_event_targets():
     from astock import news
     t = news.event_targets([dict(stocks=[])], "也门胡塞武装称，他们用无人机袭击了沙特阿拉伯的东西向原油泵站")
     assert [x["why"] for x in t][:2] == ["原油", "原油"] and len(t) == 3 and t[2]["why"] != "原油"
-    t = news.event_targets([dict(stocks=[("sz.300750", "宁德时代")]), dict(stocks=[("sz.300750", "宁德时代")])], "电池")
-    assert t[0] == dict(code="sz.300750", name="宁德时代", why="快讯点名")
+    t = news.event_targets([dict(title="宁德时代发布新电池", stocks=[("sz.300750", "宁德时代"), ("sz.300024", "机器人")]),
+                            dict(title="宁德时代涨超5%", stocks=[("sz.300750", "宁德时代")])], "电池")
+    assert t[0] == dict(code="sz.300750", name="宁德时代", why="快讯点名") and "机器人" not in [x["name"] for x in t]
     assert news.event_targets([dict(stocks=[])], "党的二十届五中全会召开")[0]["why"] == "大盘"
 
 

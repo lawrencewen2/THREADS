@@ -194,7 +194,10 @@ BROAD = [("sh.510300", "沪深300ETF"), ("sh.510050", "上证50ETF")]
 
 def event_targets(items, text, n=3):
     """一件事最直接关联的标的：快讯里点名次数最多的股票优先，不够再按主题补龙头；都没有时给宽基 ETF。"""
-    named = pd.Series([s for it in items for s in (it.get("stocks") or [])], dtype=object).value_counts()
+    # 新浪按字面自动挂股票（“机器人”“新城市”这类词也会挂上同名公司），所以只认标题里真出现了名字的，且不要指数
+    titles = " ".join(it.get("title", "") for it in items)
+    named = pd.Series([s for it in items for s in (it.get("stocks") or [])
+                       if s[1] in titles and not re.match(r"^(sz\.399|sh\.000)", s[0])], dtype=object).value_counts()
     out = [dict(code=c, name=nm, why="快讯点名") for (c, nm) in list(named.index)[:n]]
     themes = sorted(((len(rx.findall(text)), name, st) for name, rx, st in THEME_RE if rx.search(text)), key=lambda t: -t[0])
     for k, (_, name, st) in enumerate(themes):
