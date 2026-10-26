@@ -136,7 +136,8 @@ def test_week_events_merge_split_document():
 
 def test_event_targets():
     from astock import news
-    t = news.event_targets([dict(stocks=[])], "也门胡塞武装称，他们用无人机袭击了沙特阿拉伯的东西向原油泵站")
+    h = "也门胡塞武装称，他们用无人机袭击了沙特阿拉伯的东西向原油泵站"
+    t = news.event_targets([dict(title=h, stocks=[])], h)
     assert [x["why"] for x in t][:2] == ["原油", "原油"] and len(t) == 3 and t[2]["why"] != "原油"
     t = news.event_targets([dict(title="宁德时代发布新电池", stocks=[("sz.300750", "宁德时代"), ("sz.300024", "机器人")]),
                             dict(title="宁德时代涨超5%", stocks=[("sz.300750", "宁德时代")])], "电池")

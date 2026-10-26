@@ -200,6 +200,8 @@ def event_targets(items, text, n=3):
                        if s[1] in titles and not re.match(r"^(sz\.399|sh\.000)", s[0])], dtype=object).value_counts()
     out = [dict(code=c, name=nm, why="快讯点名") for (c, nm) in list(named.index)[:n]]
     themes = sorted(((len(rx.findall(text)), name, st) for name, rx, st in THEME_RE if rx.search(text)), key=lambda t: -t[0])
+    # 正文里顺带提到的方向容易跑偏：第一主题以外，只保留标题里也出现的
+    themes = themes[:1] + [t for t in themes[1:] if dict((n, rx) for n, rx, _ in THEME_RE)[t[1]].search(titles)]
     for k, (_, name, st) in enumerate(themes):
         cap = len(out) + (2 if k < len(themes) - 1 else n)  # 多个主题时每个主题最多两只，让标的覆盖不同方向
         for c, nm in st:
