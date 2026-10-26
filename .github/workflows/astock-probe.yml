@@ -1,0 +1,20 @@
+name: astock-probe
+
+# 一次性：探测概念板块数据源（用完删除）
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-sfpfl5]
+    paths: ["scripts/probe_concepts.py", ".github/workflows/astock-probe.yml"]
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install akshare pandas
+      - run: python scripts/probe_concepts.py
