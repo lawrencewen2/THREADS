@@ -21,7 +21,7 @@ permissions:
 concurrency:
   group: intraday
   cancel-in-progress: true
-
+ 
 jobs:
   estimate:
     runs-on: ubuntu-latest
