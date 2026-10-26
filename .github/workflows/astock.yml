@@ -29,6 +29,9 @@ jobs:
     timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
+        with:
+          # 排队等前一次运行时，开始时取分支最新的提交（含前一次刚拟合的 model.json）
+          ref: ${{ github.ref_name }}
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
