@@ -26,6 +26,9 @@ YAHOO = {"spx": "^GSPC", "vix": "^VIX", "vix3m": "^VIX3M", "hyg": "HYG", "ief": 
 TENCENT = {"csi300": "sh000300"}
 TURNOVER_CODES = ("sh000001", "sz399001")
 NO_INTRADAY = ("sh_margin", "move")
+# 区域的主指数有了新行情，这个区域才算进入新的一天。汇率、黄金等几乎 24 小时交易，
+# 主指数还没开盘时只接汇率会让区域在“大部分成分还是昨天”的状态下被平滑一次，读数失真。
+PRIMARY = {"us": "spx", "eu": "sx5e", "jp": "n225", "cn": "csi300", "hk": "hsi", "global": "spx"}
 
 # 盘中急跌提醒：分数比上一交易日正式读数低这么多分（每日版历史上每区域每年约 4–10 次）
 DROP_ALERT = 6
@@ -34,17 +37,24 @@ EXTREME_LOW, EXTREME_HIGH = 20, 80
 
 # ---------- 行情 ----------
 
-def _yahoo_quote(symbol, session):
-    url = f"https://query1.finance.yahoo.com/v8/finance/chart/{symbol}"
-    r = session.get(url, params={"interval": "1m", "range": "1d"}, headers=UA, timeout=15)
-    r.raise_for_status()
-    meta = r.json()["chart"]["result"][0]["meta"]
-    price, ts = meta.get("regularMarketPrice"), meta.get("regularMarketTime")
-    if price is None or ts is None:
-        raise ValueError(f"no price for {symbol}")
-    tz = ZoneInfo(meta.get("exchangeTimezoneName") or "UTC")
-    t = datetime.fromtimestamp(ts, tz=timezone.utc)
-    return dict(value=float(price), time=t, date=pd.Timestamp(t.astimezone(tz).date()))
+def _yahoo_quote(symbol, session=None):
+    """最近一根分钟线的收盘价。yfinance 自带 Yahoo 需要的 cookie，直接请求接口会被限流（429）。"""
+    import yfinance as yf
+
+    last_exc = None
+    for period, interval in (("1d", "1m"), ("5d", "5m")):
+        try:
+            df = yf.Ticker(symbol).history(period=period, interval=interval, prepost=False, auto_adjust=False)
+        except Exception as exc:
+            last_exc = exc
+            continue
+        close = df["Close"].dropna() if df is not None and not df.empty else None
+        if close is None or close.empty:
+            continue
+        ts = close.index[-1]
+        return dict(value=float(close.iloc[-1]), time=ts.tz_convert("UTC").to_pydatetime(),
+                    date=pd.Timestamp(ts.date()))
+    raise ValueError(f"no intraday data for {symbol}: {last_exc}")
 
 
 def _tencent_raw(codes, session):
@@ -78,7 +88,7 @@ def fetch_quotes(session=None):
     quotes, errors = {}, {}
     for key, sym in YAHOO.items():
         try:
-            quotes[key] = _yahoo_quote(sym, session)
+            quotes[key] = _yahoo_quote(sym)
         except Exception as exc:
             errors[key] = f"yahoo {sym}: {type(exc).__name__}: {str(exc)[:100]}"
     try:
@@ -129,14 +139,22 @@ def _turnover_value(q, hist):
 
 
 def apply_quotes(series, quotes):
-    """把比历史更新的行情接到序列末尾。返回 (新的 series, 接上了的 key 列表)。"""
+    """把比历史更新的行情接到序列末尾。返回 (新的 series, 接上了的 key 列表)。
+
+    一个序列只在用到它的每个区域的主指数都有新行情时才接上（见 PRIMARY）。
+    """
+    def newer(key):
+        hist, q = series.get(key), quotes.get(key)
+        return (q is not None and hist is not None and not hist.empty and key not in NO_INTRADAY
+                and q["date"] > hist.index[-1] and q["date"].dayofweek < 5)
+
+    open_regions = {r for r, k in PRIMARY.items() if newer(k)}
     out, fresh = dict(series), []
     for key, q in quotes.items():
-        hist = series.get(key)
-        if hist is None or hist.empty or key in NO_INTRADAY:
+        users = {c["region"] for c in config.COMPONENTS.values() if key in c["inputs"]}
+        if not newer(key) or not users or not users <= open_regions:
             continue
-        if q["date"] <= hist.index[-1] or q["date"].dayofweek >= 5:
-            continue
+        hist = series[key]
         value = _turnover_value(q, hist) if q.get("partial") else q["value"]
         if value is None or not value > 0:
             continue
@@ -145,24 +163,39 @@ def apply_quotes(series, quotes):
     return out, fresh
 
 
-def _region_inputs(region):
-    return {k for c in config.COMPONENTS.values() if c["region"] == region for k in c["inputs"]}
+def _global_live(official, live, fresh_regions, common_fresh):
+    """全球盘中读数 = 正式读数 + 有新行情的区域各自的变化 × 其权重。
+
+    全球分是区域分的线性组合，平滑也是线性的，所以按区域拆开相加与整体重算等价；
+    但还没开盘的区域如果在新的一天里沿用昨天的成分值，会被平滑一次而失真，拆开算就避开了这一点。
+    """
+    off = official["global"].dropna()
+    total_w = sum(config.REGION_WEIGHTS.values())
+    delta = 0.0
+    for r in fresh_regions:
+        delta += (1 - config.COMMON_WEIGHT) * config.REGION_WEIGHTS[r] / total_w * (
+            live[r].dropna().iloc[-1] - official[r].dropna().iloc[-1])
+    if common_fresh:
+        delta += config.COMMON_WEIGHT * (live["common"].dropna().iloc[-1] - official["common"].dropna().iloc[-1])
+    date = max(live[r].dropna().index[-1] for r in fresh_regions)
+    return pd.concat([off, pd.Series([round(off.iloc[-1] + delta, 1)], index=[date])])
 
 
 def estimate(series, quotes):
-    """返回盘中读数 dict。没有新行情的区域显示上一交易日正式读数（fresh=False）。"""
+    """返回盘中读数 dict。主指数没有新行情的区域显示上一交易日正式读数（fresh=False）。"""
     official, _, _ = compute.build(series)
     live_series, fresh = apply_quotes(series, quotes)
     live, _, _ = compute.build(live_series) if fresh else (official, None, None)
+    fresh_regions = [r for r in config.REGIONS if PRIMARY[r] in fresh]
+    common_fresh = PRIMARY["global"] in fresh
     regions = {}
-    fresh_regions = set()
-    for r in config.REGIONS:
-        if _region_inputs(r) & set(fresh):
-            fresh_regions.add(r)
     for key in ["global"] + list(config.REGIONS):
         off = official[key].dropna()
         is_fresh = key in fresh_regions or (key == "global" and bool(fresh_regions))
-        src = live[key].dropna() if is_fresh else off
+        if key == "global" and is_fresh:
+            src = _global_live(official, live, fresh_regions, common_fresh)
+        else:
+            src = live[key].dropna() if is_fresh else off
         score = float(src.iloc[-1])
         sig = config.signals(src).iloc[-1]
         regions[key] = dict(

@@ -244,19 +244,25 @@ def test_intraday_apply_quotes():
 
     idx = pd.bdate_range("2026-01-01", periods=300)
     series = {"n225": pd.Series(range(1, 301), index=idx, dtype=float),
+              "csi300": pd.Series(100.0, index=idx), "usdjpy": pd.Series(150.0, index=idx),
               "a_turnover": pd.Series(1e9, index=idx), "sh_margin": pd.Series(1.0, index=idx)}
     t = datetime(2026, 1, 1, tzinfo=timezone.utc)
     nxt = idx[-1] + pd.offsets.BDay()
     quotes = {"n225": dict(value=250.0, time=t, date=nxt),
               "a_turnover": dict(value=5e5, time=t, date=nxt, partial=True, minutes=120),  # 万元，半天
+              "csi300": dict(value=99.0, time=t, date=nxt),
               "sh_margin": dict(value=2.0, time=t, date=nxt)}
     out, fresh = intraday.apply_quotes(series, quotes)
-    assert sorted(fresh) == ["a_turnover", "n225"]
+    assert sorted(fresh) == ["a_turnover", "csi300", "n225"]
     assert out["n225"].index[-1] == nxt and out["n225"].iloc[-1] == 250.0
     assert abs(out["a_turnover"].iloc[-1] - 1e9) < 1  # 折算全天并换算到历史单位
     # 不比历史新的行情不接
     stale = {"n225": dict(value=1.0, time=t, date=idx[-1])}
     assert intraday.apply_quotes(series, stale)[1] == []
     # 开盘不到 30 分钟的成交额不折算
-    early = {"a_turnover": dict(value=1e5, time=t, date=nxt, partial=True, minutes=10)}
-    assert intraday.apply_quotes(series, early)[1] == []
+    early = {"a_turnover": dict(value=1e5, time=t, date=nxt, partial=True, minutes=10),
+             "csi300": dict(value=99.0, time=t, date=nxt)}
+    assert intraday.apply_quotes(series, early)[1] == ["csi300"]
+    # 主指数还没开盘时，24 小时交易的汇率不接
+    fx = {"usdjpy": dict(value=149.0, time=t, date=nxt)}
+    assert intraday.apply_quotes(series, fx)[1] == []
