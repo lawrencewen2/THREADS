@@ -38,8 +38,12 @@ def _clean(s):
 
 
 def sanitize(key, s):
-    """剔除周末日期（各市场周末都不交易，出现即为接口杂质），外汇序列再剔除单日坏点。"""
+    """剔除周末日期（各市场周末都不交易，出现即为接口杂质）和未收盘的当天行情，外汇序列再剔除单日坏点。"""
     s = s[s.index.dayofweek < 5]
+    # 去掉当天还没收盘的行情：D 日的数据要到 D 日 22:00 UTC（美股收盘后）才算完整。
+    # 定时任务延迟到亚洲开盘后才跑时，Yahoo 会把日经等的盘中价当作当天收盘返回。
+    cutoff = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=22)).tz_localize(None).normalize()
+    s = s[s.index <= cutoff]
     thr = config.SPIKE_FILTER.get(key)
     if thr and len(s) > 2:
         prev, nxt = s.shift(1), s.shift(-1)

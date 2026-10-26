@@ -201,3 +201,68 @@ def test_risk_off_needs_two_days():
     s = pd.Series([60.0] * 25 + [35.0, 50.0, 35.0, 34.0], index=pd.bdate_range("2020-01-01", periods=29))
     on = config.risk_off(s)
     assert not on.iloc[25] and not on.iloc[27] and on.iloc[28]
+
+
+def test_extreme_hints():
+    idx = pd.bdate_range("2020-01-01", periods=60)
+    s = pd.Series([50.0] * 10 + [15.0] * 10 + [30.0, 45.0, 55.0] + [55.0] * 15 + [90.0] * 5 + [70.0, 60.0] + [60.0] * 15,
+                  index=idx)
+    assert config.extreme_events(s, "bottom") == [idx[22]]
+    assert config.extreme_events(s, "top") == [idx[44]]
+    sig = config.signals(s)
+    assert sig.iloc[22] == "bottom" and sig.iloc[26] == "bottom" and sig.iloc[27] == "normal"
+    assert sig.iloc[44] == "top"
+
+
+def test_short_bottom_hint():
+    """短期触底：10 日内下跌至少 10 分后回升 8 分，不要求跌到 20 以下。"""
+    idx = pd.bdate_range("2020-01-01", periods=40)
+    s = pd.Series([60.0] * 10 + [52.0, 46.0, 42.0, 40.0, 44.0, 49.0] + [49.0] * 24, index=idx)
+    assert config.extreme_events(s, "bottom") == []
+    assert config.extreme_events(s, "short_bottom") == [idx[15]]
+    sig = config.signals(s)
+    assert sig.iloc[15] == "short_bottom" and sig.iloc[19] == "short_bottom" and sig.iloc[20] == "normal"
+    # 低点高于 50 的回调不算
+    assert config.extreme_events(s + 15, "short_bottom") == []
+
+
+def test_sanitize_drops_unfinished_today():
+    from fearindex import fetch
+
+    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    idx = pd.bdate_range(end=today - pd.Timedelta(days=7), periods=5).append(pd.DatetimeIndex([today]))
+    s = pd.Series(1.0, index=idx)
+    out = fetch.sanitize("spx", s)
+    assert today not in out.index
+    assert len(out) == 5
+
+
+def test_intraday_apply_quotes():
+    from datetime import datetime, timezone
+
+    from fearindex import intraday
+
+    idx = pd.bdate_range("2026-01-01", periods=300)
+    series = {"n225": pd.Series(range(1, 301), index=idx, dtype=float),
+              "csi300": pd.Series(100.0, index=idx), "usdjpy": pd.Series(150.0, index=idx),
+              "a_turnover": pd.Series(1e9, index=idx), "sh_margin": pd.Series(1.0, index=idx)}
+    t = datetime(2026, 1, 1, tzinfo=timezone.utc)
+    nxt = idx[-1] + pd.offsets.BDay()
+    quotes = {"n225": dict(value=250.0, time=t, date=nxt),
+              "a_turnover": dict(value=5e5, time=t, date=nxt, partial=True, minutes=120),  # 万元，半天
+              "csi300": dict(value=99.0, time=t, date=nxt),
+              "sh_margin": dict(value=2.0, time=t, date=nxt)}
+    out, fresh = intraday.apply_quotes(series, quotes)
+    assert sorted(fresh) == ["a_turnover", "csi300", "n225"]
+    assert out["n225"].index[-1] == nxt and out["n225"].iloc[-1] == 250.0
+    assert abs(out["a_turnover"].iloc[-1] - 1e9) < 1  # 折算全天并换算到历史单位
+    # 不比历史新的行情不接
+    stale = {"n225": dict(value=1.0, time=t, date=idx[-1])}
+    assert intraday.apply_quotes(series, stale)[1] == []
+    # 开盘不到 30 分钟的成交额不折算
+    early = {"a_turnover": dict(value=1e5, time=t, date=nxt, partial=True, minutes=10),
+             "csi300": dict(value=99.0, time=t, date=nxt)}
+    assert intraday.apply_quotes(series, early)[1] == ["csi300"]
+    # 主指数还没开盘时，24 小时交易的汇率不接
+    fx = {"usdjpy": dict(value=149.0, time=t, date=nxt)}
+    assert intraday.apply_quotes(series, fx)[1] == []

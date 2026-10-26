@@ -4,6 +4,9 @@
 0 = 极度恐慌，100 = 极度贪婪（与 CNN 恐惧贪婪指数方向一致）。
 """
 
+import numpy as np
+import pandas as pd
+
 # 原始序列：key -> [(数据源, 代码), ...]，按顺序尝试，第一个成功的生效。
 # 换了数据源（量纲可能不同）时会整段重拉，不与旧缓存拼接。
 # yahoo: yfinance 收盘价；akshare: 见 fetch.py 里的专用函数
@@ -15,11 +18,14 @@ SERIES = {
     "vix3m": [("yahoo", "^VIX3M")],
     "hyg": [("yahoo", "HYG")],
     "ief": [("yahoo", "IEF")],
+    "rsp": [("yahoo", "RSP")],     # 标普500 等权 ETF：反映多数成分股，而不是少数权重股
+    "iwm": [("yahoo", "IWM")],     # 罗素2000 小盘 ETF
     # 欧洲
     "sx5e": [("yahoo", "^STOXX50E")],
     "eurchf": [("yahoo", "EURCHF=X")],
     # 日本
     "n225": [("yahoo", "^N225")],
+    "topix": [("yahoo", "1306.T"), ("yahoo", "^TOPX")],  # TOPIX（市值加权、覆盖全市场；日经225 为价格加权，受少数高价股左右）
     "usdjpy": [("yahoo", "JPY=X")],
     # A股（东方财富常拒绝境外 IP，依次退到腾讯、新浪、Yahoo）
     "csi300": [("akshare", "em_close:sh000300"), ("akshare", "tx_close:sh000300"),
@@ -27,10 +33,13 @@ SERIES = {
     "a_turnover": [("akshare", "em_amount:sh000001+sz399001"), ("akshare", "tx_amount:sh000001+sz399001"),
                    ("akshare", "sina_volume:sh000001+sz399001")],
     "sh_margin": [("akshare", "sh_margin")],
+    "csi1000": [("akshare", "tx_close:sh000852"), ("akshare", "sina_close:sh000852"), ("yahoo", "000852.SS")],
+    "csi500": [("akshare", "tx_close:sh000905"), ("akshare", "sina_close:sh000905"), ("yahoo", "000905.SS")],
     "qvix50": [("akshare", "qvix50")],
     # 港股
     "hsi": [("yahoo", "^HSI")],
     "hstech": [("yahoo", "HSTECH.HK"), ("yahoo", "3033.HK")],
+    "hscomp": [("yahoo", "^HSCI"), ("yahoo", "2833.HK")],  # 恒生综合指数（覆盖大中小盘）
     # 全球公共
     "gold": [("yahoo", "GC=F")],
     "move": [("yahoo", "^MOVE")],
@@ -63,6 +72,8 @@ COMPONENTS = {
     "jp_ma": dict(region="jp", transform="below_ma", inputs=["n225"], weight=0.75, name="日经225 低于125日均线幅度"),
     "jp_yen": dict(region="jp", transform="fall_20d", inputs=["usdjpy"], weight=0.5, name="日元20日急升"),
     "jp_crash": dict(region="jp", transform="fall_10d", inputs=["n225"], weight=0.5, name="日经225 10日急跌"),
+    # 日经225 是价格加权，少数高价股（如迅销、东京电子）影响很大；TOPIX 覆盖全市场，更接近多数股票的感受
+    "jp_breadth": dict(region="jp", transform="drawdown", inputs=["topix"], weight=1.0, name="TOPIX 回撤（全市场）"),
     # ---- A股 ----
     "cn_qvix": dict(region="cn", transform="level", inputs=["qvix50"], weight=1.0, name="50ETF 期权波动率 QVIX"),
     "cn_rvol": dict(region="cn", transform="realized_vol", inputs=["csi300"], weight=0.5, name="沪深300 20日实际波动率"),
@@ -113,6 +124,27 @@ RISK_OFF_LEVEL = 40
 RISK_OFF_LOOKBACK = 20
 RISK_OFF_CONFIRM = 2     # 条件连续成立几天才发出信号，减少来回开关
 
+# 极端行情提示（参考，不参与减仓规则；回测显示两者都没有可靠的预测力，统计见 reports/backtest.md）：
+#   触底：分数在过去 EXTREME_MEMORY 个交易日内曾 ≤ BOTTOM_LEVEL，之后回升到 BOTTOM_EXIT 以上（恐慌解除）
+#   触顶：分数在过去 EXTREME_MEMORY 个交易日内曾 ≥ TOP_LEVEL，之后回落到 TOP_EXIT 以下（贪婪退潮）
+# 触发后显示 EXTREME_SHOW 个交易日；同一种提示至少间隔 EXTREME_GAP 个交易日。阈值只依据 2018 年以前的回测选定。
+BOTTOM_LEVEL, BOTTOM_EXIT = 20, 50
+TOP_LEVEL, TOP_EXIT = 85, 65
+EXTREME_MEMORY = 60
+EXTREME_SHOW = 5
+EXTREME_GAP = 20
+# 短期触底（参考）：过去 SHORT_WINDOW 个交易日里分数从高点下跌至少 SHORT_DROP 分、低点不高于 SHORT_LEVEL，
+# 之后从低点回升至少 SHORT_REBOUND 分。不要求跌到极度恐慌。参数只依据 2018 年以前的回测选定
+# （scripts/experiment_short_bottom.py）：在每区域每年至少约 1 次的方案里，前几名守住低点的比例相差不到 1 个百分点，
+# 取触发最早（触发时价格离低点最近）的一个。2018 年以前触发后 20 日内守住前期低点约 65%，平时约 46%。
+SHORT_WINDOW = 10
+SHORT_DROP = 10
+SHORT_REBOUND = 8
+SHORT_LEVEL = 50
+SIGNAL_TEXT = {"risk_off": "恐慌加深，减仓", "bottom": "恐慌解除（可能触底，仅供参考）",
+               "short_bottom": "短期触底（仅供参考）",
+               "top": "贪婪退潮（可能触顶，仅供参考）", "normal": "正常"}
+
 BANDS = [
     (20, "极度恐慌"),
     (40, "恐慌"),
@@ -136,7 +168,9 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM))
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM),
+                  extremes=(BOTTOM_LEVEL, BOTTOM_EXIT, TOP_LEVEL, TOP_EXIT, EXTREME_MEMORY, EXTREME_SHOW, EXTREME_GAP),
+                  short=(SHORT_WINDOW, SHORT_DROP, SHORT_REBOUND, SHORT_LEVEL))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]
 
 
@@ -146,3 +180,48 @@ def risk_off(score):
     if RISK_OFF_CONFIRM <= 1:
         return raw
     return raw.astype(int).rolling(RISK_OFF_CONFIRM, min_periods=RISK_OFF_CONFIRM).min().fillna(0).astype(bool)
+
+
+def extreme_events(score, kind):
+    """触底（kind='bottom'）、短期触底（'short_bottom'）或触顶（'top'）提示的触发日期列表。"""
+    s = score.dropna()
+    if kind == "short_bottom":
+        fire = _short_bottom_fire(s)
+    elif kind == "bottom":
+        seen = (s <= BOTTOM_LEVEL).astype(int).rolling(EXTREME_MEMORY, min_periods=1).max().shift(1, fill_value=0) > 0
+        fire = seen & (s >= BOTTOM_EXIT) & (s.shift(1) < BOTTOM_EXIT)
+    else:
+        seen = (s >= TOP_LEVEL).astype(int).rolling(EXTREME_MEMORY, min_periods=1).max().shift(1, fill_value=0) > 0
+        fire = seen & (s <= TOP_EXIT) & (s.shift(1) > TOP_EXIT)
+    out = []
+    for d in s.index[fire]:
+        if not out or s.index.get_loc(d) - s.index.get_loc(out[-1]) >= EXTREME_GAP:
+            out.append(d)
+    return out
+
+
+def _short_bottom_fire(s):
+    vals = s.to_numpy()
+    fire = np.zeros(len(s), dtype=bool)
+    for i in range(SHORT_WINDOW, len(s)):
+        seg = vals[i - SHORT_WINDOW: i + 1]
+        j = int(np.argmin(seg))
+        trough = seg[j]
+        if trough > SHORT_LEVEL or seg[: j + 1].max() - trough < SHORT_DROP:
+            continue
+        fire[i] = vals[i] - trough >= SHORT_REBOUND and vals[i - 1] - trough < SHORT_REBOUND
+    return pd.Series(fire, index=s.index)
+
+
+def signals(score):
+    """每天的仓位信号：risk_off / bottom / short_bottom / top / normal。
+    减仓优先，其次是触底，再次是短期触底；提示在触发后显示 EXTREME_SHOW 天。"""
+    s = score.dropna()
+    out = pd.Series("normal", index=s.index)
+    pos = pd.Series(range(len(s)), index=s.index)
+    for kind in ("top", "short_bottom", "bottom"):
+        for d in extreme_events(s, kind):
+            i = pos[d]
+            out.iloc[i:i + EXTREME_SHOW] = kind
+    out[risk_off(s)] = "risk_off"
+    return out

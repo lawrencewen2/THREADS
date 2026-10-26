@@ -2,9 +2,10 @@ name: daily-update
 
 on:
   schedule:
-    # 北京时间周一至周五 07:30（UTC 周日至周四 23:30），A股/港股开盘前更新；
-    # 周一早上用的是上周五收盘数据
-    - cron: "30 23 * * 0-4"
+    # 北京时间周一至周五 06:30，07:20 再跑一次备用（GitHub 定时常延迟一小时以上，重复运行无副作用）；
+    # A股/港股开盘前更新，周一早上用的是上周五收盘数据
+    - cron: "30 22 * * 0-4" 
+    - cron: "20 23 * * 0-4"
   workflow_dispatch:
     inputs:
       full:
@@ -35,8 +36,11 @@ jobs:
         run: python scripts/run_daily.py ${{ inputs.full && '--full' || '' }}
         continue-on-error: true
       - name: Verify data
-        # 只报告不改数据：重算分数、核对发布文件、与第二数据源比对，结果写入 reports/verification.md
-        run: python scripts/verify_data.py
+        # 只报告不改数据：重算分数、核对发布文件、与第二数据源比对、核对盘中估算，结果写入 reports/verification.md
+        run: |
+          mkdir -p /tmp/intraday
+          git fetch --depth 1 origin intraday && git --work-tree=/tmp/intraday checkout FETCH_HEAD -- log && git reset -q || true
+          python scripts/verify_data.py --intraday-log /tmp/intraday/log
         continue-on-error: true
       - name: Commit results
         run: |

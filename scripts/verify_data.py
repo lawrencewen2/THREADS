@@ -13,12 +13,13 @@ from fearindex import compute, fetch, publish, verify  # noqa: E402
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--offline", action="store_true", help="不做跨数据源比对")
+    ap.add_argument("--intraday-log", help="intraday 分支 log/ 目录，用来核对盘中估算")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
     series = fetch.load_all()
     index_df, comp_df, _ = compute.build(series)
-    rep = verify.run(series, index_df, comp_df, online=not args.offline)
+    rep = verify.run(series, index_df, comp_df, online=not args.offline, intraday_log=args.intraday_log)
     md = verify.to_markdown(rep, index_df.index[-1].date())
     out = publish.ROOT / "reports" / "verification.md"
     out.parent.mkdir(exist_ok=True)
