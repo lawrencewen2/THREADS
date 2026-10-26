@@ -21,55 +21,48 @@ def probe(name, fn):
         print(f"FAIL {name}: {exc!r}")
 
 
-def sina_classes():
+def sina_members():
+    out = {}
+    for node in ("gn_hwqc", "gn_syht", "gn_htjg", "gn_xp"):
+        u = ("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData"
+             f"?page=1&num=100&sort=symbol&asc=1&node={node}&symbol=&_s_r_a=init")
+        out[node] = get(u, "gbk", "http://vip.stock.finance.sina.com.cn/")[:300]
+    cnt = get("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeStockCount?node=gn_hwqc", "gbk")
+    out["count"] = cnt
+    return out
+
+
+def sina_classes_aero():
     s = get("http://vip.stock.finance.sina.com.cn/q/view/newFLJK.php?param=class", "gbk")
     items = re.findall(r'"(gn_\w+)":"gn_\w+,([^,]+),(\d+)', s)
-    return len(items), items[:15], s[:200]
+    return [i for i in items if re.search("航天|芯片|半导体|卫星|AI|人工智能|算力", i[1])]
 
 
-def sina_members():
-    s = get("http://vip.stock.finance.sina.com.cn/quotes_service/api/json_v2.php/Market_Center.getHQNodeData?page=1&num=80&sort=symbol&asc=1&node=gn_syht&symbol=&_s_r_a=init", "gbk")
-    return s[:500]
+def ths_detail():
+    out = []
+    for page in (1, 2):
+        u = f"http://q.10jqka.com.cn/gn/detail/field/264648/order/desc/page/{page}/ajax/1/code/308614"
+        try:
+            s = get(u, "gbk", "http://q.10jqka.com.cn/gn/detail/code/308614/")
+            out.append((page, len(s), re.findall(r'stockpage.10jqka.com.cn/(\d{6})/" target="_blank">([^<]+)<', s)[:5], s[:200]))
+        except Exception as exc:
+            out.append((page, repr(exc)))
+    s = get("http://q.10jqka.com.cn/gn/detail/code/308614/", "gbk", "http://q.10jqka.com.cn/gn/")
+    out.append(("main", len(s), re.findall(r'page_info">(\d+/\d+)<', s), re.findall(r'stockpage.10jqka.com.cn/(\d{6})/', s)[:5]))
+    return out
 
 
-def ak_ths():
-    import akshare as ak
-    df = ak.stock_board_concept_name_ths()
-    return df.shape, df.head(5).to_dict("records")
+def tencent_members():
+    out = []
+    for u in ["https://proxy.finance.qq.com/cgi/cgi-bin/rank/pt/getRank?board_type=gn&sort_type=price&direct=down&offset=0&count=3",
+              "https://proxy.finance.qq.com/cgi/cgi-bin/rank/hs/getBoardRankList?_appver=11.17.0&board_code=pt01801081&sort_type=price&direct=down&offset=0&count=20"]:
+        try:
+            out.append(get(u)[:700])
+        except Exception as exc:
+            out.append(repr(exc))
+    return out
 
 
-def ak_ths_cons():
-    import akshare as ak
-    fn = getattr(ak, "stock_board_concept_cons_ths", None)
-    if fn is None:
-        return "no stock_board_concept_cons_ths in this akshare"
-    df = fn(symbol="商业航天")
-    return df.shape, df.head(5).to_dict("records")
-
-
-def ak_em():
-    import akshare as ak
-    df = ak.stock_board_concept_name_em()
-    return df.shape, df.head(3).to_dict("records")
-
-
-def ak_em_cons():
-    import akshare as ak
-    df = ak.stock_board_concept_cons_em(symbol="商业航天")
-    return df.shape, df.head(3).to_dict("records")
-
-
-def ths_page():
-    s = get("http://q.10jqka.com.cn/gn/", "gbk", "http://q.10jqka.com.cn/")
-    return len(s), re.findall(r'href="http://q.10jqka.com.cn/gn/detail/code/(\d+)/"[^>]*>([^<]+)<', s)[:10]
-
-
-def tencent_concepts():
-    s = get("https://proxy.finance.qq.com/cgi/cgi-bin/rank/pt/getRank?board_type=gn&sort_type=price&direct=down&offset=0&count=20")
-    return s[:600]
-
-
-for n, f in [("sina_classes", sina_classes), ("sina_members", sina_members), ("ths_page", ths_page),
-             ("tencent_concepts", tencent_concepts), ("ak_ths", ak_ths), ("ak_ths_cons", ak_ths_cons),
-             ("ak_em", ak_em), ("ak_em_cons", ak_em_cons)]:
+for n, f in [("sina_members", sina_members), ("sina_classes_aero", sina_classes_aero),
+             ("ths_detail", ths_detail), ("tencent_members", tencent_members)]:
     probe(n, f)
