@@ -138,9 +138,9 @@ CAT_RE = [(n, w, re.compile(k)) for n, w, k in CATEGORIES]
 FOCUS_TAGS = ("焦点", "重要", "头条")
 
 
-def importance(text, tags):
-    """单条快讯的重要性分和命中的类别。"""
-    hits = [(n, w) for n, w, rx in CAT_RE if rx.search(text)]
+def importance(text, tags, title=None):
+    """单条快讯的重要性分和命中的类别。重大会议只看标题：正文里“学习贯彻全会精神”之类的套话不算。"""
+    hits = [(n, w) for n, w, rx in CAT_RE if rx.search(title if (n == "重大会议" and title) else text)]
     score = (max(w for _, w in hits) + min(1.0, 0.5 * (len(hits) - 1))) if hits else 0.0
     if hits and CHINA_RE.search(text):
         score += 2
@@ -167,7 +167,7 @@ def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
         text = r["title"] + r["body"]
         if ROUTINE_RE.search(r["title"]):
             continue
-        score, cats = importance(text, r.get("tags") or [])
+        score, cats = importance(text, r.get("tags") or [], r["title"])
         if score <= 0:
             continue
         g = _grams(r["title"])
