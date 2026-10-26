@@ -36,9 +36,9 @@
     },
     "cn": {
       "name": "A股",
-      "score": 24.2,
+      "score": 24.0,
       "band": "恐慌",
-      "change_5d": -1.5,
+      "change_5d": -1.7,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -140,7 +140,7 @@
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
       "region": "cn",
-      "score": 69.6
+      "score": 68.2
     },
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
