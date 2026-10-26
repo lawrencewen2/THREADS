@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-26T20:23+00:00",
+  "as_of": "2026-10-26T20:25+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 36.4,
+      "score": 36.5,
       "band": "恐慌",
       "date": "2026-10-27",
       "official": 37.4,
       "official_date": "2026-10-23",
-      "change": -1.0,
+      "change": -0.9,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -23,12 +23,12 @@
     "us": {
       "name": "美国",
       "fresh": true,
-      "score": 45.2,
+      "score": 45.4,
       "band": "中性",
       "date": "2026-10-27",
       "official": 44.5,
       "official_date": "2026-10-23",
-      "change": 0.7,
+      "change": 0.9,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "vix": {
-      "value": 18.469999,
-      "time": "2026-10-26T20:07+00:00",
+      "value": 18.43,
+      "time": "2026-10-26T20:09+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -149,8 +149,8 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92509,
-      "time": "2026-10-26T20:23+00:00",
+      "value": 0.92503,
+      "time": "2026-10-26T20:25+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -161,8 +161,8 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.516006,
-      "time": "2026-10-26T20:23+00:00",
+      "value": 157.518005,
+      "time": "2026-10-26T20:25+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -185,8 +185,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4026.5,
-      "time": "2026-10-26T20:13+00:00",
+      "value": 4026.100098,
+      "time": "2026-10-26T20:15+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
