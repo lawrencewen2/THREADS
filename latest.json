@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-26T09:26+00:00",
+  "as_of": "2026-10-26T12:57+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -39,12 +39,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 30.0,
+      "score": 29.9,
       "band": "恐慌",
       "date": "2026-10-26",
       "official": 31.5,
       "official_date": "2026-10-23",
-      "change": -1.5,
+      "change": -1.6,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -76,9 +76,9 @@
       "score": 24.4,
       "band": "恐慌",
       "date": "2026-10-26",
-      "official": 24.2,
+      "official": 24.0,
       "official_date": "2026-10-23",
-      "change": 0.2,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -113,8 +113,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 19.219999,
-      "time": "2026-10-26T09:11+00:00",
+      "value": 19.26,
+      "time": "2026-10-26T12:42+00:00",
       "date": "2026-10-26",
       "fresh": false
     },
@@ -137,14 +137,14 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6093.830078,
-      "time": "2026-10-26T09:11+00:00",
+      "value": 6107.879883,
+      "time": "2026-10-26T12:42+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92595,
-      "time": "2026-10-26T09:26+00:00",
+      "value": 0.92352,
+      "time": "2026-10-26T12:57+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -155,8 +155,8 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.270004,
-      "time": "2026-10-26T09:26+00:00",
+      "value": 157.309998,
+      "time": "2026-10-26T12:57+00:00",
       "date": "2026-10-26",
       "fresh": true
     },
@@ -179,15 +179,15 @@
       "fresh": true
     },
     "gold": {
-      "value": 4030.100098,
-      "time": "2026-10-26T09:16+00:00",
+      "value": 4034.0,
+      "time": "2026-10-26T12:47+00:00",
       "date": "2026-10-26",
       "fresh": false
     },
     "us10y": {
-      "value": 4.988,
-      "time": "2026-10-23T18:59+00:00",
-      "date": "2026-10-23",
+      "value": 4.99,
+      "time": "2026-10-26T12:42+00:00",
+      "date": "2026-10-26",
       "fresh": false
     },
     "csi300": {
