@@ -75,6 +75,29 @@ def sina_live(n=MARKET_N):
     return rows
 
 
+def _ext_stocks(it):
+    """新浪快讯 ext 里点名的股票，转成 (代码, 名称)。A股写成 sh.600000，港美股保留原样。"""
+    ext = it.get("ext") or {}
+    if isinstance(ext, str):
+        try:
+            ext = json.loads(ext)
+        except ValueError:
+            return []
+    out = []
+    for st in (ext.get("stocks") or []) if isinstance(ext, dict) else []:
+        sym, name, mkt = str(st.get("symbol", "")).lower(), st.get("key") or st.get("name") or "", st.get("market", "")
+        m = re.match(r"^(sh|sz|bj)(\d{6})$", sym)
+        if m:
+            sym = f"{m.group(1)}.{m.group(2)}"
+        elif mkt == "hk":
+            sym = sym.upper().lstrip("HK") + ".HK"
+        elif mkt == "us":
+            sym = sym.upper()
+        if sym and name:
+            out.append((sym, name))
+    return out
+
+
 def sina_live_pages(days=WEEK_DAYS, page_size=100, max_pages=WEEK_PAGES):
     """往回翻新浪 7x24，直到早于 days 天前。保留标签，用来判断重要性。"""
     cutoff = (pd.Timestamp.now(tz="Asia/Shanghai") - pd.Timedelta(days=days)).strftime("%Y-%m-%d %H:%M")
@@ -90,7 +113,7 @@ def sina_live_pages(days=WEEK_DAYS, page_size=100, max_pages=WEEK_PAGES):
         for it in items:
             title, body = _title_and_body(_text(it.get("rich_text")))
             tags = [t.get("name", "") for t in (it.get("tag") or []) if t.get("name")]
-            rows.append(dict(time=it.get("create_time", "")[:16], title=title, body=body, tags=tags))
+            rows.append(dict(time=it.get("create_time", "")[:16], title=title, body=body, tags=tags, stocks=_ext_stocks(it)))
         if rows[-1]["time"] < cutoff:
             break
         time.sleep(0.3)
@@ -135,6 +158,56 @@ CHINA_RE = re.compile(r"中国|我国|(?<!美国)(?<![美俄英日韩法德])国
 FOREIGN_RE = re.compile(r"韩国|印尼|印度|英国|日本|日银|澳洲|澳大利亚|新西兰|巴西|土耳其|加拿大|墨西哥|南非|新台币|台湾|欧元区|欧洲央行|瑞士|挪威|瑞典")
 INDUSTRY_STOP = {"研究", "专业", "其他", "综合", "批发", "零售", "商务服务", "食品"}
 CAT_RE = [(n, w, re.compile(k)) for n, w, k in CATEGORIES]
+
+# 事件主题对应的 A股核心标的（行业龙头，受影响最直接的方向）。快讯没点名股票时用它。
+# 只是“和这件事关联最直接的股票”，不是买卖建议。
+THEMES = [
+    ("原油", r"原油|油价|OPEC|欧佩克|布伦特|WTI|泵站|炼厂", [("sh.600938", "中国海油"), ("sh.601857", "中国石油"), ("sh.600028", "中国石化")]),
+    ("中东航运", r"红海|霍尔木兹|胡塞|苏伊士|航运|集运|油轮", [("sh.601919", "中远海控"), ("sh.601872", "招商轮船")]),
+    ("黄金", r"黄金|金价|贵金属", [("sh.601899", "紫金矿业"), ("sh.600547", "山东黄金"), ("sh.600489", "中金黄金")]),
+    ("铜铝", r"铜价|铜矿|电解铝|铝价|铝企", [("sh.601899", "紫金矿业"), ("sh.600362", "江西铜业"), ("sh.601600", "中国铝业")]),
+    ("稀土", r"稀土", [("sh.600111", "北方稀土"), ("sh.600392", "盛和资源")]),
+    ("人工智能", r"人工智能|(?<![A-Za-z])AI(?![A-Za-z])|大模型|算力|智能体", [("sh.688256", "寒武纪"), ("sz.300308", "中际旭创"), ("sz.002230", "科大讯飞")]),
+    ("半导体", r"集成电路|半导体|芯片|光刻|工业母机", [("sh.688981", "中芯国际"), ("sz.002371", "北方华创")]),
+    ("机器人", r"机器人|人形", [("sz.300124", "汇川技术"), ("sz.002472", "双环传动")]),
+    ("军工", r"军工|导弹|空袭|无人机袭击|战机|国防", [("sh.600760", "中航沈飞"), ("sh.600893", "航发动力")]),
+    ("银行", r"降准|降息|LPR|MLF|逆回购|存款利率|信贷|新增贷款|社融", [("sh.600036", "招商银行"), ("sh.601398", "工商银行")]),
+    ("券商", r"证监会|资本市场|汇金|平准|印花税|融资融券|IPO|注册制|成交额|两融", [("sh.600030", "中信证券"), ("sz.300059", "东方财富")]),
+    ("保险", r"保险|险资", [("sh.601318", "中国平安"), ("sh.601628", "中国人寿")]),
+    ("基建", r"地方政府债|专项债|新增地方|基建|城市更新|水利|特别国债", [("sh.601668", "中国建筑"), ("sh.601390", "中国中铁"), ("sh.600585", "海螺水泥")]),
+    ("地产", r"房地产|楼市|房贷|住房|保交楼|房企", [("sh.600048", "保利发展"), ("sz.000002", "万科A")]),
+    ("消费", r"消费|零售|以旧换新|家电|白酒|免税|服务业", [("sh.600519", "贵州茅台"), ("sz.000333", "美的集团"), ("sh.601888", "中国中免")]),
+    ("汽车", r"汽车|新能源车|电动车|柴油车|燃油车", [("sz.002594", "比亚迪"), ("sh.601127", "赛力斯")]),
+    ("电池储能", r"电池|锂|储能", [("sz.300750", "宁德时代"), ("sz.300014", "亿纬锂能")]),
+    ("光伏", r"光伏|硅料|组件", [("sh.601012", "隆基绿能"), ("sh.600438", "通威股份")]),
+    ("电力", r"电力|电网|特高压|核电|水电", [("sh.600900", "长江电力"), ("sh.600406", "国电南瑞")]),
+    ("煤炭", r"煤炭|煤价|动力煤|焦煤", [("sh.601088", "中国神华"), ("sh.601225", "陕西煤业")]),
+    ("医药", r"医药|创新药|医保|集采|疫苗", [("sh.600276", "恒瑞医药"), ("sh.603259", "药明康德")]),
+    ("出口", r"关税|出口管制|贸易战|实体清单|出口", [("sz.002475", "立讯精密"), ("sz.000333", "美的集团")]),
+    ("航空", r"航空|航班|航油", [("sh.601111", "中国国航"), ("sh.600029", "南方航空")]),
+    ("美联储", r"美联储|美债|美元指数|加息|议息", [("sh.601899", "紫金矿业"), ("sh.600030", "中信证券")]),
+]
+THEME_RE = [(n, re.compile(k), st) for n, k, st in THEMES]
+BROAD = [("sh.510300", "沪深300ETF"), ("sh.510050", "上证50ETF")]
+
+
+def event_targets(items, text, n=3):
+    """一件事最直接关联的标的：快讯里点名次数最多的股票优先，不够再按主题补龙头；都没有时给宽基 ETF。"""
+    named = pd.Series([s for it in items for s in (it.get("stocks") or [])], dtype=object).value_counts()
+    out = [dict(code=c, name=nm, why="快讯点名") for (c, nm) in list(named.index)[:n]]
+    themes = sorted(((len(rx.findall(text)), name, st) for name, rx, st in THEME_RE if rx.search(text)), key=lambda t: -t[0])
+    for k, (_, name, st) in enumerate(themes):
+        cap = len(out) + (2 if k < len(themes) - 1 else n)  # 多个主题时每个主题最多两只，让标的覆盖不同方向
+        for c, nm in st:
+            if len(out) >= min(n, cap):
+                break
+            if c not in {o["code"] for o in out}:
+                out.append(dict(code=c, name=nm, why=name))
+        if len(out) >= n:
+            break
+    if not out:
+        out = [dict(code=c, name=nm, why="大盘") for c, nm in BROAD[:1]]
+    return out
 FOCUS_TAGS = ("焦点", "重要", "头条")
 
 
@@ -199,7 +272,8 @@ def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
         out.append(dict(title=top["title"], body=top["body"][:300], first=e["items"][0]["time"], last=e["items"][-1]["time"],
                         reports=len(e["items"]), category="、".join(c for c, _, _ in CATEGORIES if c in e["cats"]),
                         focus=any(f in t for x in e["items"] for t in (x.get("tags") or []) for f in FOCUS_TAGS),
-                        related="、".join(dict.fromkeys(related)), weight=round(weight, 2)))
+                        related="、".join(dict.fromkeys(related)), weight=round(weight, 2),
+                        targets=event_targets(e["items"], text)))
     out.sort(key=lambda x: (x["weight"], x["last"]), reverse=True)
     for i, x in enumerate(out[:n]):
         x["rank"] = i + 1
@@ -288,6 +362,7 @@ def build(picks, sectors):
         tag_count = pd.Series([t for r in raw for t in r["tags"]]).value_counts().head(15).to_dict()
         week = week_events(raw, [n for _, n in cands], [i for i in inds if len(i) >= 2])
         status.append(dict(source="本周大事（新浪 7x24 近 7 天）", ok=True, rows=len(raw), tags=tag_count,
+                           with_stocks=sum(1 for r in raw if r.get("stocks")),
                            oldest=raw[-1]["time"] if raw else None))
     except Exception as exc:
         log.warning("week events failed: %s", exc)
