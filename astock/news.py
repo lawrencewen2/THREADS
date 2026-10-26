@@ -114,8 +114,9 @@ def cls_telegraph(n=MARKET_N):
 
 # (类别, 权重, 关键词)。权重是对 A 股影响面大小的粗略排序，不是回测出来的。
 CATEGORIES = [
+    ("重大会议", 6, r"全会|政治局(会议|召开)|中央经济工作会议|中央金融工作会议|国务院常务会议|国常会|两会|陆家嘴论坛"),
     ("货币政策", 5, r"降准|降息|LPR|MLF|逆回购利率|央行宣布|人民银行宣布|美联储|加息|议息|利率决议|欧洲央行|日本央行|日银"),
-    ("重大政策", 5, r"国务院|中办|国办|中共中央|政治局|中央经济工作会议|国常会|全会|两会|特别国债|财政部.*(发行|赤字)|发改委.*(出台|印发)|稳增长|刺激"),
+    ("重大政策", 5, r"(?<![美俄英日韩法德])国务院|中办|国办|中共中央|特别国债|财政部.*(发行|赤字)|发改委.*(出台|印发)|稳增长|刺激"),
     ("监管与资本市场", 4, r"证监会|印花税|汇金|平准|国家队|减持新规|退市新规|交易所.*(发布|修订)|融资融券|程序化交易"),
     ("地缘与贸易", 4, r"关税|制裁|贸易战|出口管制|实体清单|停火|战争|冲突升级|导弹|空袭"),
     ("宏观数据", 3, r"GDP|CPI|PPI|PMI|社融|新增贷款|M2|非农|失业率|零售销售|工业增加值|出口同比|进口同比|外汇储备"),
@@ -126,9 +127,10 @@ CATEGORIES = [
 ]
 # 行情自动播报（某合约日内涨 X%、资金净买入）和每日固定栏目不算“大事”，否则会把真正的新闻挤下去
 ROUTINE_RE = re.compile(r"日内(涨|跌)|现报|涨超|跌超|涨幅扩大|跌幅扩大|净(买入|卖出)|异动|逆回购操作|新闻联播|头版|主要内容"
-                        r"|早餐|晚报|午报|早报|收评|午评|盘前|要闻|一览|汇总|集锦")
+                        r"|早餐|晚报|午报|早报|收评|午评|盘前|要闻|一览|汇总|集锦"
+                        r"|成交额超|成交额突破|异常交易行为")
 # 对 A 股来说国内的事优先；只讲其他国家、和中国无关的降一档（美国、美联储不降，影响面大）
-CHINA_RE = re.compile(r"中国|我国|国务院|中办|国办|中共中央|政治局|全会|证监会|人民银行|中国央行|A股|沪指|深成指|创业板|科创板|上证|人民币"
+CHINA_RE = re.compile(r"中国|我国|(?<![美俄英日韩法德])国务院|中办|国办|中共中央|政治局|全会|证监会|人民银行|中国央行|A股|沪指|深成指|创业板|科创板|上证|人民币"
                       r"|发改委|财政部|商务部|国家统计局|工信部|外汇局|两市|北向|南向|沪深|港股|恒指")
 FOREIGN_RE = re.compile(r"韩国|印尼|印度|英国|日本|日银|澳洲|澳大利亚|新西兰|巴西|土耳其|加拿大|墨西哥|南非|新台币|台湾|欧元区|欧洲央行|瑞士|挪威|瑞典")
 INDUSTRY_STOP = {"研究", "专业", "其他", "综合", "批发", "零售", "商务服务", "食品"}
@@ -154,6 +156,10 @@ def _grams(s):
     return {s[i:i + 2] for i in range(len(s) - 1)}
 
 
+def _minutes(a, b):
+    return abs((pd.Timestamp(b) - pd.Timestamp(a)).total_seconds()) / 60
+
+
 def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
     """把一周快讯里讲同一件事的合并，按 单条最高分 + 报道条数 + 和候选股相关 排序。"""
     events = []
@@ -165,14 +171,20 @@ def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
         if score <= 0:
             continue
         g = _grams(r["title"])
+        m = re.match(r"^([^：:]{2,12})[：:]", r["title"])
+        speaker = m.group(1) if m else None
         best = None
         for e in events[-300:]:
             inter = len(g & e["grams"])
-            if inter and inter / len(g | e["grams"]) >= sim:
+            # 标题相近，或一条标题基本包含在另一条里（短讯和详讯），或同一发布方半小时内连发（一份文件拆成多条）
+            if inter and (inter / len(g | e["grams"]) >= sim or inter / min(len(g), len(e["grams"])) >= 0.7):
+                best = e
+                break
+            if speaker and speaker == e.get("speaker") and _minutes(e["items"][-1]["time"], r["time"]) <= 30:
                 best = e
                 break
         if best is None:
-            best = dict(grams=g, items=[], cats=set())
+            best = dict(grams=g, items=[], cats=set(), speaker=speaker)
             events.append(best)
         best["items"].append(dict(r, score=score))
         best["cats"].update(cats)
