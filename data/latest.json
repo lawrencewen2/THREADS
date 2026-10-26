@@ -1,52 +1,52 @@
 {
-  "date": "2026-10-23",
+  "date": "2026-10-26",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
-      "score": 37.4,
+      "score": 36.9,
       "band": "恐慌",
-      "change_5d": -9.0,
-      "risk_off": false,
-      "signal": "normal"
+      "change_5d": -8.6,
+      "risk_off": true,
+      "signal": "risk_off"
     },
     "us": {
       "name": "美国",
-      "score": 44.5,
+      "score": 45.2,
       "band": "中性",
-      "change_5d": -8.2,
+      "change_5d": -5.8,
       "risk_off": false,
       "signal": "normal"
     },
     "eu": {
       "name": "欧洲",
-      "score": 31.5,
+      "score": 30.1,
       "band": "恐慌",
-      "change_5d": -7.2,
+      "change_5d": -8.6,
       "risk_off": true,
       "signal": "risk_off"
     },
     "jp": {
       "name": "日本",
-      "score": 18.5,
+      "score": 18.0,
       "band": "极度恐慌",
-      "change_5d": -17.1,
+      "change_5d": -13.4,
       "risk_off": true,
       "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
-      "score": 24.0,
+      "score": 24.2,
       "band": "恐慌",
-      "change_5d": -1.7,
+      "change_5d": -2.7,
       "risk_off": true,
       "signal": "risk_off"
     },
     "hk": {
       "name": "港股",
-      "score": 40.5,
-      "band": "中性",
-      "change_5d": -16.5,
+      "score": 39.3,
+      "band": "恐慌",
+      "change_5d": -18.9,
       "risk_off": false,
       "signal": "normal"
     }
@@ -55,57 +55,57 @@
     "us_vix": {
       "name": "VIX",
       "region": "us",
-      "score": 35.9
+      "score": 44.5
     },
     "us_term": {
       "name": "VIX/VIX3M 期限结构",
       "region": "us",
-      "score": 20.2
+      "score": 31.3
     },
     "us_rvol": {
       "name": "标普500 20日实际波动率",
       "region": "us",
-      "score": 82.1
+      "score": 82.0
     },
     "us_dd": {
       "name": "标普500 距52周高点回撤",
       "region": "us",
-      "score": 46.3
+      "score": 52.6
     },
     "us_credit": {
       "name": "高收益债相对国债回撤（HYG/IEF）",
       "region": "us",
-      "score": 34.0
+      "score": 37.1
     },
     "us_crash": {
       "name": "标普500 10日急跌",
       "region": "us",
-      "score": 15.8
+      "score": 20.2
     },
     "eu_rvol": {
       "name": "欧洲斯托克50 20日实际波动率",
       "region": "eu",
-      "score": 50.0
+      "score": 46.2
     },
     "eu_dd": {
       "name": "欧洲斯托克50 回撤",
       "region": "eu",
-      "score": 22.2
+      "score": 25.2
     },
     "eu_ma": {
       "name": "欧洲斯托克50 低于125日均线幅度",
       "region": "eu",
-      "score": 16.7
+      "score": 20.0
     },
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 5.3
+      "score": 7.0
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
       "region": "eu",
-      "score": 22.3
+      "score": 25.6
     },
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
@@ -125,7 +125,7 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 22.9
+      "score": 37.7
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
@@ -135,17 +135,17 @@
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
       "region": "jp",
-      "score": 35.4
+      "score": 39.6
     },
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
       "region": "cn",
-      "score": 68.2
+      "score": 70.8
     },
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
       "region": "cn",
-      "score": 37.9
+      "score": 45.8
     },
     "cn_dd": {
       "name": "沪深300 回撤",
@@ -165,7 +165,7 @@
     "cn_crash": {
       "name": "沪深300 10日急跌",
       "region": "cn",
-      "score": 4.4
+      "score": 7.2
     },
     "hk_rvol": {
       "name": "恒指 20日实际波动率",
@@ -195,17 +195,17 @@
     "gl_move": {
       "name": "MOVE 美债波动率",
       "region": "global",
-      "score": 47.5
+      "score": 48.9
     },
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 84.8
+      "score": 71.6
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
       "region": "global",
-      "score": 16.0
+      "score": 10.6
     }
   },
   "status": {
