@@ -31,10 +31,10 @@ def issue_body(est, errors):
         r = est["regions"][key]
         if r["fresh"]:
             ch = f"{r['change']:+.1f}"
-            note = f"{r['date']} 盘中/收盘估算"
+            note = f"{r['date']} {r['session']}" + ("（收盘读数，次日早上正式发布）" if r["session"] == "已收盘" else "")
         else:
             ch = "—"
-            note = f"未开盘，显示 {r['official_date']} 收盘"
+            note = f"{r['session']}，显示 {r['official_date']} 收盘"
         lines.append(f"| {r['name']} | {r['score']:.1f}（{r['band']}） | {ch} | {r['signal_text']} | {note} |")
     lines += ["", "<details><summary>行情时间</summary>", "", "| 序列 | 最新值 | 行情时间（北京） | 已计入 |", "| --- | --- | --- | --- |"]
     for k, q in sorted(est["quotes"].items()):
@@ -93,7 +93,7 @@ def main():
     # 在线总表用的精简版：每行一个区域
     t_cn = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)
     page = [dict(key=k, name=r["name"], fresh=r["fresh"], date=r["date"], score=r["score"], change=r["change"],
-                 band=r["band"], signal=r["signal_text"], time=f"{t_cn:%m-%d %H:%M}") for k, r in est["regions"].items()]
+                 band=r["band"], signal=r["signal_text"], session=r["session"], time=f"{t_cn:%m-%d %H:%M}") for k, r in est["regions"].items()]
     (out / "page.json").write_text(json.dumps(page, ensure_ascii=False, indent=1))
 
     # 每次运行一行，供当天走势和收盘后与正式读数核对

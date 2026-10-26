@@ -34,6 +34,13 @@ PRIMARY = {"us": "spx", "eu": "sx5e", "jp": "n225", "cn": "csi300", "hk": "hsi",
 DROP_ALERT = 6
 EXTREME_LOW, EXTREME_HIGH = 20, 80
 
+# 各市场当地交易时段（时区自动处理夏令时），用于标注“未开盘 / 盘中 / 午休 / 已收盘”
+MARKET_HOURS = {"us": ("America/New_York", [(9, 30, 16, 0)]),
+                "eu": ("Europe/Berlin", [(9, 0, 17, 30)]),
+                "jp": ("Asia/Tokyo", [(9, 0, 11, 30), (12, 30, 15, 30)]),
+                "cn": ("Asia/Shanghai", [(9, 30, 11, 30), (13, 0, 15, 0)]),
+                "hk": ("Asia/Hong_Kong", [(9, 30, 12, 0), (13, 0, 16, 0)])}
+
 
 # ---------- 行情 ----------
 
@@ -127,6 +134,21 @@ def _qvix_quote():
     return dict(value=float(last.iloc[-1]), time=t.astimezone(timezone.utc), date=pd.Timestamp(now.date()))
 
 
+def market_session(region, now=None):
+    """按当地时钟返回 "未开盘"、"盘中"、"午休" 或 "已收盘"。节假日按时钟判断，是否有新行情以 fresh 为准。"""
+    tz, spans = MARKET_HOURS[region]
+    t = (now or datetime.now(timezone.utc)).astimezone(ZoneInfo(tz))
+    if t.weekday() >= 5:
+        return "已收盘" if t.weekday() == 5 else "未开盘"
+    m = t.hour * 60 + t.minute
+    spans = [(h1 * 60 + m1, h2 * 60 + m2) for h1, m1, h2, m2 in spans]
+    if m < spans[0][0]:
+        return "未开盘"
+    if m >= spans[-1][1]:
+        return "已收盘"
+    return "盘中" if any(a <= m < b for a, b in spans) else "午休"
+
+
 # ---------- 估算 ----------
 
 def _turnover_value(q, hist):
@@ -206,9 +228,15 @@ def estimate(series, quotes):
             new_event={k: bool(is_fresh and (ev := config.extreme_events(src, k)) and ev[-1] == src.index[-1])
                        for k in ("short_bottom", "bottom")},
         )
+    now = datetime.now(timezone.utc)
+    for r in config.REGIONS:
+        regions[r]["session"] = market_session(r, now)
+    sessions = [regions[r]["session"] for r in config.REGIONS]
+    regions["global"]["session"] = ("盘中" if "盘中" in sessions or "午休" in sessions
+                                    else "已收盘" if regions["global"]["fresh"] else "未开盘")
     q_out = {k: dict(value=round(q["value"], 6), time=q["time"].isoformat(timespec="minutes"), date=str(q["date"].date()),
                      fresh=k in fresh) for k, q in quotes.items()}
-    return dict(as_of=datetime.now(timezone.utc).isoformat(timespec="minutes"), method=config.fingerprint(),
+    return dict(as_of=now.isoformat(timespec="minutes"), method=config.fingerprint(),
                 regions=regions, quotes=q_out, fresh=sorted(fresh))
 
 
