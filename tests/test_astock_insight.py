@@ -141,3 +141,10 @@ def test_event_targets():
     t = news.event_targets([dict(stocks=[("sz.300750", "宁德时代")]), dict(stocks=[("sz.300750", "宁德时代")])], "电池")
     assert t[0] == dict(code="sz.300750", name="宁德时代", why="快讯点名")
     assert news.event_targets([dict(stocks=[])], "党的二十届五中全会召开")[0]["why"] == "大盘"
+
+
+def test_ext_stocks_only_real_codes():
+    from astock import news
+    ext = '{"stocks":[{"market":"cn","symbol":"sz300750","key":"宁德时代"},{"market":"hk","symbol":"00700","key":"腾讯控股"},' \
+          '{"market":"cn","symbol":"创新","key":"创新"},{"market":"us","symbol":"aapl","key":"苹果"}]}'
+    assert news._ext_stocks({"ext": ext}) == [("sz.300750", "宁德时代"), ("00700.HK", "腾讯控股")]
