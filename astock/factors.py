@@ -93,48 +93,56 @@ class Panel:
 
 
 def compute_factors(p):
+    return dict(iter_factors(p))
+
+
+def iter_factors(p):
+    """逐个产出 (因子名, 宽表)。全 A股时一次全放内存里太大，调用方可以算一个排一个名再丢掉。"""
+
+    def fin(v):  # 停牌日不出因子，避免拿过期数据选股
+        return v.where(p.traded).astype("float32")
+
     ret = (p.close / p.preclose - 1).where(p.traded)
     r0 = ret.fillna(0)
     adj = (1 + r0).cumprod()  # 复权价格指数：除权除息由 preclose 体现
 
-    f = {}
-    f["rev5"] = adj / adj.shift(5) - 1
-    f["mom60"] = adj.shift(5) / adj.shift(60) - 1
-    f["vol20"] = ret.rolling(20, min_periods=15).std()
-    f["maxret20"] = ret.rolling(20, min_periods=15).max()
-    f["intraday20"] = (p.close / p.open - 1).rolling(20, min_periods=15).mean()
-    f["overnight20"] = (p.open / p.preclose - 1).rolling(20, min_periods=15).mean()
+    yield "rev5", fin(adj / adj.shift(5) - 1)
+    yield "mom60", fin(adj.shift(5) / adj.shift(60) - 1)
+    yield "vol20", fin(ret.rolling(20, min_periods=15).std())
+    yield "maxret20", fin(ret.rolling(20, min_periods=15).max())
+    yield "intraday20", fin((p.close / p.open - 1).rolling(20, min_periods=15).mean())
+    yield "overnight20", fin((p.open / p.preclose - 1).rolling(20, min_periods=15).mean())
     turn = p.turn.where(p.turn > 0)
-    f["turn_ratio"] = turn.rolling(5, min_periods=3).mean() / turn.rolling(60, min_periods=40).mean()
+    yield "turn_ratio", fin(turn.rolling(5, min_periods=3).mean() / turn.rolling(60, min_periods=40).mean())
     rng = (p.high - p.low).where(p.high > p.low)
-    f["clv"] = (p.close - p.low) / rng
-    f["ma20gap"] = adj / adj.rolling(20, min_periods=15).mean() - 1
-    f["ret1"] = ret
+    yield "clv", fin((p.close - p.low) / rng)
+    yield "ma20gap", fin(adj / adj.rolling(20, min_periods=15).mean() - 1)
+    yield "ret1", fin(ret)
     float_shares = p.volume / (turn / 100)
-    f["size"] = np.log((p.close * float_shares).ffill(limit=5))
-    f["amount20"] = np.log(p.amount.rolling(20, min_periods=15).mean())
+    yield "size", fin(np.log((p.close * float_shares).ffill(limit=5)))
+    yield "amount20", fin(np.log(p.amount.rolling(20, min_periods=15).mean()))
 
-    f["rev20"] = adj / adj.shift(20) - 1
-    f["high250"] = adj / adj.rolling(250, min_periods=120).max()
-    f["skew20"] = ret.rolling(20, min_periods=15).skew()
-    f["range20"] = ((p.high - p.low) / p.preclose).rolling(20, min_periods=15).mean()
-    f["amihud20"] = (ret.abs() / (p.amount / 1e8)).rolling(20, min_periods=15).mean()
-    f["turn20"] = turn.rolling(20, min_periods=15).mean()
-    f["vol_spike"] = p.volume / p.volume.rolling(20, min_periods=15).mean()
-    f["gap1"] = p.open / p.preclose - 1
+    yield "rev20", fin(adj / adj.shift(20) - 1)
+    yield "high250", fin(adj / adj.rolling(250, min_periods=120).max())
+    yield "skew20", fin(ret.rolling(20, min_periods=15).skew())
+    yield "range20", fin(((p.high - p.low) / p.preclose).rolling(20, min_periods=15).mean())
+    yield "amihud20", fin((ret.abs() / (p.amount / 1e8)).rolling(20, min_periods=15).mean())
+    yield "turn20", fin(turn.rolling(20, min_periods=15).mean())
+    yield "vol_spike", fin(p.volume / p.volume.rolling(20, min_periods=15).mean())
+    yield "gap1", fin(p.open / p.preclose - 1)
     up, _ = p.limit_prices()
-    f["limitup20"] = (p.close >= up - 0.005).astype("float32").where(p.traded).rolling(20, min_periods=15).sum()
+    yield "limitup20", fin((p.close >= up - 0.005).astype("float32").where(p.traded).rolling(20, min_periods=15).sum())
     mkt = ret.mean(axis=1)  # 等权全市场日收益
     rm = ret.mul(mkt, axis=0).rolling(60, min_periods=40).mean()
     r_mean = ret.rolling(60, min_periods=40).mean()
     m_mean = mkt.rolling(60, min_periods=40).mean()
     m_var = mkt.rolling(60, min_periods=40).var()
     beta = rm.sub(r_mean.mul(m_mean, axis=0)).div(m_var, axis=0)
-    f["beta60"] = beta
+    yield "beta60", fin(beta)
     total_var = ret.rolling(60, min_periods=40).var()
-    f["idiovol60"] = np.sqrt((total_var - beta**2 * m_var.values[:, None]).clip(lower=0))
+    yield "idiovol60", fin(np.sqrt((total_var - beta**2 * m_var.values[:, None]).clip(lower=0)))
     mkt_adj = (1 + mkt.fillna(0)).cumprod()
-    f["rel5"] = (adj / adj.shift(5) - 1).sub(mkt_adj / mkt_adj.shift(5) - 1, axis=0)
+    yield "rel5", fin((adj / adj.shift(5) - 1).sub(mkt_adj / mkt_adj.shift(5) - 1, axis=0))
     # 行为金融因子
     # 持仓成本：每天按换手率把当天价格换进成本，R_t = (1 - v_t) R_{t-1} + v_t P_t（Grinblatt-Han 的递推近似）
     v = (turn / 100).clip(upper=1).fillna(0).to_numpy()
@@ -144,22 +152,22 @@ def compute_factors(p):
     for i in range(1, len(price)):
         prev = np.where(np.isnan(cost[i - 1]), price[i], cost[i - 1])
         cost[i] = (1 - v[i]) * prev + v[i] * price[i]
-    f["cgo"] = adj / pd.DataFrame(cost, index=adj.index, columns=adj.columns) - 1
+    yield "cgo", fin(adj / pd.DataFrame(cost, index=adj.index, columns=adj.columns) - 1)
+    del v, price, cost
     down = (ret < 0).to_numpy(dtype="float32")
     traded = p.traded.to_numpy()
     streak = np.zeros_like(down)
     for i in range(1, len(down)):  # 停牌日计数不变
         streak[i] = np.where(traded[i], (streak[i - 1] + 1) * down[i], streak[i - 1])
-    f["downstreak"] = pd.DataFrame(streak, index=adj.index, columns=adj.columns)
-    f["low250"] = adj / adj.rolling(250, min_periods=120).min()
-    f["turn_rel"] = turn.div(turn.median(axis=1), axis=0)
+    yield "downstreak", fin(pd.DataFrame(streak, index=adj.index, columns=adj.columns))
+    del down, traded, streak
+    yield "low250", fin(adj / adj.rolling(250, min_periods=120).min())
+    yield "turn_rel", fin(turn.div(turn.median(axis=1), axis=0))
     # 估值：取倒数，亏损（负值）也保留排序含义；数据缺失时这三个因子为空
     for name, col in (("ep", "peTTM"), ("bp", "pbMRQ"), ("sp", "psTTM")):
         v = p.valuation.get(col)
         if v is not None:
-            f[name] = (1 / v.where(v.abs() > 1e-6)).ffill(limit=5)
-    # 停牌日不出因子，避免拿过期数据选股
-    return {k: v.where(p.traded).astype("float32") for k, v in f.items()}
+            yield name, fin((1 / v.where(v.abs() > 1e-6)).ffill(limit=5))
 
 
 def eligible(p, basic):

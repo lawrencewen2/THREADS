@@ -44,17 +44,22 @@ jobs:
           path: data/astock/cache
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
-      - name: Backtest
+      - name: Fetch prices
         if: github.event_name == 'push' || inputs.backtest
         # 首次要拉 2014 年以来约 5500 只股票；超时也会先保存已下载的缓存，重跑时接着拉
-        timeout-minutes: 320
-        run: python scripts/astock_backtest.py
+        timeout-minutes: 240
+        run: python scripts/astock_backtest.py --fetch-only
       - name: Save price cache
+        # 先存缓存再回测：回测内存不够被杀掉时，下载好的数据不会丢
         if: always()
         uses: actions/cache/save@v4
         with:
           path: data/astock/cache
           key: astock-kline-${{ github.run_id }}
+      - name: Backtest
+        if: github.event_name == 'push' || inputs.backtest
+        timeout-minutes: 120
+        run: python scripts/astock_backtest.py --offline
       - name: Daily screen
         # 分支上推送时按最近一个交易日出一份清单，用来检查流程
         run: python scripts/astock_daily.py ${{ github.event_name == 'push' && '--offline' || '' }}

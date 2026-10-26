@@ -1,5 +1,6 @@
 """完整回测：训练期定权重和参数，样本外检验，生成报告和面板数据。"""
 
+import gc
 import json
 import logging
 
@@ -7,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 from . import config, diagnose, model, portfolio
-from .factors import FACTORS, Panel, compute_factors, eligible, trade_outcomes
+from .factors import FACTORS, Panel, eligible, iter_factors, trade_outcomes
 
 log = logging.getLogger(__name__)
 
@@ -15,20 +16,25 @@ log = logging.getLogger(__name__)
 def prepare(kline, basic, valuation=None, keep_raw=True):
     """keep_raw=False 时算完排名就丢掉原始因子值（只留市值），全 A股回测省一半内存。"""
     p = Panel(kline, valuation)
-    f = compute_factors(p)
     elig = eligible(p, basic)
-    ranks = {}
-    for k in list(f):
-        ranks[k] = model.xs_rank(f[k], elig)
-        if not keep_raw and k != "size":
-            del f[k]
+    f, ranks = {}, {}
+    for k, v in iter_factors(p):  # 算一个排一个名；keep_raw=False 时原始值随即丢掉
+        ranks[k] = model.xs_rank(v, elig)
+        if keep_raw or k == "size":
+            f[k] = v
+        del v
     return p, f, elig, ranks
 
 
 def run(kline, basic, valuation=None):
+    """kline / valuation 可以传读取函数：在这里读、建好面板就释放，调用方不留引用（全 A股原始行情有好几 GB）。"""
+    kline = kline() if callable(kline) else kline
+    valuation = valuation() if callable(valuation) else valuation
     p, f, elig, ranks = prepare(kline, basic, valuation, keep_raw=False)
     size = f.get("size")
     del f, kline, valuation  # 全 A股面板很大，回测只用排名
+    gc.collect()
+    log.info("panel %d days x %d codes, %d factors", len(p.dates), len(p.codes), len(ranks))
     out = trade_outcomes(p)
     label_mask = elig & out["buyable"]
     weights, stats = model.fit_weights(ranks, out["day_ret"], label_mask, config.TRAIN_START, config.TRAIN_END)
