@@ -212,3 +212,14 @@ def test_extreme_hints():
     sig = config.signals(s)
     assert sig.iloc[22] == "bottom" and sig.iloc[26] == "bottom" and sig.iloc[27] == "normal"
     assert sig.iloc[44] == "top"
+
+
+def test_sanitize_drops_unfinished_today():
+    from fearindex import fetch
+
+    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    idx = pd.bdate_range(end=today - pd.Timedelta(days=7), periods=5).append(pd.DatetimeIndex([today]))
+    s = pd.Series(1.0, index=idx)
+    out = fetch.sanitize("spx", s)
+    assert today not in out.index
+    assert len(out) == 5
