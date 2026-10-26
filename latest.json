@@ -1,0 +1,149 @@
+{
+  "as_of": "2026-10-26T06:23+00:00",
+  "method": "c769c7bccbdb",
+  "regions": {
+    "global": {
+      "name": "全球",
+      "fresh": true,
+      "score": 35.8,
+      "band": "恐慌",
+      "date": "2026-10-26",
+      "official": 37.4,
+      "official_date": "2026-10-23",
+      "change": -1.6,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
+      "official_signal": "normal",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    },
+    "us": {
+      "name": "美国",
+      "fresh": false,
+      "score": 44.5,
+      "band": "中性",
+      "date": "2026-10-23",
+      "official": 44.5,
+      "official_date": "2026-10-23",
+      "change": 0.0,
+      "signal": "normal",
+      "signal_text": "正常",
+      "official_signal": "normal",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    },
+    "eu": {
+      "name": "欧洲",
+      "fresh": false,
+      "score": 31.5,
+      "band": "恐慌",
+      "date": "2026-10-23",
+      "official": 31.5,
+      "official_date": "2026-10-23",
+      "change": 0.0,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
+      "official_signal": "risk_off",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    },
+    "jp": {
+      "name": "日本",
+      "fresh": false,
+      "score": 18.5,
+      "band": "极度恐慌",
+      "date": "2026-10-23",
+      "official": 18.5,
+      "official_date": "2026-10-23",
+      "change": 0.0,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
+      "official_signal": "risk_off",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    },
+    "cn": {
+      "name": "A股",
+      "fresh": true,
+      "score": 24.1,
+      "band": "恐慌",
+      "date": "2026-10-26",
+      "official": 24.2,
+      "official_date": "2026-10-23",
+      "change": -0.1,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
+      "official_signal": "risk_off",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    },
+    "hk": {
+      "name": "港股",
+      "fresh": false,
+      "score": 40.5,
+      "band": "中性",
+      "date": "2026-10-23",
+      "official": 40.5,
+      "official_date": "2026-10-23",
+      "change": 0.0,
+      "signal": "normal",
+      "signal_text": "正常",
+      "official_signal": "normal",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      }
+    }
+  },
+  "quotes": {
+    "csi300": {
+      "value": 4082.62,
+      "time": "2026-10-26T06:23+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "a_turnover": {
+      "value": 137433299.0,
+      "time": "2026-10-26T06:23+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    },
+    "qvix50": {
+      "value": 16.33,
+      "time": "2026-10-26T06:22+00:00",
+      "date": "2026-10-26",
+      "fresh": true
+    }
+  },
+  "fresh": [
+    "a_turnover",
+    "csi300",
+    "qvix50"
+  ],
+  "errors": {
+    "spx": "yahoo ^GSPC: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EGS",
+    "vix": "yahoo ^VIX: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EVI",
+    "vix3m": "yahoo ^VIX3M: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EVI",
+    "hyg": "yahoo HYG: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/HYG?i",
+    "ief": "yahoo IEF: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/IEF?i",
+    "sx5e": "yahoo ^STOXX50E: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EST",
+    "eurchf": "yahoo EURCHF=X: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/EURCH",
+    "n225": "yahoo ^N225: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EN2",
+    "usdjpy": "yahoo JPY=X: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/JPY=X",
+    "topix": "yahoo 1306.T: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/1306.",
+    "hsi": "yahoo ^HSI: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5EHS",
+    "hstech": "yahoo 3033.HK: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/3033.",
+    "gold": "yahoo GC=F: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/GC=F?",
+    "us10y": "yahoo ^TNX: HTTPError: 429 Client Error: Too Many Requests for url: https://query1.finance.yahoo.com/v8/finance/chart/%5ETN"
+  }
+}
