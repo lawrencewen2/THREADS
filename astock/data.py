@@ -16,6 +16,11 @@ log = logging.getLogger(__name__)
 KLINE_FIELDS = "date,code,open,high,low,close,preclose,volume,amount,turn,tradestatus,isST"
 NUMERIC = ["open", "high", "low", "close", "preclose", "volume", "amount", "turn"]
 KLINE_FILE = config.CACHE_DIR / "kline.pkl.gz"
+# 估值单独存一份缓存，加因子时不必重拉行情
+VALUATION_FIELDS = "date,code,peTTM,pbMRQ,psTTM"
+VALUATION_NUMERIC = ["peTTM", "pbMRQ", "psTTM"]
+VALUATION_FILE = config.CACHE_DIR / "valuation.pkl.gz"
+KINDS = {"kline": (KLINE_FIELDS, KLINE_FILE), "valuation": (VALUATION_FIELDS, VALUATION_FILE)}
 BASIC_FILE = config.DATA_DIR / "basic.csv"
 
 
@@ -69,10 +74,18 @@ class Session:
         df = self.query("query_stock_basic")
         return df[["code", "code_name", "ipoDate", "outDate", "type", "status"]]
 
-    def kline(self, code, start, end):
-        df = self.query("query_history_k_data_plus", code, KLINE_FIELDS,
+    def kline(self, code, start, end, fields=KLINE_FIELDS):
+        df = self.query("query_history_k_data_plus", code, fields,
                         start_date=start, end_date=end, frequency="d", adjustflag="3")
         return df
+
+
+def clean_valuation(df):
+    df = df.copy()
+    for c in VALUATION_NUMERIC:
+        df[c] = pd.to_numeric(df[c], errors="coerce").astype("float32")
+    df["date"] = pd.to_datetime(df["date"])
+    return df
 
 
 def clean_kline(df):
@@ -104,15 +117,20 @@ def stock_codes(basic, listed_only=False):
     return sorted(b["code"])
 
 
-def load_kline():
-    if not KLINE_FILE.exists():
+def load_kline(kind="kline"):
+    path = KINDS[kind][1]
+    if not path.exists():
         return None
-    return pd.read_pickle(KLINE_FILE)
+    return pd.read_pickle(path)
 
 
-def save_kline(df):
+def load_valuation():
+    return load_kline("valuation")
+
+
+def save_kline(df, kind="kline"):
     config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    df.to_pickle(KLINE_FILE)
+    df.to_pickle(KINDS[kind][1])
 
 
 _worker_session = None
@@ -126,22 +144,25 @@ def _init_worker():
 
 def _fetch_chunk(job):
     """在下载进程里拉一批股票；返回 (数据列表, 失败代码)。"""
-    items, end = job
+    items, end, kind = job
+    fields = KINDS[kind][0]
+    clean = clean_valuation if kind == "valuation" else clean_kline
     sess = _worker_session or Session().__enter__()
     parts, failed = [], []
     for code, start in items:
         try:
-            df = sess.kline(code, start, end)
+            df = sess.kline(code, start, end, fields)
         except Exception as exc:
             log.warning("kline %s failed: %s", code, exc)
             failed.append(code)
             continue
         if len(df):
-            parts.append(clean_kline(df))
+            parts.append(clean(df))
     return parts, failed
 
 
-def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, workers=config.FETCH_WORKERS):
+def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, workers=config.FETCH_WORKERS,
+                 kind="kline"):
     """增量更新日线缓存：已有的股票从缓存末尾往前 overlap_days 天重拉，新股票从 start 拉。
 
     多个进程各开一个 baostock 连接并行拉取，每完成约 600 只落盘一次，任务超时也不丢已下载的数据。
@@ -149,7 +170,7 @@ def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, w
     from multiprocessing import Pool
 
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
-    old = load_kline()
+    old = load_kline(kind)
     last = old.groupby("code")["date"].max() if old is not None else pd.Series(dtype="datetime64[ns]")
     items = []
     for code in codes:
@@ -158,23 +179,23 @@ def update_kline(codes, start=config.HISTORY_START, end=None, overlap_days=10, w
             s = max(pd.Timestamp(start), last[code] - pd.Timedelta(days=overlap_days)).strftime("%Y-%m-%d")
         items.append((code, s))
     chunk = 150
-    jobs = [(items[i:i + chunk], end) for i in range(0, len(items), chunk)]
+    jobs = [(items[i:i + chunk], end, kind) for i in range(0, len(items), chunk)]
     parts, failed, done = [], [], 0
     with Pool(max(1, workers), initializer=_init_worker) as pool:
         for got, bad in pool.imap_unordered(_fetch_chunk, jobs):
             parts += got
             failed += bad
             done += 1
-            log.info("kline chunks %d/%d", done, len(jobs))
+            log.info("%s chunks %d/%d", kind, done, len(jobs))
             if len(parts) >= 600:
-                old, parts = _merge(old, parts), []
+                old, parts = _merge(old, parts, kind), []
     if old is None and not parts:
-        raise RuntimeError("no kline data")
-    return _merge(old, parts), failed
+        raise RuntimeError(f"no {kind} data")
+    return _merge(old, parts, kind), failed
 
 
-def _merge(old, parts):
+def _merge(old, parts, kind="kline"):
     out = pd.concat(([old] if old is not None else []) + parts, ignore_index=True)
     out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
-    save_kline(out)
+    save_kline(out, kind)
     return out

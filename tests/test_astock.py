@@ -149,3 +149,18 @@ def test_hold_exit_uses_open_h_days_later(synth):
     entry = p.open.at[T, code] * (1 + config.SLIPPAGE) * (1 + config.COMMISSION)
     sell = p.open.at[Th, code] * (1 - config.SLIPPAGE) * (1 - config.COMMISSION - config.STAMP_DUTY_OLD)
     assert out["hold5_net"].iloc[i][code] == pytest.approx(sell / entry - 1, rel=1e-4)
+
+
+def test_new_factors_have_no_lookahead(synth):
+    k, basic = synth
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    cut = pd.Timestamp("2015-06-30")
+    f1 = compute_factors(Panel(k, val))
+    assert {"ep", "bp", "sp", "beta60", "idiovol60"} <= set(f1)
+    k2, v2 = k.copy(), val.copy()
+    k2.loc[k2["date"] > cut, ["open", "high", "low", "close"]] *= 1.5
+    v2.loc[v2["date"] > cut, "peTTM"] = -3.0
+    f2 = compute_factors(Panel(k2, v2))
+    for name in f1:
+        pd.testing.assert_frame_equal(f1[name].loc[:cut], f2[name].loc[:cut], check_exact=False, rtol=1e-4)

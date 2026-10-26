@@ -40,6 +40,7 @@ def main():
         tracked_codes = set(log_df["code"]) if log_df is not None else set()
         start = (today - pd.Timedelta(days=200)).strftime("%Y-%m-%d")
         kline, failed = data.update_kline(sorted(set(codes) | tracked_codes), start=start)
+        data.update_kline(codes, start=start, kind="valuation")
         if len(failed) > 0.1 * len(codes):
             raise RuntimeError(f"too many failed codes: {len(failed)}")
         if kline["date"].max() < prev:
@@ -50,7 +51,7 @@ def main():
     last = kline["date"].max()
     if (trade_date - last).days > 7:
         raise RuntimeError(f"stale data: last bar {last.date()} for trade date {trade_date.date()}")
-    result = screen.screen(kline, basic, trade_date)
+    result = screen.screen(kline, basic, trade_date, valuation=data.load_valuation())
     log_df = screen.append_log(result)
     screen.write(result, screen.track(kline, log_df))
     print(result)

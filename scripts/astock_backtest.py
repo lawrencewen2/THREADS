@@ -27,7 +27,10 @@ def main():
         _, failed = data.update_kline(codes)
         if failed:
             logging.warning("%d codes failed: %s", len(failed), failed[:20])
-    res = backtest.run(data.load_kline(), data.load_basic())
+        _, failed = data.update_kline(codes, kind="valuation")
+        if failed:
+            logging.warning("%d valuation codes failed: %s", len(failed), failed[:20])
+    res = backtest.run(data.load_kline(), data.load_basic(), data.load_valuation())
     backtest.write(res)
     print(backtest.to_markdown(res))
     print(model.public(res["chosen"]["test"]))

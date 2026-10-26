@@ -13,11 +13,13 @@ LOG_FILE = config.DATA_DIR / "picks_log.csv"
 WATCH_N = 10  # 面板上列出的候选数量；只有前 top_n 只算入选
 
 
-def screen(kline, basic, trade_date, m=None):
+def screen(kline, basic, trade_date, m=None, valuation=None):
     """用最后一个交易日 t 收盘后的数据，给 trade_date（T）开盘买入出候选清单。"""
     m = m or model.load_model()
     recent = kline[kline["date"] >= kline["date"].max() - pd.Timedelta(days=200)]
-    p, f, elig, ranks = prepare(recent, basic)
+    if valuation is not None:
+        valuation = valuation[valuation["date"] >= recent["date"].min()]
+    p, f, elig, ranks = prepare(recent, basic, valuation)
     sc = model.score(ranks, m["weights"], elig)
     t = p.dates[-1]
     fear = model.load_fear(p.dates)
@@ -38,7 +40,7 @@ def screen(kline, basic, trade_date, m=None):
             close=round(close, 2),
             limit_up=round(close * (1 + float(up_pct[code])) + 1e-6, 2),
             factors={k: (None if np.isnan(v) else round(float(v), 4))
-                     for k, v in ((k, f[k].at[t, code]) for k in FACTORS) if m["weights"].get(k)},
+                     for k, v in ((k, f[k].at[t, code]) for k in FACTORS if k in f) if m["weights"].get(k)},
         ))
     return dict(
         signal_date=str(t.date()), trade_date=str(pd.Timestamp(trade_date).date()),

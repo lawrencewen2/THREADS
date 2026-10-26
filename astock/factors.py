@@ -22,13 +22,30 @@ FACTORS = {
     "ret1": "昨日涨幅",
     "size": "流通市值（对数）",
     "amount20": "近20日成交额（对数）",
+    # 第二批（2026-10-26 加）
+    "rev20": "近20日涨幅",
+    "high250": "收盘价 / 近250日最高价",
+    "skew20": "近20日收益偏度",
+    "range20": "近20日平均振幅",
+    "amihud20": "近20日非流动性（涨跌幅 / 成交额）",
+    "turn20": "近20日平均换手率",
+    "vol_spike": "昨日成交量 / 近20日均量",
+    "gap1": "昨日开盘跳空",
+    "limitup20": "近20日涨停次数",
+    "beta60": "近60日相对大盘 beta",
+    "idiovol60": "近60日特质波动率",
+    "rel5": "近5日超额涨幅（减去全市场平均）",
+    "ep": "盈利收益率（1 / 市盈率TTM）",
+    "bp": "账面市值比（1 / 市净率）",
+    "sp": "营收市值比（1 / 市销率TTM）",
 }
+VALUATION_FACTORS = ("ep", "bp", "sp")
 
 
 class Panel:
     """各字段的宽表（行 = 交易日，列 = 股票代码）。"""
 
-    def __init__(self, kline):
+    def __init__(self, kline, valuation=None):
         k = kline[kline["code"].str[:5].isin(config.BOARD_PREFIXES)]
         self.dates = pd.DatetimeIndex(sorted(k["date"].unique()))
         self.codes = pd.Index(sorted(k["code"].unique()))
@@ -47,6 +64,12 @@ class Panel:
                 w = w.where(traded)
             setattr(self, col, w)
         self.volume = wide("volume").where(traded)
+        self.valuation = {}
+        if valuation is not None and len(valuation):
+            v = valuation[valuation["code"].isin(self.codes)]
+            for col in ("peTTM", "pbMRQ", "psTTM"):
+                w = v.pivot(index="date", columns="code", values=col)
+                self.valuation[col] = w.reindex(index=self.dates, columns=self.codes).astype("float32").where(traded)
 
     def limit_pct(self):
         """涨跌停幅度：科创板 20%；创业板 2020-08-24 起 20%，之前 10%；其余 10%（ST 已被剔除）。"""
@@ -85,6 +108,33 @@ def compute_factors(p):
     float_shares = p.volume / (turn / 100)
     f["size"] = np.log((p.close * float_shares).ffill(limit=5))
     f["amount20"] = np.log(p.amount.rolling(20, min_periods=15).mean())
+
+    f["rev20"] = adj / adj.shift(20) - 1
+    f["high250"] = adj / adj.rolling(250, min_periods=120).max()
+    f["skew20"] = ret.rolling(20, min_periods=15).skew()
+    f["range20"] = ((p.high - p.low) / p.preclose).rolling(20, min_periods=15).mean()
+    f["amihud20"] = (ret.abs() / (p.amount / 1e8)).rolling(20, min_periods=15).mean()
+    f["turn20"] = turn.rolling(20, min_periods=15).mean()
+    f["vol_spike"] = p.volume / p.volume.rolling(20, min_periods=15).mean()
+    f["gap1"] = p.open / p.preclose - 1
+    up, _ = p.limit_prices()
+    f["limitup20"] = (p.close >= up - 0.005).astype("float32").where(p.traded).rolling(20, min_periods=15).sum()
+    mkt = ret.mean(axis=1)  # 等权全市场日收益
+    rm = ret.mul(mkt, axis=0).rolling(60, min_periods=40).mean()
+    r_mean = ret.rolling(60, min_periods=40).mean()
+    m_mean = mkt.rolling(60, min_periods=40).mean()
+    m_var = mkt.rolling(60, min_periods=40).var()
+    beta = rm.sub(r_mean.mul(m_mean, axis=0)).div(m_var, axis=0)
+    f["beta60"] = beta
+    total_var = ret.rolling(60, min_periods=40).var()
+    f["idiovol60"] = np.sqrt((total_var - beta**2 * m_var.values[:, None]).clip(lower=0))
+    mkt_adj = (1 + mkt.fillna(0)).cumprod()
+    f["rel5"] = (adj / adj.shift(5) - 1).sub(mkt_adj / mkt_adj.shift(5) - 1, axis=0)
+    # 估值：取倒数，亏损（负值）也保留排序含义；数据缺失时这三个因子为空
+    for name, col in (("ep", "peTTM"), ("bp", "pbMRQ"), ("sp", "psTTM")):
+        v = p.valuation.get(col)
+        if v is not None:
+            f[name] = (1 / v.where(v.abs() > 1e-6)).ffill(limit=5)
     # 停牌日不出因子，避免拿过期数据选股
     return {k: v.where(p.traded).astype("float32") for k, v in f.items()}
 

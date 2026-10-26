@@ -6,23 +6,29 @@ import logging
 import numpy as np
 import pandas as pd
 
-from . import config, model
+from . import config, diagnose, model, portfolio
 from .factors import FACTORS, Panel, compute_factors, eligible, trade_outcomes
 
 log = logging.getLogger(__name__)
 
 
-def prepare(kline, basic):
-    p = Panel(kline)
+def prepare(kline, basic, valuation=None, keep_raw=True):
+    """keep_raw=False 时算完排名就丢掉原始因子值（只留市值），全 A股回测省一半内存。"""
+    p = Panel(kline, valuation)
     f = compute_factors(p)
     elig = eligible(p, basic)
-    ranks = {k: model.xs_rank(v, elig) for k, v in f.items()}
+    ranks = {}
+    for k in list(f):
+        ranks[k] = model.xs_rank(f[k], elig)
+        if not keep_raw and k != "size":
+            del f[k]
     return p, f, elig, ranks
 
 
-def run(kline, basic):
-    p, f, elig, ranks = prepare(kline, basic)
-    del f, kline  # 全 A股面板很大，回测只用排名
+def run(kline, basic, valuation=None):
+    p, f, elig, ranks = prepare(kline, basic, valuation, keep_raw=False)
+    size = f.get("size")
+    del f, kline, valuation  # 全 A股面板很大，回测只用排名
     out = trade_outcomes(p)
     label_mask = elig & out["buyable"]
     weights, stats = model.fit_weights(ranks, out["day_ret"], label_mask, config.TRAIN_START, config.TRAIN_END)
@@ -34,6 +40,8 @@ def run(kline, basic):
     order = sc.rank(axis=1, ascending=False, method="first")
     fear = model.load_fear(p.dates)
     holding = holding_study(p, ranks, elig, out, fear)
+    diagnosis = diagnose.run(p, size, elig, ranks, out, sc)
+    port = portfolio_study(p, ranks, elig, out, fear)
     del ranks
 
     end = p.dates[-1]
@@ -52,7 +60,33 @@ def run(kline, basic):
         fitted_on=str(end.date()),
         test=model.public(chosen["test"]), train_stats=model.public(chosen["stats"])))
     return dict(p=p, out=out, sc=sc, order=order, fear=fear, grid=grid, chosen=chosen, baseline=baseline, model=m,
-                holding=holding)
+                holding=holding, diagnosis=diagnosis, portfolio=port)
+
+
+def portfolio_study(p, ranks, elig, out, fear):
+    """改进版：按“持有 5 天”的可实现收益定因子权重，分散持有多只，排名跌出缓冲区才卖，降低换手。"""
+    end = p.dates[-1]
+    train_end = p.dates[p.dates <= pd.Timestamp(config.TRAIN_END)][-6]
+    w, _ = model.fit_weights(ranks, out["hold5_net"], elig & out["buyable"], config.TRAIN_START, train_end)
+    sc = model.score(ranks, w, elig)
+    ctx = portfolio.context(p)
+    grid = []
+    for n in config.PORT_N_GRID:
+        for buf in config.PORT_BUFFER_GRID:
+            for floor in config.PORT_FLOOR_GRID:
+                d_tr, t_tr = portfolio.simulate(ctx, sc, fear, n, buf, floor, config.TRAIN_START, config.TRAIN_END)
+                d_te, t_te = portfolio.simulate(ctx, sc, fear, n, buf, floor, config.TEST_START, end)
+                grid.append(dict(n=n, buffer=buf, fear_floor=floor,
+                                 train=portfolio.stats(d_tr, t_tr), test=portfolio.stats(d_te, t_te)))
+                log.info("portfolio n=%d buf=%d floor=%s train %.3f test %.3f", n, buf, floor,
+                         grid[-1]["train"].get("ann_return", np.nan), grid[-1]["test"].get("ann_return", np.nan))
+    chosen = portfolio.choose(grid)
+    # 对照：全部可选股票等权、每天开盘到次日开盘，不扣费（近似全市场等权指数）
+    adj = pd.DataFrame(ctx["adj"], index=p.dates, columns=p.codes)
+    mkt = (adj.shift(-1) / adj - 1).where(elig.shift(1, fill_value=False)).mean(axis=1)
+    bench = {k: portfolio.stats(mkt.loc[s:e].dropna(), []) for k, (s, e) in
+             dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, end)).items()}
+    return dict(weights=w, grid=grid, chosen=chosen, bench=bench)
 
 
 def holding_study(p, ranks, elig, out, fear):
@@ -165,9 +199,42 @@ def to_markdown(res):
                      f"{_pct(t['avg_net'], 2)} | {_pct(t['ann_return'])} | {_pct(t['max_drawdown'])} | "
                      f"{_pct(bb.get('avg_net'), 2)} |")
 
+    pf = res.get("portfolio")
+    if pf:
+        ch = pf["chosen"]
+        lines += ["", "## 改进版：分散持有 + 换手缓冲", "",
+                  "按“持有 5 天”的可实现收益在训练期定因子权重；每天目标持有前 n 只，已持有的只要排名还在前 n×缓冲倍数就不卖。"
+                  "参数只在训练期挑（年化为正的组合里夏普最高的）。对照组是全部可选股票等权、不扣费。", "",
+                  f"训练期选定：持有 {ch['n']} 只，缓冲 {ch['buffer']} 倍，"
+                  + ("不设开关" if ch["fear_floor"] is None else f"A股恐慌贪婪指数低于 {ch['fear_floor']} 时空仓") + "。", "",
+                  "| 区间 | 年化 | 夏普 | 最大回撤 | 组合赚钱的天数 | 交易笔数 | 每笔胜率 | 每笔平均 | 平均持有天数 |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+
+        def prow(name, s):
+            if not s.get("days"):
+                return f"| {name} | — | — | — | — | — | — | — | — |"
+            hd = s.get("avg_hold_days")
+            return (f"| {name} | {_pct(s['ann_return'])} | {s['sharpe']:.2f} | {_pct(s['max_drawdown'])} | "
+                    f"{_pct(s['day_win'])} | {s['trades']} | {_pct(s.get('trade_win'))} | {_pct(s.get('avg_trade'), 2)} | "
+                    f"{'—' if hd is None else f'{hd:.1f}'} |")
+
+        lines += [prow("训练期", ch["train"]), prow("**样本外**", ch["test"]),
+                  prow("对照：全部可选股票等权（训练期）", pf["bench"]["train"]),
+                  prow("对照：全部可选股票等权（样本外）", pf["bench"]["test"]), "",
+                  "全部参数组合（样本外，仅供对照，没有参与挑选）：", "",
+                  "| 持有只数 | 缓冲 | 开关 | 训练期年化 | 训练期夏普 | 样本外年化 | 样本外夏普 | 样本外最大回撤 |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for g in pf["grid"]:
+            a, t = g["train"], g["test"]
+            lines.append(f"| {g['n']} | {g['buffer']} | {'不设' if g['fear_floor'] is None else '≥' + str(g['fear_floor'])} | "
+                         f"{_pct(a.get('ann_return'))} | {a.get('sharpe', 0):.2f} | {_pct(t.get('ann_return'))} | "
+                         f"{t.get('sharpe', 0):.2f} | {_pct(t.get('max_drawdown'))} |")
+
     lines += ["", "## 因子（训练期 IC 定权重，|t| < 2 的不用）", "",
               "| 因子 | 含义 | 训练期 IC | t 值 | 权重 | 样本外 IC |", "| --- | --- | --- | --- | --- | --- |"]
     for k, desc in FACTORS.items():
+        if k not in m["factor_stats"]:
+            continue
         s = m["factor_stats"][k]
         tic = s.get("test_ic_mean")
         lines.append(f"| {k} | {desc} | {s['ic_mean']:.3f} | {s['t']:.1f} | {m['weights'][k]:+.2f} | "
@@ -204,6 +271,16 @@ def page_data(res):
                           baseline=None if np.isnan(bv) else round(float(bv), 4))
                      for d, v, bv in zip(roll.index, roll.values, base_hit.values)],
         selectivity=curve,
+        portfolio=None if not res.get("portfolio") else dict(
+            n=res["portfolio"]["chosen"]["n"], buffer=res["portfolio"]["chosen"]["buffer"],
+            fear_floor=res["portfolio"]["chosen"]["fear_floor"],
+            train=model.public(res["portfolio"]["chosen"]["train"]), test=model.public(res["portfolio"]["chosen"]["test"]),
+            bench=dict(train=model.public(res["portfolio"]["bench"]["train"]), test=model.public(res["portfolio"]["bench"]["test"])),
+            equity=[dict(date=str(d.date()), strategy=round(float(v), 4))
+                    for d, v in pd.concat([res["portfolio"]["chosen"]["train"].get("_equity", pd.Series(dtype=float)),
+                                           res["portfolio"]["chosen"]["test"].get("_equity", pd.Series(dtype=float))]).iloc[::5].items()],
+            grid=[dict(n=g["n"], buffer=g["buffer"], fear_floor=g["fear_floor"],
+                       train=model.public(g["train"]), test=model.public(g["test"])) for g in res["portfolio"]["grid"]]),
         holding=[dict(hold=r["hold"], top_n=r.get("top_n"), fear_floor=r.get("fear_floor"),
                       train=model.public(r["train"]), test=model.public(r["test"]),
                       baseline=model.public(r["baseline"])) for r in res.get("holding", [])],
@@ -214,4 +291,6 @@ def write(res):
     config.REPORT_DIR.mkdir(parents=True, exist_ok=True)
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
     (config.REPORT_DIR / "backtest.md").write_text(to_markdown(res))
+    if res.get("diagnosis"):
+        (config.REPORT_DIR / "diagnosis.md").write_text(res["diagnosis"])
     (config.PAGE_DIR / "backtest.json").write_text(json.dumps(page_data(res), ensure_ascii=False))
