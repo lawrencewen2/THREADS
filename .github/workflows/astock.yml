@@ -12,6 +12,10 @@ on:
         description: "先重跑完整回测（重新拟合 astock/model.json，首次约 2–3 小时）"
         type: boolean
         default: false
+      fetch:
+        description: "只补拉 2014 年以来的完整行情缓存、不重跑回测（主分支第一次运行用，约 3 小时）"
+        type: boolean
+        default: false
   push:
     # 决策辅助板块的分支用自己的 astock-insight.yml 检验，不在那里重跑全量回测
     branches-ignore: [main, claude/project-thread-sfpfl5]
@@ -46,7 +50,7 @@ jobs:
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
       - name: Fetch prices
-        if: github.event_name == 'push' || inputs.backtest
+        if: github.event_name == 'push' || inputs.backtest || inputs.fetch
         # 首次要拉 2014 年以来约 5500 只股票；超时也会先保存已下载的缓存，重跑时接着拉
         timeout-minutes: 240
         run: python scripts/astock_backtest.py --fetch-only
