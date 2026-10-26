@@ -18,6 +18,7 @@ TEST_START = "2021-01-01"  # 之后全部是样本外
 # 股票池：全 A股，沪深主板、创业板、科创板（baostock 不含北交所），含已退市股票
 BOARD_PREFIXES = ("sh.60", "sh.68", "sz.00", "sz.30")
 FETCH_WORKERS = 4  # 并行拉取的 baostock 连接数
+FETCH_TIMEOUT = 60  # 秒，单次 baostock 网络读写
 
 # 交易成本（单边比例）
 COMMISSION = 0.00025

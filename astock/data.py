@@ -5,6 +5,7 @@ baostock 是免费的 TCP 接口，GitHub Actions 上可以访问（东方财富
 """
 
 import logging
+import socket
 import time
 
 import pandas as pd
@@ -39,6 +40,8 @@ class Session:
             pass
 
     def _login(self):
+        # baostock 的连接没有超时，网络断了会一直卡在接收上（一次回测因此停了 85 分钟）；设了超时才会报错重试
+        socket.setdefaulttimeout(config.FETCH_TIMEOUT)
         lg = self.bs.login()
         if lg.error_code != "0":
             raise RuntimeError(f"baostock login failed: {lg.error_msg}")
