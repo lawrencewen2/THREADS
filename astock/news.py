@@ -9,6 +9,7 @@
 
 import html
 import json
+import math
 import logging
 import re
 import time
@@ -25,6 +26,9 @@ OUT_FILE = config.PAGE_DIR / "news.json"
 UA = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36"
 TIMEOUT = 20
 MARKET_N = 60  # 市场快讯条数
+WEEK_DAYS = 7  # 本周大事回看天数
+WEEK_N = 15  # 本周大事列几件
+WEEK_PAGES = 60  # 往回翻快讯的最多页数（每页 100 条）
 STOCK_DAYS = 30  # 候选股公告、新闻回看天数
 STOCK_N = 5  # 每只候选股最多列几条
 
@@ -71,6 +75,25 @@ def sina_live(n=MARKET_N):
     return rows
 
 
+def sina_live_pages(days=WEEK_DAYS, page_size=100, max_pages=WEEK_PAGES):
+    """往回翻新浪 7x24，直到早于 days 天前。保留标签，用来判断重要性。"""
+    cutoff = (pd.Timestamp.now(tz="Asia/Shanghai") - pd.Timedelta(days=days)).strftime("%Y-%m-%d %H:%M")
+    rows = []
+    for page in range(1, max_pages + 1):
+        url = f"https://zhibo.sina.com.cn/api/zhibo/feed?zhibo_id=152&page={page}&page_size={page_size}&type=0"
+        items = json.loads(_get(url, headers={"Referer": "https://finance.sina.com.cn/7x24/"}))["result"]["data"]["feed"]["list"]
+        if not items:
+            break
+        for it in items:
+            title, body = _title_and_body(_text(it.get("rich_text")))
+            tags = [t.get("name", "") for t in (it.get("tag") or []) if t.get("name")]
+            rows.append(dict(time=it.get("create_time", "")[:16], title=title, body=body, tags=tags))
+        if rows[-1]["time"] < cutoff:
+            break
+        time.sleep(0.3)
+    return [r for r in rows if r["time"] >= cutoff]
+
+
 def cls_telegraph(n=MARKET_N):
     d = json.loads(_get(f"https://www.cls.cn/nodeapi/telegraphList?rn={n}", headers={"Referer": "https://www.cls.cn/telegraph"}))
     rows = []
@@ -82,6 +105,75 @@ def cls_telegraph(n=MARKET_N):
                          tags="重要" if str(it.get("level", "")).upper() in ("A", "B") else "",
                          source="财联社电报", url=it.get("shareurl") or "https://www.cls.cn/telegraph"))
     return rows
+
+
+# ---------- 本周大事 ----------
+
+# (类别, 权重, 关键词)。权重是对 A 股影响面大小的粗略排序，不是回测出来的。
+CATEGORIES = [
+    ("货币政策", 5, r"降准|降息|LPR|MLF|逆回购利率|央行宣布|人民银行宣布|美联储|加息|议息|利率决议|欧洲央行|日本央行|日银"),
+    ("重大政策", 5, r"国务院|政治局|中央经济工作会议|国常会|全会|两会|特别国债|财政部.*(发行|赤字)|发改委.*(出台|印发)|稳增长|刺激"),
+    ("监管与资本市场", 4, r"证监会|印花税|汇金|平准|国家队|减持|IPO|退市|交易所.*(发布|修订)|融资融券|程序化交易"),
+    ("地缘与贸易", 4, r"关税|制裁|贸易战|出口管制|实体清单|停火|战争|冲突升级|导弹|空袭"),
+    ("宏观数据", 3, r"GDP|CPI|PPI|PMI|社融|新增贷款|M2|非农|失业率|零售销售|工业增加值|出口同比|进口同比|外汇储备"),
+    ("市场大波动", 3, r"暴跌|暴涨|大跌|大涨|熔断|跌停潮|涨停潮|千股|创.{0,6}(新高|新低)|成交额.{0,6}(突破|超|万亿)|汇率.{0,6}(破|跌破|升破)"),
+    ("大宗商品", 2, r"原油|油价|OPEC|金价|黄金|铜价|铁矿石"),
+    ("海外市场", 2, r"美股|纳指|标普|道指|日经|恒指|港股|欧股|美债收益率"),
+]
+CAT_RE = [(n, w, re.compile(k)) for n, w, k in CATEGORIES]
+FOCUS_TAGS = ("焦点", "重要", "头条")
+
+
+def importance(text, tags):
+    """单条快讯的重要性分和命中的类别。"""
+    hits = [(n, w) for n, w, rx in CAT_RE if rx.search(text)]
+    score = (max(w for _, w in hits) + 0.5 * (len(hits) - 1)) if hits else 0.0
+    if any(f in t for t in tags for f in FOCUS_TAGS):
+        score += 3
+    return score, [n for n, _ in hits]
+
+
+def _grams(s):
+    s = re.sub(r"[\s\W_]+", "", s)
+    return {s[i:i + 2] for i in range(len(s) - 1)}
+
+
+def week_events(rows, names=(), industries=(), n=WEEK_N, sim=0.3):
+    """把一周快讯里讲同一件事的合并，按 单条最高分 + 报道条数 + 和候选股相关 排序。"""
+    events = []
+    for r in sorted(rows, key=lambda r: r["time"]):
+        text = r["title"] + r["body"]
+        score, cats = importance(text, r.get("tags") or [])
+        if score <= 0:
+            continue
+        g = _grams(r["title"])
+        best = None
+        for e in events[-300:]:
+            inter = len(g & e["grams"])
+            if inter and inter / len(g | e["grams"]) >= sim:
+                best = e
+                break
+        if best is None:
+            best = dict(grams=g, items=[], cats=set())
+            events.append(best)
+        best["items"].append(dict(r, score=score))
+        best["cats"].update(cats)
+    out = []
+    for e in events:
+        top = max(e["items"], key=lambda x: (x["score"], len(x["body"])))
+        text = " ".join(x["title"] + x["body"] for x in e["items"])
+        related = [k for k in list(names) + list(industries) if k and k in text]
+        weight = top["score"] + 2 * math.log(len(e["items"]))
+        weight += 1 if related else 0
+        out.append(dict(title=top["title"], body=top["body"][:300], first=e["items"][0]["time"], last=e["items"][-1]["time"],
+                        reports=len(e["items"]), category="、".join(c for c, _, _ in CATEGORIES if c in e["cats"]),
+                        focus=any(f in t for x in e["items"] for t in (x.get("tags") or []) for f in FOCUS_TAGS),
+                        related="、".join(dict.fromkeys(related)), weight=round(weight, 2)))
+    out.sort(key=lambda x: (x["weight"], x["last"]), reverse=True)
+    for i, x in enumerate(out[:n]):
+        x["rank"] = i + 1
+        x["id"] = f"w{i}"
+    return out[:n]
 
 
 # ---------- 候选股 ----------
@@ -159,6 +251,16 @@ def build(picks, sectors):
     cands = [(pk["code"], pk.get("name", "")) for pk in (picks or {}).get("picks", [])]
     inds = [short_industry(s["industry"]) for s in (sectors or [])[:5] + (sectors or [])[-5:]]
     tag_market(market, [n for _, n in cands], [i for i in inds if len(i) >= 2])
+    week = []
+    try:
+        raw = sina_live_pages()
+        tag_count = pd.Series([t for r in raw for t in r["tags"]]).value_counts().head(15).to_dict()
+        week = week_events(raw, [n for _, n in cands], [i for i in inds if len(i) >= 2])
+        status.append(dict(source="本周大事（新浪 7x24 近 7 天）", ok=True, rows=len(raw), tags=tag_count,
+                           oldest=raw[-1]["time"] if raw else None))
+    except Exception as exc:
+        log.warning("week events failed: %s", exc)
+        status.append(dict(source="本周大事（新浪 7x24 近 7 天）", ok=False, error=str(exc)[:200]))
     stock = []
     for fn, name in ((cninfo_announcements, "巨潮资讯公告"), (sina_stock_news, "新浪个股新闻")):
         ok = 0
@@ -179,7 +281,7 @@ def build(picks, sectors):
     for i, r in enumerate(stock):
         r["id"] = f"s{i}"
     return dict(updated=pd.Timestamp.now(tz="Asia/Shanghai").strftime("%Y-%m-%d %H:%M"),
-                market=market, stocks=stock, status=status)
+                market=market, week=week, stocks=stock, status=status)
 
 
 def write(out):
