@@ -1,0 +1,57 @@
+name: astock-insight
+
+# 单独检验选股面板的决策辅助板块：没有选股分支的行情缓存，先拉近 500 天行情和估值（约 30–40 分钟）。
+# 合进选股分支后，每天由 astock.yml 在选股之后直接用缓存生成，这个工作流只留作手动重跑。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-sfpfl5]
+    paths: ["astock/insight.py", "scripts/astock_insight.py", "tests/test_astock_insight.py", ".github/workflows/astock-insight.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-insight
+  cancel-in-progress: false
+
+jobs:
+  insight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_insight.py
+      - name: Restore price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-insight-kline-${{ github.run_id }}
+          restore-keys: astock-insight-kline-
+      - name: Build insight
+        run: python scripts/astock_insight.py --fetch-days 500
+      - name: Save price cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-insight-kline-${{ github.run_id }}
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/astock/industry.csv docs/astock/insight.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: insight $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

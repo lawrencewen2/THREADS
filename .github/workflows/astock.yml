@@ -13,7 +13,8 @@ on:
         type: boolean
         default: false
   push:
-    branches-ignore: [main]
+    # 决策辅助板块的分支用自己的 astock-insight.yml 检验，不在那里重跑全量回测
+    branches-ignore: [main, claude/project-thread-sfpfl5]
     paths: ["astock/**", "scripts/astock_*", "tests/test_astock.py", ".github/workflows/astock.yml"]
 
 permissions:
@@ -37,7 +38,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r astock/requirements.txt
-      - run: python -m pytest -q tests/test_astock.py
+      - run: python -m pytest -q tests/test_astock.py tests/test_astock_insight.py
       - name: Restore price cache
         uses: actions/cache/restore@v4
         with:
@@ -63,6 +64,10 @@ jobs:
       - name: Daily screen
         # 分支上推送时按最近一个交易日出一份清单，用来检查流程
         run: python scripts/astock_daily.py ${{ github.event_name == 'push' && '--offline' || '' }}
+      - name: Decision insight
+        # 市场温度、行业强弱、个股体检、策略可信度、决策清单；出错不影响当天的选股清单
+        run: python scripts/astock_insight.py
+        continue-on-error: true
       - name: Commit results
         run: |
           git config user.name "astock-bot"
