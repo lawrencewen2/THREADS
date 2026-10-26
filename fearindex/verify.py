@@ -292,7 +292,30 @@ def cross_source(series):
 
 # ---------- 报告 ----------
 
-def run(series, index_df, comp_df, online=True):
+def intraday_reconcile(log_dir, index_df, days=10):
+    """盘中估算的最后一个读数与收盘后正式读数相差多少（每个区域、最近 days 个交易日）。"""
+    from pathlib import Path
+
+    files = sorted(Path(log_dir).glob("*.csv")) if log_dir else []
+    if not files:
+        return None
+    log = pd.concat([pd.read_csv(f) for f in files[-2:]], ignore_index=True)
+    rows = []
+    for key in ["global"] + list(config.REGIONS):
+        if key not in log or f"{key}_date" not in log:
+            continue
+        sub = log.dropna(subset=[key, f"{key}_date"])
+        last = sub.groupby(f"{key}_date")[key].last()
+        last.index = pd.to_datetime(last.index)
+        common = last.index.intersection(index_df.index)[-days:]
+        if len(common):
+            diff = (last.loc[common] - index_df.loc[common, key]).abs()
+            rows.append(dict(key=key, n=len(common), median=float(diff.median()), max=float(diff.max()),
+                             worst=str(diff.idxmax().date())))
+    return rows
+
+
+def run(series, index_df, comp_df, online=True, intraday_log=None):
     report = dict(raw=raw_checks(series))
     report["pct"] = recompute_percentiles(series, comp_df)
     recomputed = recompute_index(comp_df)
@@ -301,6 +324,7 @@ def run(series, index_df, comp_df, online=True):
     report["replay"] = realtime_replay(series, index_df)
     report["published"] = published_consistency()
     report["cross"] = cross_source(series) if online else None
+    report["intraday"] = intraday_reconcile(intraday_log, index_df)
     return report
 
 
@@ -342,6 +366,18 @@ def to_markdown(rep, date):
         if failed:
             detail += "；第二来源取数失败：" + "、".join(r["key"] for r in failed)
         summary.append(("跨数据源比对", f"{len(cross)} 个序列 × 最近 20 天", warn and WARN or OK, detail))
+
+    intra = rep.get("intraday")
+    if intra:
+        # 美欧日港所有成分都有盘中行情，应基本一致；A股的融资余额、全球的 MOVE 只能沿用前一天
+        tol = {"cn": 2.0, "global": 1.5}
+        bad = [r for r in intra if r["max"] > tol.get(r["key"], 1.0)]
+        summary.append(("盘中估算与收盘读数", f"{len(intra)} 个区域 × 最近 {max(r['n'] for r in intra)} 天",
+                        bad and WARN or OK,
+                        "；".join(f"{r['key']} 最大差 {r['max']:.1f}（{r['worst']}）" for r in bad) or
+                        "最后一个盘中读数与正式读数最大相差 " + "、".join(f"{r['key']} {r['max']:.1f}" for r in intra)))
+    else:
+        summary.append(("盘中估算与收盘读数", "—", "—", "还没有盘中记录"))
 
     lines += ["## 汇总", "", "| 核查项 | 范围 | 结果 | 说明 |", "| --- | --- | --- | --- |"]
     lines += [f"| {a} | {b} | {c} | {d} |" for a, b, c, d in summary]

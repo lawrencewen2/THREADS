@@ -90,6 +90,11 @@ def main():
     est = intraday.estimate(series, quotes)
     est["errors"] = errors
     (out / "latest.json").write_text(json.dumps(est, ensure_ascii=False, indent=2))
+    # 在线总表用的精简版：每行一个区域
+    t_cn = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)
+    page = [dict(key=k, name=r["name"], fresh=r["fresh"], date=r["date"], score=r["score"], change=r["change"],
+                 band=r["band"], signal=r["signal_text"], time=f"{t_cn:%m-%d %H:%M}") for k, r in est["regions"].items()]
+    (out / "page.json").write_text(json.dumps(page, ensure_ascii=False, indent=1))
 
     # 每次运行一行，供当天走势和收盘后与正式读数核对
     now_cn = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)

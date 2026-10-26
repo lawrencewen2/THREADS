@@ -36,8 +36,11 @@ jobs:
         run: python scripts/run_daily.py ${{ inputs.full && '--full' || '' }}
         continue-on-error: true
       - name: Verify data
-        # 只报告不改数据：重算分数、核对发布文件、与第二数据源比对，结果写入 reports/verification.md
-        run: python scripts/verify_data.py
+        # 只报告不改数据：重算分数、核对发布文件、与第二数据源比对、核对盘中估算，结果写入 reports/verification.md
+        run: |
+          mkdir -p /tmp/intraday
+          git fetch --depth 1 origin intraday && git --work-tree=/tmp/intraday checkout FETCH_HEAD -- log && git reset -q || true
+          python scripts/verify_data.py --intraday-log /tmp/intraday/log
         continue-on-error: true
       - name: Commit results
         run: |
