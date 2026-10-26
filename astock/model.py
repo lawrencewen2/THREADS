@@ -72,6 +72,19 @@ def fear_date():
         return None
 
 
+def contrarian_regime(fear, buy, sell):
+    """恐慌时买、贪婪时卖：指数 <= buy 进场，之后一直持有到指数 >= sell 才离场。按信号日 t 对齐，只用 t 及以前的指数。"""
+    state, out = False, []
+    for v in fear.to_numpy():
+        if not np.isnan(v):
+            if not state and v <= buy:
+                state = True
+            elif state and v >= sell:
+                state = False
+        out.append(state)
+    return pd.Series(out, index=fear.index)
+
+
 def pick_mask(sc, top_n, fear=None, floor=None, order=None):
     """每天得分前 top_n 只；order 是预先算好的名次（省得每组参数重排一次）。"""
     order = sc.rank(axis=1, ascending=False, method="first") if order is None else order

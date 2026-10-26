@@ -40,4 +40,9 @@ HOLD_DAYS_GRID = (5, 10, 20)
 # 改进版组合：持有只数、缓冲倍数（排名跌出前 n×倍数才卖）、恐慌指数门槛（低于就空仓）
 PORT_N_GRID = (5, 10, 20)
 PORT_BUFFER_GRID = (1, 2, 4)
+# 恐慌时买、贪婪时卖：A股恐慌贪婪指数 <= 买入线进场，>= 卖出线清仓
+CONTRA_BUY_GRID = (20, 30, 40)
+CONTRA_SELL_GRID = (60, 70, 80)
+CONTRA_N_GRID = (10, 20)
+CONTRA_BUFFER_GRID = (2, 4)
 PORT_FLOOR_GRID = (None, 30)  # 多日持有对照：T 开盘买，T+h 开盘卖  # 挑参数时要求至少 30% 的交易日有选股，防止只挑出极少数幸运日

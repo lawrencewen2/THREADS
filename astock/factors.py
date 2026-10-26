@@ -38,6 +38,11 @@ FACTORS = {
     "ep": "盈利收益率（1 / 市盈率TTM）",
     "bp": "账面市值比（1 / 市净率）",
     "sp": "营收市值比（1 / 市销率TTM）",
+    # 行为金融
+    "cgo": "浮盈浮亏（处置效应）：收盘价相对换手加权的持仓成本",
+    "downstreak": "连续下跌天数（过度反应）",
+    "low250": "收盘价 / 近250日最低价（锚定低点）",
+    "turn_rel": "昨日换手率 / 全市场中位数（散户注意力）",
 }
 VALUATION_FACTORS = ("ep", "bp", "sp")
 
@@ -130,6 +135,24 @@ def compute_factors(p):
     f["idiovol60"] = np.sqrt((total_var - beta**2 * m_var.values[:, None]).clip(lower=0))
     mkt_adj = (1 + mkt.fillna(0)).cumprod()
     f["rel5"] = (adj / adj.shift(5) - 1).sub(mkt_adj / mkt_adj.shift(5) - 1, axis=0)
+    # 行为金融因子
+    # 持仓成本：每天按换手率把当天价格换进成本，R_t = (1 - v_t) R_{t-1} + v_t P_t（Grinblatt-Han 的递推近似）
+    v = (turn / 100).clip(upper=1).fillna(0).to_numpy()
+    price = adj.to_numpy()
+    cost = np.empty_like(price)
+    cost[0] = price[0]
+    for i in range(1, len(price)):
+        prev = np.where(np.isnan(cost[i - 1]), price[i], cost[i - 1])
+        cost[i] = (1 - v[i]) * prev + v[i] * price[i]
+    f["cgo"] = adj / pd.DataFrame(cost, index=adj.index, columns=adj.columns) - 1
+    down = (ret < 0).to_numpy(dtype="float32")
+    traded = p.traded.to_numpy()
+    streak = np.zeros_like(down)
+    for i in range(1, len(down)):  # 停牌日计数不变
+        streak[i] = np.where(traded[i], (streak[i - 1] + 1) * down[i], streak[i - 1])
+    f["downstreak"] = pd.DataFrame(streak, index=adj.index, columns=adj.columns)
+    f["low250"] = adj / adj.rolling(250, min_periods=120).min()
+    f["turn_rel"] = turn.div(turn.median(axis=1), axis=0)
     # 估值：取倒数，亏损（负值）也保留排序含义；数据缺失时这三个因子为空
     for name, col in (("ep", "peTTM"), ("bp", "pbMRQ"), ("sp", "psTTM")):
         v = p.valuation.get(col)

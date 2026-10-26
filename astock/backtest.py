@@ -86,7 +86,37 @@ def portfolio_study(p, ranks, elig, out, fear):
     mkt = (adj.shift(-1) / adj - 1).where(elig.shift(1, fill_value=False)).mean(axis=1)
     bench = {k: portfolio.stats(mkt.loc[s:e].dropna(), []) for k, (s, e) in
              dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, end)).items()}
-    return dict(weights=w, grid=grid, chosen=chosen, bench=bench)
+    return dict(weights=w, grid=grid, chosen=chosen, bench=bench, contrarian=contrarian_study(p, ctx, sc, elig, fear))
+
+
+def contrarian_study(p, ctx, sc, elig, fear):
+    """恐慌时买、贪婪时卖：A股恐慌贪婪指数跌到买入线以下进场，涨到卖出线以上清仓，期间按得分分散持股。
+    买卖线和持股参数只在训练期挑；同时给出“同样的进出场、但等权持有全市场”的对照，分开择时和选股的贡献。"""
+    end = p.dates[-1]
+    periods = dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, end))
+    grid, timing = [], []
+    for buy in config.CONTRA_BUY_GRID:
+        for sell in config.CONTRA_SELL_GRID:
+            regime = model.contrarian_regime(fear, buy, sell)
+            row = dict(buy=buy, sell=sell)
+            for k, (s, e) in periods.items():
+                row[k] = portfolio.stats(portfolio.market(ctx, elig, regime, s, e), [])
+                row[k]["in_market"] = float(regime.loc[s:e].mean())
+            timing.append(row)
+            for n in config.CONTRA_N_GRID:
+                for buf in config.CONTRA_BUFFER_GRID:
+                    g = dict(buy=buy, sell=sell, n=n, buffer=buf)
+                    for k, (s, e) in periods.items():
+                        d, t = portfolio.simulate(ctx, sc, fear, n, buf, None, s, e, regime=regime)
+                        g[k] = portfolio.stats(d, t)
+                        g[k]["in_market"] = float(regime.loc[s:e].mean())
+                    grid.append(g)
+                    log.info("contrarian buy<=%d sell>=%d n=%d buf=%d train %.3f test %.3f", buy, sell, n, buf,
+                             g["train"].get("ann_return", np.nan), g["test"].get("ann_return", np.nan))
+    chosen = portfolio.choose(grid)
+    timing_chosen = portfolio.choose(timing)
+    always = {k: portfolio.stats(portfolio.market(ctx, elig, None, s, e), []) for k, (s, e) in periods.items()}
+    return dict(grid=grid, chosen=chosen, timing=timing, timing_chosen=timing_chosen, always=always)
 
 
 def holding_study(p, ranks, elig, out, fear):
@@ -230,6 +260,35 @@ def to_markdown(res):
                          f"{_pct(a.get('ann_return'))} | {a.get('sharpe', 0):.2f} | {_pct(t.get('ann_return'))} | "
                          f"{t.get('sharpe', 0):.2f} | {_pct(t.get('max_drawdown'))} |")
 
+    ct = (pf or {}).get("contrarian")
+    if ct:
+        ch, tc = ct["chosen"], ct["timing_chosen"]
+        lines += ["", "## 恐慌时买、贪婪时卖", "",
+                  "A股恐慌贪婪指数（0 = 极度恐慌，100 = 极度贪婪）跌到买入线及以下的第二天开盘进场，之后一直持有，"
+                  "直到指数涨到卖出线及以上，第二天开盘清仓。持股期间按上面改进版的得分分散持有。"
+                  "买卖线和持股只数都只在训练期挑。", "",
+                  f"训练期选定：指数 ≤ {ch['buy']} 买入，≥ {ch['sell']} 卖出，持有 {ch['n']} 只，缓冲 {ch['buffer']} 倍。"
+                  f"只择时、等权持有全市场的版本，训练期选定 ≤ {tc['buy']} 买、≥ {tc['sell']} 卖。", "",
+                  "| 方案 | 区间 | 在场时间 | 年化 | 夏普 | 最大回撤 |", "| --- | --- | --- | --- | --- | --- |"]
+
+        def crow(name, period, st):
+            if not st.get("days"):
+                return f"| {name} | {period} | — | — | — | — |"
+            return (f"| {name} | {period} | {_pct(st.get('in_market', 1.0), 0)} | {_pct(st['ann_return'])} | "
+                    f"{st['sharpe']:.2f} | {_pct(st['max_drawdown'])} |")
+
+        for k, period in (("train", "训练期"), ("test", "**样本外**")):
+            lines += [crow("恐慌买贪婪卖 + 选股", period, ch[k]), crow("恐慌买贪婪卖 + 等权全市场（未扣选股费用）", period, tc[k]),
+                      crow("一直持有等权全市场（不扣费）", period, ct["always"][k])]
+        lines += ["", "全部买卖线（只择时、等权全市场，样本外仅供对照，没有参与挑选）：", "",
+                  "| 买入线 | 卖出线 | 训练期在场 | 训练期年化 | 训练期夏普 | 样本外在场 | 样本外年化 | 样本外夏普 | 样本外最大回撤 |",
+                  "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+        for g in ct["timing"]:
+            a, t = g["train"], g["test"]
+            lines.append(f"| ≤{g['buy']} | ≥{g['sell']} | {_pct(a.get('in_market'), 0)} | {_pct(a.get('ann_return'))} | "
+                         f"{a.get('sharpe', 0):.2f} | {_pct(t.get('in_market'), 0)} | {_pct(t.get('ann_return'))} | "
+                         f"{t.get('sharpe', 0):.2f} | {_pct(t.get('max_drawdown'))} |")
+
     lines += ["", "## 因子（训练期 IC 定权重，|t| < 2 的不用）", "",
               "| 因子 | 含义 | 训练期 IC | t 值 | 权重 | 样本外 IC |", "| --- | --- | --- | --- | --- | --- |"]
     for k, desc in FACTORS.items():
@@ -281,9 +340,32 @@ def page_data(res):
                                            res["portfolio"]["chosen"]["test"].get("_equity", pd.Series(dtype=float))]).iloc[::5].items()],
             grid=[dict(n=g["n"], buffer=g["buffer"], fear_floor=g["fear_floor"],
                        train=model.public(g["train"]), test=model.public(g["test"])) for g in res["portfolio"]["grid"]]),
+        contrarian=_contrarian_page(res),
         holding=[dict(hold=r["hold"], top_n=r.get("top_n"), fear_floor=r.get("fear_floor"),
                       train=model.public(r["train"]), test=model.public(r["test"]),
                       baseline=model.public(r["baseline"])) for r in res.get("holding", [])],
+    )
+
+
+def _contrarian_page(res):
+    ct = (res.get("portfolio") or {}).get("contrarian")
+    if not ct:
+        return None
+    ch, tc = ct["chosen"], ct["timing_chosen"]
+
+    def curve(st_tr, st_te):
+        eq = pd.concat([st_tr.get("_equity", pd.Series(dtype=float)), st_te.get("_equity", pd.Series(dtype=float))])
+        return {str(d.date()): round(float(v), 4) for d, v in eq.iloc[::5].items()}
+
+    return dict(
+        chosen=dict(buy=ch["buy"], sell=ch["sell"], n=ch["n"], buffer=ch["buffer"],
+                    train=model.public(ch["train"]), test=model.public(ch["test"])),
+        timing=dict(buy=tc["buy"], sell=tc["sell"], train=model.public(tc["train"]), test=model.public(tc["test"])),
+        always=dict(train=model.public(ct["always"]["train"]), test=model.public(ct["always"]["test"])),
+        equity=dict(strategy=curve(ch["train"], ch["test"]), timing=curve(tc["train"], tc["test"]),
+                    always=curve(ct["always"]["train"], ct["always"]["test"])),
+        grid=[dict(buy=g["buy"], sell=g["sell"], train=model.public(g["train"]), test=model.public(g["test"]))
+              for g in ct["timing"]],
     )
 
 

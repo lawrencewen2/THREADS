@@ -27,8 +27,12 @@ def context(p):
                 traded=p.traded.to_numpy(), adj=adjusted_open(p).to_numpy())
 
 
-def simulate(ctx, sc, fear, n, buffer, floor, start, end):
-    """返回 (每日组合收益 Series, 交易记录 list)。sc 以信号日 t 为行。"""
+def simulate(ctx, sc, fear, n, buffer, floor, start, end, regime=None):
+    """返回 (每日组合收益 Series, 交易记录 list)。sc 以信号日 t 为行。
+
+    regime 给定时（按信号日对齐的布尔序列，见 model.contrarian_regime）代替 floor 当开关：
+    为 True 时按排名持股，变成 False 的那天开盘清仓。
+    """
     dates = ctx["dates"]
     i0 = dates.searchsorted(pd.Timestamp(start))
     i1 = dates.searchsorted(pd.Timestamp(end), side="right")
@@ -41,6 +45,7 @@ def simulate(ctx, sc, fear, n, buffer, floor, start, end):
     open_v, up_v, down_v = ctx["open"], ctx["up"], ctx["down"]
     traded_v, adj_v = ctx["traded"], ctx["adj"]
     fear_v = fear.to_numpy() if fear is not None else np.full(len(dates), np.nan)
+    regime_v = None if regime is None else regime.reindex(dates).fillna(False).to_numpy(dtype=bool)
 
     holdings = {}  # code -> (entry adj open, entry date)
     daily, trades = [], []
@@ -52,7 +57,10 @@ def simulate(ctx, sc, fear, n, buffer, floor, start, end):
         n_valid = int(valid.sum())
         rank = np.full(len(codes), np.inf)
         rank[order[:n_valid]] = np.arange(1, n_valid + 1)
-        gate = floor is None or (not np.isnan(fear_v[t]) and fear_v[t] >= floor)
+        if regime_v is not None:
+            gate = bool(regime_v[t])
+        else:
+            gate = floor is None or (not np.isnan(fear_v[t]) and fear_v[t] >= floor)
         stamp = config.STAMP_DUTY_NEW if dates[T] >= stamp_change else config.STAMP_DUTY_OLD
         cost = 0.0
 
@@ -95,6 +103,19 @@ def simulate(ctx, sc, fear, n, buffer, floor, start, end):
         daily.append((dates[T], r - cost))
     s = pd.Series(dict(daily), dtype="float64")
     return s, trades
+
+
+def market(ctx, elig, regime, start, end):
+    """对照：等权持有全部可选股票（T 开盘到 T+1 开盘，未扣费），regime 为 False 的日子空仓。"""
+    o2o = pd.DataFrame(ctx["adj"], index=ctx["dates"], columns=ctx["codes"])
+    o2o = (o2o.shift(-1) / o2o - 1).where(elig.shift(1, fill_value=False))  # 第 T 行：T 开盘到 T+1 开盘，t = T-1 可选
+    daily = o2o.mean(axis=1).fillna(0.0)
+    if regime is not None:
+        pos = regime.reindex(ctx["dates"]).fillna(False).shift(1, fill_value=False).astype(float)
+        switches = pos.diff().abs().fillna(pos.iloc[0])
+        daily = daily * pos - switches * (config.SLIPPAGE + config.COMMISSION + config.STAMP_DUTY_NEW / 2)
+    daily = daily.loc[pd.Timestamp(start):pd.Timestamp(end)].iloc[:-1]
+    return daily
 
 
 def stats(daily, trades):

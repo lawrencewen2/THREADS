@@ -91,7 +91,7 @@ def test_backtest_and_screen_end_to_end(synth, monkeypatch, tmp_path):
     res = backtest.run(k, basic)
     backtest.write(res)
     md = (tmp_path / "rep" / "backtest.md").read_text()
-    assert "样本外" in md
+    assert "样本外" in md and "恐慌时买、贪婪时卖" in md
     # 随机数据上不应有显著的选股能力：样本外浮盈率接近全部股票
     t, b = res["chosen"]["test"], res["baseline"]["test"]
     if t.get("trades", 0) > 100:
@@ -157,10 +157,18 @@ def test_new_factors_have_no_lookahead(synth):
     val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
     cut = pd.Timestamp("2015-06-30")
     f1 = compute_factors(Panel(k, val))
-    assert {"ep", "bp", "sp", "beta60", "idiovol60"} <= set(f1)
+    assert {"ep", "bp", "sp", "beta60", "idiovol60", "cgo", "downstreak"} <= set(f1)
     k2, v2 = k.copy(), val.copy()
     k2.loc[k2["date"] > cut, ["open", "high", "low", "close"]] *= 1.5
     v2.loc[v2["date"] > cut, "peTTM"] = -3.0
     f2 = compute_factors(Panel(k2, v2))
     for name in f1:
         pd.testing.assert_frame_equal(f1[name].loc[:cut], f2[name].loc[:cut], check_exact=False, rtol=1e-4)
+
+
+def test_contrarian_regime_buys_in_fear_and_sells_in_greed():
+    idx = pd.date_range("2020-01-01", periods=8, freq="B")
+    fear = pd.Series([50, 25, 40, 55, 72, 50, 30, float("nan")], index=idx)
+    r = model.contrarian_regime(fear, buy=30, sell=70)
+    # 25 进场，一直拿到 72 离场，30 再进场，缺数据的日子保持原状态
+    assert r.tolist() == [False, True, True, True, False, False, True, True]
