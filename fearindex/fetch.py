@@ -54,6 +54,22 @@ def sanitize(key, s):
     return s
 
 
+def _yahoo_recent(ticker):
+    """最近几天每个交易日的收盘价：先取日线，日线缺的日子用 30 分钟线当天最后一根补上。"""
+    import yfinance as yf
+
+    t = yf.Ticker(ticker)
+    daily = t.history(period="7d", interval="1d", auto_adjust=False)
+    daily = _clean(daily["Close"]) if daily is not None and not daily.empty else pd.Series(dtype=float)
+    bars = t.history(period="5d", interval="30m", auto_adjust=False, prepost=False)
+    if bars is None or bars.empty:
+        return daily
+    close = bars["Close"].dropna()
+    by_day = close.groupby(close.index.date).last()
+    by_day.index = pd.to_datetime(by_day.index)
+    return daily.combine_first(by_day)
+
+
 def fetch_yahoo(ticker, start):
     import yfinance as yf
 
@@ -66,7 +82,18 @@ def fetch_yahoo(ticker, start):
             close = close.iloc[:, 0]
         return close
 
-    return _clean(_retry(go))
+    s = _clean(_retry(go))
+    # Yahoo 日线的最新一天有时几个小时内收盘价为空（被 dropna 去掉），这里用最近几天的数据补齐
+    try:
+        recent = _yahoo_recent(ticker)
+        missing = recent[recent.index > s.index[-1]]
+        if len(missing):
+            log.info("%s: daily bars end %s, filled %s from recent bars", ticker, s.index[-1].date(),
+                     [d.date() for d in missing.index])
+            s = pd.concat([s, missing])
+    except Exception as exc:
+        log.warning("%s: recent bars failed: %s", ticker, exc)
+    return s
 
 
 def _ak_index(provider, symbol, field):

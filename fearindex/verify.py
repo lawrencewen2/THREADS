@@ -20,13 +20,18 @@ OK, WARN, FAIL = "✅", "⚠️", "❌"
 
 # ---------- 1. 原始数据体检 ----------
 
+# 正常就晚发布的序列：上交所融资余额次日才公布
+PUBLISH_LAG = {"sh_margin": 1}
+
 def raw_checks(series, today=None):
     """每个序列：最新日期、周末行、非正值、近两年缺口、近两年最大单日波动。"""
     today = pd.Timestamp(today or pd.Timestamp.today().normalize())
     rows = []
+    newest = max(s.index[-1] for s in series.values())
     for key, s in series.items():
         recent = s[s.index >= today - pd.Timedelta(days=730)]
         lag = len(pd.bdate_range(s.index[-1], today)) - 1
+        behind = len(pd.bdate_range(s.index[-1], newest)) - 1
         weekend = int((s.index.dayofweek >= 5).sum())
         nonpos = int((s <= 0).sum())
         gaps = recent.index.to_series().diff().dt.days
@@ -37,6 +42,9 @@ def raw_checks(series, today=None):
         problems = []
         if lag > 3:
             problems.append(f"已 {lag} 个工作日没有新数据")
+        elif behind > PUBLISH_LAG.get(key, 0):
+            # 比最新的序列落后：可能是当地假日，也可能是数据源当天没给收盘价
+            problems.append(f"最新只到 {s.index[-1].date()}，比其他序列晚 {behind} 个交易日（当地假日可忽略）")
         if weekend:
             problems.append(f"{weekend} 行周末数据")
         if nonpos:
