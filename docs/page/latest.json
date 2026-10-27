@@ -3,36 +3,36 @@
   "key": "global",
   "name": "全球",
   "date": "2026-10-26",
-  "score": 36.9,
+  "score": 36.7,
   "band": "恐慌",
-  "change_5d": -8.6,
+  "change_5d": -8.8,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "us",
   "name": "美国",
   "date": "2026-10-26",
-  "score": 45.2,
+  "score": 44.9,
   "band": "中性",
-  "change_5d": -5.8,
+  "change_5d": -6.1,
   "signal": "正常"
  },
  {
   "key": "eu",
   "name": "欧洲",
   "date": "2026-10-26",
-  "score": 30.1,
+  "score": 29.7,
   "band": "恐慌",
-  "change_5d": -8.6,
+  "change_5d": -9.0,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "jp",
   "name": "日本",
   "date": "2026-10-26",
-  "score": 18.0,
+  "score": 17.7,
   "band": "极度恐慌",
-  "change_5d": -13.4,
+  "change_5d": -13.7,
   "signal": "恐慌加深，减仓"
  },
  {
