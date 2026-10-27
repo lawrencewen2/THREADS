@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-27T03:13+00:00",
+  "as_of": "2026-10-27T04:13+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -36,7 +36,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "已收盘"
+      "session": "未开盘"
     },
     "eu": {
       "name": "欧洲",
@@ -59,30 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 18.5,
+      "score": 18.7,
       "band": "极度恐慌",
       "date": "2026-10-27",
       "official": 17.5,
       "official_date": "2026-10-26",
-      "change": 1.0,
-      "signal": "risk_off",
-      "signal_text": "恐慌加深，减仓",
-      "official_signal": "risk_off",
-      "new_event": {
-        "short_bottom": false,
-        "bottom": false
-      },
-      "session": "午休"
-    },
-    "cn": {
-      "name": "A股",
-      "fresh": true,
-      "score": 25.1,
-      "band": "恐慌",
-      "date": "2026-10-27",
-      "official": 24.2,
-      "official_date": "2026-10-26",
-      "change": 0.9,
+      "change": 1.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -91,6 +73,24 @@
         "bottom": false
       },
       "session": "盘中"
+    },
+    "cn": {
+      "name": "A股",
+      "fresh": true,
+      "score": 25.0,
+      "band": "恐慌",
+      "date": "2026-10-27",
+      "official": 24.2,
+      "official_date": "2026-10-26",
+      "change": 0.8,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
+      "official_signal": "risk_off",
+      "new_event": {
+        "short_bottom": false,
+        "bottom": false
+      },
+      "session": "午休"
     },
     "hk": {
       "name": "港股",
@@ -108,7 +108,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "盘中"
+      "session": "午休"
     }
   },
   "quotes": {
@@ -149,45 +149,45 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92445,
-      "time": "2026-10-27T03:13+00:00",
+      "value": 0.92441,
+      "time": "2026-10-27T04:13+00:00",
       "date": "2026-10-27",
       "fresh": false
     },
     "n225": {
-      "value": 63381.289062,
-      "time": "2026-10-27T02:35+00:00",
+      "value": 63477.121094,
+      "time": "2026-10-27T03:57+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.673996,
-      "time": "2026-10-27T03:13+00:00",
+      "value": 157.662994,
+      "time": "2026-10-27T04:13+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "topix": {
-      "value": 420.200012,
-      "time": "2026-10-27T02:29+00:00",
+      "value": 421.0,
+      "time": "2026-10-27T03:57+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "hsi": {
-      "value": 23188.380859,
-      "time": "2026-10-27T02:58+00:00",
+      "value": 23184.099609,
+      "time": "2026-10-27T03:58+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "hstech": {
-      "value": 3.74,
-      "time": "2026-10-27T02:58+00:00",
+      "value": 3.752,
+      "time": "2026-10-27T03:56+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "gold": {
-      "value": 4020.699951,
-      "time": "2026-10-27T03:03+00:00",
-      "date": "2026-10-26",
+      "value": 4030.5,
+      "time": "2026-10-27T04:02+00:00",
+      "date": "2026-10-27",
       "fresh": false
     },
     "us10y": {
@@ -197,20 +197,20 @@
       "fresh": false
     },
     "csi300": {
-      "value": 4100.1,
-      "time": "2026-10-27T03:13+00:00",
+      "value": 4098.17,
+      "time": "2026-10-27T04:05+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "a_turnover": {
-      "value": 82987342.0,
-      "time": "2026-10-27T03:13+00:00",
+      "value": 86999374.0,
+      "time": "2026-10-27T04:05+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "qvix50": {
-      "value": 15.97,
-      "time": "2026-10-27T03:13+00:00",
+      "value": 16.09,
+      "time": "2026-10-27T03:30+00:00",
       "date": "2026-10-27",
       "fresh": true
     }
