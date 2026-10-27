@@ -8,6 +8,7 @@ import pandas as pd
 from . import config, model
 from .backtest import prepare
 from .factors import FACTORS
+from .fix_study import knife_mask, market_gate
 
 LOG_FILE = config.DATA_DIR / "picks_log.csv"
 WATCH_N = 10  # 面板上列出的候选数量；只有前 top_n 只算入选
@@ -20,13 +21,17 @@ def screen(kline, basic, trade_date, m=None, valuation=None):
     if valuation is not None:
         valuation = valuation[valuation["date"] >= recent["date"].min()]
     p, f, elig, ranks = prepare(recent, basic, valuation)
-    sc = model.score(ranks, m["weights"], elig)
+    # 2026-10-27 对照实验后加的两道筛：剔除前一天大跌、连跌 3 天、收在当日最低点附近的股票；全市场近 5 日下跌时空仓
+    pool = elig & knife_mask(p) if m.get("knife_filter") else elig
+    sc = model.score(ranks, m["weights"], pool)
     t = p.dates[-1]
+    market = m.get("market_gate")
+    market_ok = True if not market else bool(market_gate(p, elig, market).loc[t])
     fear = model.load_fear(p.dates)
     fear_t = fear.iloc[-1]
     fear_date = model.fear_date()
     floor = m.get("fear_floor")
-    gate_open = floor is None or (not np.isnan(fear_t) and fear_t >= floor)
+    gate_open = (floor is None or (not np.isnan(fear_t) and fear_t >= floor)) and market_ok
 
     full = sc.loc[t].dropna().sort_values(ascending=False)
     row = full.head(WATCH_N)
@@ -49,7 +54,8 @@ def screen(kline, basic, trade_date, m=None, valuation=None):
     return dict(
         signal_date=str(t.date()), trade_date=str(pd.Timestamp(trade_date).date()),
         fear_cn=None if np.isnan(fear_t) else round(float(fear_t), 1), fear_date=fear_date, fear_floor=floor,
-        gate_open=bool(gate_open), top_n=m["top_n"], universe_size=int(elig.loc[t].sum()), picks=picks,
+        gate_open=bool(gate_open), market_gate=market, market_ok=market_ok, knife_filter=bool(m.get("knife_filter")),
+        top_n=m["top_n"], universe_size=int(elig.loc[t].sum()), picks=picks,
         ranking=ranking,
     )
 

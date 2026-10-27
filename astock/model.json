@@ -251,7 +251,7 @@
       "test_ic_mean": 0.014884580858051777
     }
   },
-  "top_n": 5,
+  "top_n": 3,
   "fear_floor": null,
   "train": [
     "2015-01-01",
@@ -288,5 +288,38 @@
     "hit_next_open_net": 0.48895637769188294,
     "ann_return": -0.36461490392684937,
     "max_drawdown": -0.9814279675483704
+  },
+  "knife_filter": true,
+  "market_gate": "ret5",
+  "rules_note": "2026-10-27 对照实验（reports/astock/fix_study.md）：剔除飞刀 + 全市场近 5 日下跌空仓 + 每天 3 只，训练期挑出；样本外仍亏损，只作观察",
+  "fix_test": {
+    "days": 1407,
+    "trade_days": 756,
+    "trade_day_share": 0.5373134328358209,
+    "trades": 2265,
+    "hit_gross": 0.4653421633554084,
+    "hit_net": 0.42339955849889627,
+    "day_win_net": 0.4166666666666667,
+    "avg_day_net": -0.002356559488658817,
+    "avg_next_open_net": -0.0018845273880288005,
+    "avg_next_close_net": 0.0006108030793257058,
+    "hit_next_open_net": 0.4282560706401766,
+    "ann_return": -0.2515847086906433,
+    "max_drawdown": -0.8303784132003784
+  },
+  "fix_train": {
+    "days": 1460,
+    "trade_days": 811,
+    "trade_day_share": 0.5554794520547945,
+    "trades": 2429,
+    "hit_gross": 0.524083985179086,
+    "hit_net": 0.4800329353643475,
+    "day_win_net": 0.4969173859432799,
+    "avg_day_net": 0.0004387290529978121,
+    "avg_next_open_net": -0.0001629751204745844,
+    "avg_next_close_net": 0.003546156222000718,
+    "hit_next_open_net": 0.466199505358615,
+    "ann_return": -0.05815112590789795,
+    "max_drawdown": -0.8212222456932068
   }
 }
