@@ -44,9 +44,9 @@
     },
     "hk": {
       "name": "港股",
-      "score": 38.3,
+      "score": 38.4,
       "band": "恐慌",
-      "change_5d": -19.9,
+      "change_5d": -19.8,
       "risk_off": false,
       "signal": "normal"
     }
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 14.9
+      "score": 16.8
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 72.7
+      "score": 69.8
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
