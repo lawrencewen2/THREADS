@@ -12,9 +12,9 @@
   "key": "us",
   "name": "美国",
   "date": "2026-10-26",
-  "score": 45.1,
+  "score": 45.2,
   "band": "中性",
-  "change_5d": -5.9,
+  "change_5d": -5.8,
   "signal": "正常"
  },
  {
@@ -48,9 +48,9 @@
   "key": "hk",
   "name": "港股",
   "date": "2026-10-26",
-  "score": 38.1,
+  "score": 38.3,
   "band": "恐慌",
-  "change_5d": -20.1,
+  "change_5d": -19.9,
   "signal": "正常"
  }
 ]
