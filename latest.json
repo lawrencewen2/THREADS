@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-27T10:29+00:00",
+  "as_of": "2026-10-27T11:19+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 36.5,
+      "score": 36.7,
       "band": "恐慌",
       "date": "2026-10-27",
       "official": 36.8,
       "official_date": "2026-10-26",
-      "change": -0.3,
+      "change": -0.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 29.5,
+      "score": 30.3,
       "band": "恐慌",
       "date": "2026-10-27",
       "official": 30.0,
       "official_date": "2026-10-26",
-      "change": -0.5,
+      "change": 0.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 18.5,
+      "score": 18.4,
       "band": "极度恐慌",
       "date": "2026-10-27",
       "official": 17.5,
       "official_date": "2026-10-26",
-      "change": 1.0,
+      "change": 0.9,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 18.32,
-      "time": "2026-10-27T10:14+00:00",
+      "value": 17.83,
+      "time": "2026-10-27T11:04+00:00",
       "date": "2026-10-27",
       "fresh": false
     },
@@ -143,14 +143,14 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6108.5,
-      "time": "2026-10-27T10:13+00:00",
+      "value": 6138.189941,
+      "time": "2026-10-27T11:03+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92267,
-      "time": "2026-10-27T10:29+00:00",
+      "value": 0.92369,
+      "time": "2026-10-27T11:19+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
@@ -161,8 +161,8 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.766006,
-      "time": "2026-10-27T10:29+00:00",
+      "value": 157.649994,
+      "time": "2026-10-27T11:19+00:00",
       "date": "2026-10-27",
       "fresh": true
     },
@@ -185,8 +185,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4008.0,
-      "time": "2026-10-27T10:19+00:00",
+      "value": 4024.800049,
+      "time": "2026-10-27T11:09+00:00",
       "date": "2026-10-27",
       "fresh": false
     },
