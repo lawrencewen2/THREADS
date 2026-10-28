@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-28T00:07+00:00",
+  "as_of": "2026-10-28T00:26+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
-      "fresh": false,
-      "score": 38.4,
+      "fresh": true,
+      "score": 38.6,
       "band": "恐慌",
-      "date": "2026-10-27",
+      "date": "2026-10-28",
       "official": 38.4,
       "official_date": "2026-10-27",
-      "change": 0.0,
+      "change": 0.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -58,13 +58,13 @@
     },
     "jp": {
       "name": "日本",
-      "fresh": false,
-      "score": 18.5,
-      "band": "极度恐慌",
-      "date": "2026-10-27",
+      "fresh": true,
+      "score": 20.5,
+      "band": "恐慌",
+      "date": "2026-10-28",
       "official": 18.5,
       "official_date": "2026-10-27",
-      "change": 0.0,
+      "change": 2.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -149,28 +149,28 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.922,
-      "time": "2026-10-28T00:07+00:00",
+      "value": 0.9223,
+      "time": "2026-10-28T00:25+00:00",
       "date": "2026-10-28",
       "fresh": false
     },
     "n225": {
-      "value": 63254.28125,
-      "time": "2026-10-27T06:25+00:00",
-      "date": "2026-10-27",
-      "fresh": false
+      "value": 64102.410156,
+      "time": "2026-10-28T00:10+00:00",
+      "date": "2026-10-28",
+      "fresh": true
     },
     "usdjpy": {
-      "value": 157.882004,
-      "time": "2026-10-28T00:07+00:00",
+      "value": 157.889999,
+      "time": "2026-10-28T00:25+00:00",
       "date": "2026-10-28",
-      "fresh": false
+      "fresh": true
     },
     "topix": {
-      "value": 420.700012,
-      "time": "2026-10-27T06:20+00:00",
-      "date": "2026-10-27",
-      "fresh": false
+      "value": 423.299988,
+      "time": "2026-10-28T00:10+00:00",
+      "date": "2026-10-28",
+      "fresh": true
     },
     "hsi": {
       "value": 23041.320312,
@@ -185,8 +185,8 @@
       "fresh": false
     },
     "gold": {
-      "value": 4076.100098,
-      "time": "2026-10-27T23:57+00:00",
+      "value": 4078.699951,
+      "time": "2026-10-28T00:15+00:00",
       "date": "2026-10-27",
       "fresh": false
     },
@@ -215,6 +215,10 @@
       "fresh": false
     }
   },
-  "fresh": [],
+  "fresh": [
+    "n225",
+    "topix",
+    "usdjpy"
+  ],
   "errors": {}
 }
