@@ -171,11 +171,17 @@ def choose(grid_train):
     return max(pool, key=lambda g: g["stats"].get("hit_net", 0))
 
 
+LIVE_RULES = ("knife_filter", "market_gate", "top_n", "rules_note")  # 对照实验定下的线上规则，重跑回测时保留
+
+
 def save_model(weights, stats, chosen, extra=None):
+    old = load_model() if config.MODEL_FILE.exists() else {}
     m = dict(weights=weights, factor_stats=stats, top_n=chosen["top_n"], fear_floor=chosen["fear_floor"],
              train=[config.TRAIN_START, config.TRAIN_END], target="T日开盘买入到T日收盘的涨幅")
     if extra:
         m.update(extra)
+    if old.get("knife_filter") or old.get("market_gate"):
+        m.update({k: old[k] for k in LIVE_RULES if k in old})
     config.MODEL_FILE.write_text(json.dumps(m, ensure_ascii=False, indent=2))
     return m
 
