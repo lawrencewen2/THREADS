@@ -1,0 +1,50 @@
+name: astock-alt-study
+
+# 另类因子对照实验。和 astock.yml 同一个并发组，用主分支每日任务存下的行情缓存。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-pbwbl8]
+    paths: ["astock/alt_study.py", "scripts/astock_alt_study.py", "tests/test_astock_alt_study.py", ".github/workflows/astock-alt.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock
+  cancel-in-progress: false
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_alt_study.py
+      - name: Restore price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}
+          restore-keys: astock-kline-
+      - name: Alt factor study
+        run: python scripts/astock_alt_study.py
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/alt_study.md docs/astock/alt_study.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: alt factor study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

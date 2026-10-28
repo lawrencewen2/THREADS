@@ -202,3 +202,57 @@ def _merge(old, parts, kind="kline"):
     out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
     save_kline(out, kind)
     return out
+
+
+# 业绩预告：每只股票一次查询拉全部历史。公告日（pubDate）之后的第一个交易日才算已知
+FORECAST_FILE = config.CACHE_DIR / "forecast.pkl.gz"
+FORECAST_COLS = {"profitForcastExpPubDate": "pub", "profitForcastExpStatDate": "stat",
+                 "profitForcastType": "type", "profitForcastChgPctUp": "up", "profitForcastChgPctDwn": "dn"}
+
+
+def _fetch_forecast_chunk(job):
+    codes, start, end = job
+    sess = _worker_session or Session().__enter__()
+    parts, failed = [], []
+    for code in codes:
+        try:
+            df = sess.query("query_forecast_report", code, start_date=start, end_date=end)
+        except Exception as exc:
+            log.warning("forecast %s failed: %s", code, exc)
+            failed.append(code)
+            continue
+        if len(df):
+            parts.append(df)
+    return parts, failed
+
+
+def update_forecast(codes, start=config.HISTORY_START, end=None, workers=config.FETCH_WORKERS):
+    """拉全部股票的业绩预告（数据量小，每次全量重拉），存到 FORECAST_FILE。"""
+    from multiprocessing import Pool
+
+    end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
+    jobs = [(codes[i:i + 150], start, end) for i in range(0, len(codes), 150)]
+    parts, failed, done = [], [], 0
+    with Pool(max(1, workers), initializer=_init_worker) as pool:
+        for got, bad in pool.imap_unordered(_fetch_forecast_chunk, jobs):
+            parts += got
+            failed += bad
+            done += 1
+            log.info("forecast chunks %d/%d", done, len(jobs))
+    df = clean_forecast(pd.concat(parts, ignore_index=True)) if parts else pd.DataFrame(columns=["code", *FORECAST_COLS.values()])
+    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_pickle(FORECAST_FILE)
+    return df, failed
+
+
+def clean_forecast(df):
+    df = df.rename(columns=FORECAST_COLS)[["code", *FORECAST_COLS.values()]].copy()
+    for c in ("pub", "stat"):
+        df[c] = pd.to_datetime(df[c], errors="coerce")
+    for c in ("up", "dn"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    return df.dropna(subset=["pub"]).reset_index(drop=True)
+
+
+def load_forecast():
+    return pd.read_pickle(FORECAST_FILE) if FORECAST_FILE.exists() else None
