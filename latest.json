@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-28T20:12+00:00",
+  "as_of": "2026-10-28T20:23+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 42.1,
+      "score": 42.4,
       "band": "中性",
       "date": "2026-10-29",
       "official": 38.4,
       "official_date": "2026-10-27",
-      "change": 3.7,
+      "change": 4.0,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "risk_off",
@@ -23,12 +23,12 @@
     "us": {
       "name": "美国",
       "fresh": true,
-      "score": 56.7,
+      "score": 57.4,
       "band": "中性",
       "date": "2026-10-29",
       "official": 49.2,
       "official_date": "2026-10-27",
-      "change": 7.5,
+      "change": 8.2,
       "signal": "short_bottom",
       "signal_text": "短期触底（仅供参考）",
       "official_signal": "normal",
@@ -119,14 +119,14 @@
       "fresh": true
     },
     "vix": {
-      "value": 16.93,
-      "time": "2026-10-28T19:57+00:00",
+      "value": 16.799999,
+      "time": "2026-10-28T20:07+00:00",
       "date": "2026-10-28",
       "fresh": true
     },
     "vix3m": {
-      "value": 19.18,
-      "time": "2026-10-28T19:56+00:00",
+      "value": 19.15,
+      "time": "2026-10-28T19:59+00:00",
       "date": "2026-10-28",
       "fresh": true
     },
@@ -149,8 +149,8 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92392,
-      "time": "2026-10-28T20:12+00:00",
+      "value": 0.92379,
+      "time": "2026-10-28T20:23+00:00",
       "date": "2026-10-28",
       "fresh": true
     },
@@ -161,8 +161,8 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.850006,
-      "time": "2026-10-28T20:12+00:00",
+      "value": 157.856995,
+      "time": "2026-10-28T20:23+00:00",
       "date": "2026-10-28",
       "fresh": true
     },
@@ -185,8 +185,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4090.5,
-      "time": "2026-10-28T20:02+00:00",
+      "value": 4084.100098,
+      "time": "2026-10-28T20:13+00:00",
       "date": "2026-10-28",
       "fresh": true
     },
