@@ -226,8 +226,8 @@ def _fetch_forecast_chunk(job):
     return parts, failed
 
 
-def update_forecast(codes, start=config.HISTORY_START, end=None, workers=config.FETCH_WORKERS):
-    """拉全部股票的业绩预告（数据量小，每次全量重拉），存到 FORECAST_FILE。"""
+def update_forecast(codes, start=config.HISTORY_START, end=None, workers=config.FETCH_WORKERS, merge=False):
+    """拉全部股票的业绩预告（数据量小，每次全量重拉），存到 FORECAST_FILE。merge=True 时只补 start 之后的并入已有缓存。"""
     from multiprocessing import Pool
 
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
@@ -240,6 +240,10 @@ def update_forecast(codes, start=config.HISTORY_START, end=None, workers=config.
             done += 1
             log.info("forecast chunks %d/%d", done, len(jobs))
     df = clean_forecast(pd.concat(parts, ignore_index=True)) if parts else pd.DataFrame(columns=["code", *FORECAST_COLS.values()])
+    old = load_forecast() if merge else None
+    if old is not None and len(old):
+        df = pd.concat([old, df], ignore_index=True).drop_duplicates(["code", "pub", "stat", "type"], keep="last")
+        df = df.sort_values(["code", "pub"]).reset_index(drop=True)
     config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
     df.to_pickle(FORECAST_FILE)
     return df, failed

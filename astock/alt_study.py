@@ -85,6 +85,8 @@ HOLD = 5  # 定权重和十分位都用持有 5 天的扣费收益（T 开盘买
 PORT_N, PORT_BUFFER = 20, 4
 CONTRA_BUY, CONTRA_SELL = 20, 70  # 上一轮在训练期挑出的恐慌买、贪婪卖线
 FORECAST_DAYS = 120
+LIVE_GROUP = "业绩预期"  # 2026-10-28 用户要求上线：每日选股用这一组 + 情绪开关
+LIVE_FILE = config.ROOT / "astock" / "forecast_model.json"
 
 
 def _ema(x, span):
@@ -377,3 +379,16 @@ def write(res):
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
     (config.REPORT_DIR / "alt_study.md").write_text(to_markdown(res))
     (config.PAGE_DIR / "alt_study.json").write_text(json.dumps(page_data(res), ensure_ascii=False, default=float))
+    write_live_model(res)
+
+
+def write_live_model(res):
+    """把上线那一组在训练期定的权重和回测结果写进 astock/forecast_model.json，每日选股读它。"""
+    g = next((g for g in res["groups"] if g["group"] == LIVE_GROUP and g.get("weights")), None)
+    if g is None:
+        return
+    bt = {k: {kk: vv for kk, vv in g[f"emotion_{k}"].items() if kk != "_equity"} for k in ("train", "test")}
+    m = dict(strategy=f"{LIVE_GROUP} + 涨停情绪开关", group=LIVE_GROUP, weights=g["weights"], n=PORT_N, buffer=PORT_BUFFER,
+             gate="emotion", hold_note=f"持有 {PORT_N} 只，排名跌出前 {PORT_N * PORT_BUFFER} 才卖；情绪开关关时清仓",
+             train=[config.TRAIN_START, config.TRAIN_END], updated=res["updated"], backtest=bt)
+    LIVE_FILE.write_text(json.dumps(m, ensure_ascii=False, indent=2, default=float) + "\n")

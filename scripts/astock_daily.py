@@ -1,6 +1,11 @@
-"""A股每日开盘前选股：更新最近行情，用 astock/model.json 打分，写 docs/astock/picks.json 并跟踪历史清单。"""
+"""A股每日开盘前选股：更新最近行情和业绩预告，写 docs/astock/picks.json 并跟踪历史清单。
+
+有 astock/forecast_model.json 时用“业绩预期 + 涨停情绪开关”的 20 只持仓组合（2026-10-28 起）；
+没有时退回 astock/model.json 的单日清单。
+"""
 
 import argparse
+import json
 import logging
 import os
 import subprocess
@@ -11,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import data, screen  # noqa: E402
+from astock import alt_study, data, screen  # noqa: E402
 
 
 def main():
@@ -21,7 +26,9 @@ def main():
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     today = pd.Timestamp.now(tz="Asia/Shanghai").tz_localize(None).normalize()
-    log_df = pd.read_csv(screen.LOG_FILE, dtype={"code": str}) if screen.LOG_FILE.exists() else None
+    fm = json.loads(alt_study.LIVE_FILE.read_text()) if alt_study.LIVE_FILE.exists() else None
+    log_file = screen.PORT_LOG if fm else screen.LOG_FILE
+    log_df = pd.read_csv(log_file, dtype={"code": str}) if log_file.exists() else None
 
     if args.offline:
         kline, basic = data.load_kline(), data.load_basic()
@@ -41,6 +48,14 @@ def main():
         start = (today - pd.Timedelta(days=200)).strftime("%Y-%m-%d")
         kline, failed = data.update_kline(sorted(set(codes) | tracked_codes), start=start)
         data.update_kline(codes, start=start, kind="valuation")
+        if fm:
+            fc_start = (today - pd.Timedelta(days=screen.PANEL_DAYS + 60)).strftime("%Y-%m-%d")
+            _, fc_failed = data.update_forecast(codes, start=fc_start, merge=True)
+            if len(fc_failed) > 0.1 * len(codes):
+                raise RuntimeError(f"too many failed forecast codes: {len(fc_failed)}")
+        # 收盘后手动运行时最新一根 K 线就是今天，清单应给下一个交易日
+        if kline["date"].max() >= trade_date and not args.trade_date:
+            trade_date = days[1]
         if len(failed) > 0.1 * len(codes):
             raise RuntimeError(f"too many failed codes: {len(failed)}")
         if kline["date"].max() < prev:
@@ -51,9 +66,22 @@ def main():
     last = kline["date"].max()
     if (trade_date - last).days > 7:
         raise RuntimeError(f"stale data: last bar {last.date()} for trade date {trade_date.date()}")
-    result = screen.screen(kline, basic, trade_date, valuation=data.load_valuation())
-    log_df = screen.append_log(result)
-    screen.write(result, screen.track(kline, log_df))
+    if fm:
+        forecast = data.load_forecast()
+        if forecast is None:
+            # 分支上 --offline 检查流程时缓存里可能还没有业绩预告：补拉一次（Actions 上能连 baostock）
+            forecast, _ = data.update_forecast(data.stock_codes(basic, listed_only=True),
+                                               start=(kline["date"].max() - pd.Timedelta(days=screen.PANEL_DAYS + 60)).strftime("%Y-%m-%d"))
+        result, state = screen.screen_forecast(kline, basic, trade_date, fm, valuation=data.load_valuation(),
+                                               forecast=forecast)
+        screen.save_state(state)
+        log_df = screen.append_port_log(result)
+        rows, days_done = screen.track_portfolio(kline, log_df, fm["n"])
+        screen.write(result, rows, days_done)
+    else:
+        result = screen.screen(kline, basic, trade_date, valuation=data.load_valuation())
+        log_df = screen.append_log(result)
+        screen.write(result, screen.track(kline, log_df))
     print({k: v for k, v in result.items() if k != "ranking"})
 
 

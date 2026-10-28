@@ -49,6 +49,7 @@ def test_alt_study_runs(monkeypatch, tmp_path):
     monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
     monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
     monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    monkeypatch.setattr(alt_study, "LIVE_FILE", tmp_path / "forecast_model.json")
     val = k[["date", "code"]].copy()
     val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
     codes = sorted(k["code"].unique())
@@ -58,3 +59,42 @@ def test_alt_study_runs(monkeypatch, tmp_path):
     md = (tmp_path / "rep" / "alt_study.md").read_text()
     assert "高手与量化经理" in md and "业绩预期" in md
     assert {g["group"] for g in res["groups"]} == set(alt_study.GROUPS)
+
+
+def test_live_forecast_portfolio(monkeypatch, tmp_path):
+    from astock import screen
+
+    k, basic = synthetic_kline(n_codes=40, start="2015-01-01", end="2016-06-30", seed=2)
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "DATA_DIR", tmp_path / "data")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    monkeypatch.setattr(screen, "STATE_FILE", tmp_path / "data" / "holdings.json")
+    monkeypatch.setattr(screen, "PORT_LOG", tmp_path / "data" / "portfolio_log.csv")
+    monkeypatch.setattr(alt_study, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    fc = _forecast(codes[:8], "2016-05-01")
+    fm = dict(strategy="业绩预期 + 涨停情绪开关", weights=dict(eps_chg60=0.4, fc_chg=0.3, fc_sign=0.3), n=5, buffer=2)
+    dates = sorted(k["date"].unique())
+    d1, d2, d3 = dates[-3], dates[-2], dates[-1]
+
+    res1, st1 = screen.screen_forecast(k[k["date"] <= d1], basic, d2, fm, val, fc)
+    assert len(res1["picks"]) == 5 and all(pk["action"] == "买入" for pk in res1["picks"])
+    assert {pk["code"] for pk in res1["picks"]} <= set(codes[:8])  # 有预增预告的排前面
+    screen.save_state(st1)
+    screen.append_port_log(res1)
+    res2, st2 = screen.screen_forecast(k[k["date"] <= d2], basic, d3, fm, val, fc)
+    held2 = {pk["code"] for pk in res2["picks"]}
+    assert len(held2) == 5 and {pk["code"] for pk in res2["sells"]}.isdisjoint(held2)
+    assert any(pk["action"] == "继续持有" for pk in res2["picks"])
+    # 同一信号日重跑，结果不变
+    screen.save_state(st2)
+    res2b, st2b = screen.screen_forecast(k[k["date"] <= d2], basic, d3, fm, val, fc)
+    assert st2b["codes"] == st2["codes"] and st2b["prev"] == st2["prev"]
+    log_df = screen.append_port_log(res2)
+    rows, days = screen.track_portfolio(k, log_df, fm["n"])
+    assert [d["trade_date"] for d in days] == [str(pd.Timestamp(d2).date())]
+    screen.write(res2, rows, days)
+    live = (tmp_path / "page" / "live.json").read_text()
+    assert '"mode": "portfolio"' in live

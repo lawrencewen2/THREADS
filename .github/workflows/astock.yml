@@ -42,7 +42,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r astock/requirements.txt
-      - run: python -m pytest -q tests/test_astock.py tests/test_astock_insight.py
+      - run: python -m pytest -q tests/test_astock.py tests/test_astock_insight.py tests/test_astock_alt_study.py
       - name: Restore price cache
         uses: actions/cache/restore@v4
         with:
