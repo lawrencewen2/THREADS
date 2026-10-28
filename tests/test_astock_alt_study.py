@@ -153,3 +153,32 @@ def test_winrate_study_runs(monkeypatch, tmp_path):
     big = next(x for x in res["rows"] if x["take_profit"] == 0.08 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
     assert small["train"]["win"] >= big["train"]["win"]
     assert "胜率能做到多高" in (tmp_path / "rep" / "winrate.md").read_text()
+
+
+def test_slots_portfolio(monkeypatch, tmp_path):
+    import json
+
+    from astock import slots
+
+    k, basic = synthetic_kline(n_codes=40, start="2014-01-01", end="2016-06-30", seed=6)
+    monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
+    monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
+    monkeypatch.setattr(config, "TEST_START", "2016-01-01")
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    live = tmp_path / "forecast_model.json"
+    live.write_text(json.dumps(dict(weights=dict(eps_chg60=0.5, fc_chg=0.5))))
+    monkeypatch.setattr(slots, "LIVE_FILE", live)
+    monkeypatch.setattr(slots, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    monkeypatch.setattr(slots, "N", 5)
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    res = slots.run(k, basic, val, _forecast(codes[:10], "2015-04-01"))
+    slots.write(res)
+    r = res["chosen"]
+    assert r["test"]["trades"] > 0 and r["train"]["days"] > 0
+    for row in res["rows"]:
+        assert (row["test"].get("avg_hold_days") or 0) <= row["max_hold"] + 1
+    assert "真实账户模拟" in (tmp_path / "rep" / "slots.md").read_text()
