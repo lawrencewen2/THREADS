@@ -149,7 +149,7 @@ def test_winrate_study_runs(monkeypatch, tmp_path):
     r = res["rows"][0]
     assert r["test"]["trades"] > 0 and 0 <= r["test"]["win"] <= 1
     # 止盈越小胜率越高（同样的买入），每笔收益不会超过止盈减成本太多
-    small = next(x for x in res["rows"] if x["take_profit"] == 0.01 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
-    big = next(x for x in res["rows"] if x["take_profit"] == 0.05 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
+    small = next(x for x in res["rows"] if x["take_profit"] == 0.02 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
+    big = next(x for x in res["rows"] if x["take_profit"] == 0.08 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
     assert small["train"]["win"] >= big["train"]["win"]
     assert "胜率能做到多高" in (tmp_path / "rep" / "winrate.md").read_text()
