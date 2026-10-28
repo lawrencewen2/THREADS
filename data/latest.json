@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 10.3
+      "score": 11.2
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 71.3
+      "score": 73.5
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
