@@ -26,6 +26,7 @@ STOP_LOSS = (None, 0.05, 0.08)
 MAX_HOLD = (5, 10, 20)
 TOP_N = (5, 20)
 TARGET_WIN = 0.80
+GOAL_WIN = 0.50  # 用户 2026-10-28 改定的目标：每笔胜率 50–60%
 
 
 def adjusted_ohlc(p):
@@ -143,7 +144,9 @@ def run(kline, basic, valuation=None, forecast=None):
     pos = [r for r in rows if r["train"].get("avg", -1) > 0]
     best_win = max(pos or rows, key=lambda r: r["train"].get("win", 0))
     best_ret = max(rows, key=lambda r: r["train"].get("ann_est", -9))
-    return dict(updated=end, rows=rows, best_win=best_win, best_ret=best_ret, target_win=TARGET_WIN,
+    goal = [r for r in rows if r["train"].get("win", 0) >= GOAL_WIN and r["train"].get("avg", -1) > 0]
+    best_goal = max(goal, key=lambda r: r["train"].get("ann_est", -9)) if goal else None
+    return dict(updated=end, rows=rows, best_win=best_win, best_ret=best_ret, best_goal=best_goal, target_win=TARGET_WIN,
                 n_reach_target_test=sum(1 for r in rows if r["test"].get("win", 0) >= TARGET_WIN),
                 n_reach_target_test_positive=sum(1 for r in rows if r["test"].get("win", 0) >= TARGET_WIN
                                                  and r["test"].get("avg", -1) > 0))
@@ -164,8 +167,12 @@ def to_markdown(res):
              "T+1 才能卖；开盘涨停买不进；同一天碰到止盈和止损按止损算。", "",
              f"共 {len(res['rows'])} 种规则。样本外每笔胜率达到 {res['target_win'] * 100:.0f}% 的有 "
              f"{res['n_reach_target_test']} 种，其中每笔平均还赚钱的有 {res['n_reach_target_test_positive']} 种。", ""]
-    for label, key in (("训练期挑出的胜率最高（每笔平均为正）", "best_win"), ("训练期挑出的估算年化最高", "best_ret")):
+    for label, key in (("训练期挑出的胜率最高（每笔平均为正）", "best_win"), ("训练期挑出的估算年化最高", "best_ret"),
+                       (f"训练期胜率 ≥ {GOAL_WIN * 100:.0f}% 且每笔平均为正里估算年化最高", "best_goal")):
         r = res[key]
+        if r is None:
+            lines += [f"**{label}**：训练期没有规则达标。", ""]
+            continue
         a, t = r["train"], r["test"]
         lines += [f"**{label}**：{_rule(r)}。训练期胜率 {_p(a.get('win'), 0)}、每笔平均 {_p(a.get('avg'), 2)}；"
                   f"样本外胜率 {_p(t.get('win'), 0)}、每笔平均 {_p(t.get('avg'), 2)}、最差 5% 的一笔 {_p(t.get('worst5'))}、"

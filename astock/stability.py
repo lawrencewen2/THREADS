@@ -19,6 +19,8 @@ from .factors import Panel, eligible
 log = logging.getLogger(__name__)
 
 MIN_TRADE_WIN = 0.50
+# 用户 2026-10-28 定的目标：每笔胜率 50–60%（专业量化基金的水平），总仓位最大回撤 10–15%，稳定赚钱
+TARGET_DD = -0.15
 GREED = 70  # 恐慌指数 ≥ 70 视为贪婪
 # (名称, 持股数, 缓冲倍数, 开关)
 VARIANTS = [
@@ -35,6 +37,7 @@ VARIANTS = [
 # 控回撤：在线上规则的每日收益上叠加仓位规则，都只用前一天收盘已知的信息
 OVERLAYS = [
     ("线上规则 + 波动率目标（年化 15%，最高满仓）", "vol15"),
+    ("线上规则 + 波动率目标（年化 10%，最高满仓）", "vol10"),
     ("线上规则 + 自身净值低于 20 日均线时空仓", "trend20"),
     ("线上规则 + 回撤超过 10% 时半仓，回到 20 日均线上方恢复", "dd10"),
 ]
@@ -44,9 +47,9 @@ SWITCH_COST = config.SLIPPAGE * 2 + config.COMMISSION * 2 + config.STAMP_DUTY_NE
 def overlay(daily, kind):
     """返回叠加仓位后的每日收益。仓位按 t 日收盘后的信息定、作用在下一天；仓位变化按比例扣一次进出成本。"""
     eq = (1 + daily).cumprod()
-    if kind == "vol15":
+    if kind in ("vol15", "vol10"):
         vol = daily.rolling(20, min_periods=10).std() * np.sqrt(244)
-        pos = (0.15 / vol).clip(upper=1.0).fillna(1.0)
+        pos = (int(kind[3:]) / 100 / vol).clip(upper=1.0).fillna(1.0)
     elif kind == "trend20":
         pos = (eq >= eq.rolling(20, min_periods=10).mean()).astype(float)
     elif kind == "dd10":
@@ -127,8 +130,13 @@ def run(kline, basic, valuation=None, forecast=None):
     # 控回撤：训练期最大回撤最小、且年化为正的
     calm_pool = [r for r in rows if r["gate"] and r["train"].get("ann_return", -1) > 0]
     calm = max(calm_pool or rows, key=lambda r: r["train"].get("max_drawdown", -9))
+    for r in rows:
+        r["meets"] = {k: bool((r[k].get("trade_win") or 0) >= MIN_TRADE_WIN and r[k].get("max_drawdown", -1) >= TARGET_DD
+                              and r[k].get("ann_return", -1) > 0) for k in periods}
+    target_pool = [r for r in rows if r["meets"]["train"]]
+    target = max(target_pool, key=lambda r: r["train"].get("sharpe", -9))["variant"] if target_pool else None
     bench = {k: period_stats(portfolio.market(ctx, elig, None, s, e), []) for k, (s, e) in periods.items()}
-    return dict(updated=str(end.date()), rows=rows, chosen=best["variant"], chosen_meets_win=bool(ok), calmest=calm["variant"],
+    return dict(updated=str(end.date()), rows=rows, chosen=best["variant"], chosen_meets_win=bool(ok), calmest=calm["variant"], target=target,
                 bench=bench, min_trade_win=MIN_TRADE_WIN)
 
 
@@ -144,18 +152,21 @@ def to_markdown(res):
              f"训练期挑出的做法：**{res['chosen']}**"
              + ("" if res["chosen_meets_win"] else f"（没有做法在训练期达到 {res['min_trade_win'] * 100:.0f}% 胜率，只按夏普挑）"), "",
              f"训练期最大回撤最小（且年化为正）的做法：**{res['calmest']}**", "",
+             f"目标（每笔胜率 ≥ {MIN_TRADE_WIN * 100:.0f}%、最大回撤不超过 {-TARGET_DD * 100:.0f}%、年化为正）："
+             + (f"训练期达标里夏普最高的是 **{res['target']}**" if res.get("target") else "训练期没有做法同时达标"), "",
              "控回撤的几种是在线上规则的每日收益上调仓位，不改变买卖哪只，所以每笔胜率和线上规则一样。", "",
-             "| 做法 | 训练期年化 | 训练期胜率 | 样本外年化 | 样本外夏普 | 样本外最大回撤 | 样本外每笔胜率 | 赚钱月份占比 | 最差月份 | 最差滚动 12 个月 |",
-             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+             "| 做法 | 训练期年化 | 训练期胜率 | 样本外年化 | 样本外夏普 | 样本外最大回撤 | 样本外每笔胜率 | 赚钱月份占比 | 最差月份 | 最差滚动 12 个月 | 训练期达标 | 样本外达标 |",
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
     for r in res["rows"]:
         a, t = r["train"], r["test"]
         lines.append(f"| {r['variant']} | {_p(a.get('ann_return'))} | {_p(a.get('trade_win'), 0)} | {_p(t.get('ann_return'))} | "
                      f"{t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('trade_win'), 0)} | "
-                     f"{_p(t.get('month_win'), 0)} | {_p(t.get('worst_month'))} | {_p(t.get('worst_12m'))} |")
+                     f"{_p(t.get('month_win'), 0)} | {_p(t.get('worst_month'))} | {_p(t.get('worst_12m'))} | "
+                     f"{'是' if r['meets']['train'] else '否'} | {'是' if r['meets']['test'] else '否'} |")
     b = res["bench"]["test"]
     lines.append(f"| 对照：等权持有全市场（不扣费） | {_p(res['bench']['train'].get('ann_return'))} | — | {_p(b.get('ann_return'))} | "
                  f"{b.get('sharpe', 0):.2f} | {_p(b.get('max_drawdown'))} | — | {_p(b.get('month_win'), 0)} | "
-                 f"{_p(b.get('worst_month'))} | {_p(b.get('worst_12m'))} |")
+                 f"{_p(b.get('worst_month'))} | {_p(b.get('worst_12m'))} | — | — |")
     years = sorted({y for r in res["rows"] for y in r["test"].get("yearly", {})} | set(b.get("yearly", {})))
     lines += ["", "## 样本外分年收益", "", "| 做法 | " + " | ".join(years) + " |", "| --- |" + " --- |" * len(years)]
     for r in res["rows"] + [dict(variant="等权持有全市场", test=b)]:
