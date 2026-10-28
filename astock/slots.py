@@ -19,6 +19,7 @@ import pandas as pd
 from . import config, model, portfolio
 from .alt_study import LIVE_FILE, emotion_regime, iter_alt_factors
 from .factors import Panel, eligible
+from .stability import overlay
 from .winrate import adjusted_ohlc
 
 log = logging.getLogger(__name__)
@@ -29,6 +30,12 @@ STOP_LOSS = ("atr2", "atr3", 0.08)
 MAX_HOLD = (10, 20)
 GOAL_WIN = 0.50
 GOAL_DD = -0.15
+OVERLAYS = [
+    ("波动率目标年化 15%", "vol15"),
+    ("波动率目标年化 10%", "vol10"),
+    ("净值低于 20 日均线时空仓", "trend20"),
+    ("回撤超过 10% 时半仓，回到 20 日均线上方恢复", "dd10"),
+]
 
 
 def levels(entry, atr, tp, sl):
@@ -136,7 +143,17 @@ def run(kline, basic, valuation=None, forecast=None):
         rows.append(row)
     pool = [r for r in rows if (r["train"].get("trade_win") or 0) >= GOAL_WIN] or rows
     chosen = max(pool, key=lambda r: r["train"].get("sharpe", -9))
-    return dict(updated=end, n=N, rows=rows, chosen=chosen, chosen_meets_win=pool is not rows)
+    # 控回撤：在挑出的规则上叠加仓位（波动率目标、净值跌破均线空仓、回撤半仓），胜率不变，只改仓位
+    overlays = []
+    for name, kind in OVERLAYS:
+        row = dict(overlay=name, kind=kind)
+        for k, (s, e) in periods.items():
+            d, t = simulate(p, ohl, sc, gate, N, chosen["take_profit"], chosen["stop_loss"], chosen["max_hold"], s, e)
+            row[k] = stats(overlay(d, kind), t)
+        row["meets"] = {k: bool((row[k].get("trade_win") or 0) >= GOAL_WIN and row[k].get("max_drawdown", -1) >= GOAL_DD
+                                and row[k].get("ann_return", -1) > 0) for k in periods}
+        overlays.append(row)
+    return dict(updated=end, n=N, rows=rows, chosen=chosen, chosen_meets_win=pool is not rows, overlays=overlays)
 
 
 def _p(x, d=1):
@@ -164,6 +181,14 @@ def to_markdown(res):
         lines.append(f"| {rule(r)} | {_p(a.get('ann_return'))} | {_p(a.get('max_drawdown'))} | {_p(a.get('trade_win'), 0)} | "
                      f"{_p(t.get('ann_return'))} | {t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('trade_win'), 0)} | "
                      f"{t.get('payoff') or 0:.2f} | {_p(t.get('avg_loss'), 2)} | {_p(t.get('worst5'))} | {t.get('avg_hold_days') or 0:.1f} | "
+                     f"{'是' if r['meets']['train'] else '否'} | {'是' if r['meets']['test'] else '否'} |")
+    lines += ["", f"## 挑出规则叠加仓位控制（目标：每笔胜率 ≥ 50%、最大回撤不超过 {-GOAL_DD * 100:.0f}%）", "",
+              "| 仓位控制 | 训练期年化 | 训练期回撤 | 样本外年化 | 样本外夏普 | 样本外回撤 | 胜率 | 训练期达标 | 样本外达标 |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in res.get("overlays", []):
+        a, t = r["train"], r["test"]
+        lines.append(f"| {r['overlay']} | {_p(a.get('ann_return'))} | {_p(a.get('max_drawdown'))} | {_p(t.get('ann_return'))} | "
+                     f"{t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('trade_win'), 0)} | "
                      f"{'是' if r['meets']['train'] else '否'} | {'是' if r['meets']['test'] else '否'} |")
     years = sorted(c["test"].get("yearly", {}))
     lines += ["", "## 挑出规则的样本外分年收益", "", "| " + " | ".join(years) + " |", "|" + " --- |" * len(years),
