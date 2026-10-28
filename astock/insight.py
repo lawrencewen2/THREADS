@@ -298,7 +298,15 @@ def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
              + {"冰点": "；逆向看是机会", "偏冷": "；逆向看偏向机会", "偏热": "；追高要小心", "过热": "；过热，追高风险大"}.get(label, ""))
         items.append(dict(item="市场温度", status=s, detail=d))
     test = ((bt or {}).get("chosen") or {}).get("test") or {}
-    if test.get("avg_next_open_net") is not None:
+    live_bt = ((picks or {}).get("backtest") or {}).get("test") or {}
+    if (picks or {}).get("strategy") and live_bt.get("ann_return") is not None:
+        # 2026-10-28 起线上是持仓组合，不再是隔夜清单
+        v = live_bt["ann_return"]
+        s = "中" if v > 0 else "差"
+        d = (f"线上规则“{picks['strategy']}”样本外年化 {v * 100:.1f}%，最大回撤 {live_bt['max_drawdown'] * 100:.1f}%，"
+             f"每笔胜率 {live_bt['trade_win'] * 100:.0f}%；今天情绪开关{'开，按清单持有' if picks.get('gate_open') else '关，空仓'}")
+        items.append(dict(item="线上规则回测", status=s, detail=d))
+    elif test.get("avg_next_open_net") is not None:
         v = test["avg_next_open_net"]
         s = "好" if v > 0 else "差"
         d = f"样本外每笔扣费后平均 {v * 100:+.2f}%，" + ("优势覆盖了成本" if v > 0 else "选股优势不够付交易成本，不宜照单隔夜买卖")
