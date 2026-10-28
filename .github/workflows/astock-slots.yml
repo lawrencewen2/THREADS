@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [claude/project-thread-pbwbl8]
-    paths: ["astock/slots.py", "scripts/astock_slots.py", ".github/workflows/astock-slots.yml"]
+    paths: ["astock/slots.py", "astock/stability.py", "scripts/astock_slots.py", ".github/workflows/astock-slots.yml"]
 
 permissions:
   contents: write

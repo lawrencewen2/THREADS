@@ -45,7 +45,10 @@ SWITCH_COST = config.SLIPPAGE * 2 + config.COMMISSION * 2 + config.STAMP_DUTY_NE
 
 
 def overlay(daily, kind):
-    """返回叠加仓位后的每日收益。仓位按 t 日收盘后的信息定、作用在下一天；仓位变化按比例扣一次进出成本。"""
+    """返回叠加仓位后的每日收益。仓位变化按比例扣一次进出成本。
+
+    第 T 行是 T 开盘到 T+1 开盘的收益，要到 T+1 开盘才知道；所以 T+1 开盘前能用的净值只到第 T-1 行，
+    仓位要错开两行（shift 2），不然等于在开盘那一刻用了当时的开盘价。"""
     eq = (1 + daily).cumprod()
     if kind in ("vol15", "vol10"):
         vol = daily.rolling(20, min_periods=10).std() * np.sqrt(244)
@@ -65,7 +68,7 @@ def overlay(daily, kind):
         pos = pd.Series(out, index=daily.index)
     else:
         raise ValueError(kind)
-    pos = pos.shift(1).fillna(1.0)
+    pos = pos.shift(2).fillna(1.0)
     return daily * pos - pos.diff().abs().fillna(0) * SWITCH_COST / 2
 
 
