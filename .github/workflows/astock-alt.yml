@@ -1,6 +1,6 @@
 name: astock-alt-study
 
-# 另类因子对照实验。和 astock.yml 同一个并发组，用主分支每日任务存下的行情缓存。
+# 另类因子对照实验。只读主分支每日任务存下的行情缓存、不写缓存，所以单独一个并发组，不用排在每日选股后面。
 on:
   workflow_dispatch:
   push:
@@ -11,7 +11,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: astock
+  group: astock-alt
   cancel-in-progress: false
 
 jobs:
