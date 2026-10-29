@@ -3,9 +3,9 @@
   "key": "global",
   "name": "全球",
   "date": "2026-10-28",
-  "score": 41.0,
+  "score": 41.1,
   "band": "中性",
-  "change_5d": -5.5,
+  "change_5d": -5.4,
   "signal": "正常"
  },
  {
@@ -48,9 +48,9 @@
   "key": "hk",
   "name": "港股",
   "date": "2026-10-28",
-  "score": 35.2,
+  "score": 35.9,
   "band": "恐慌",
-  "change_5d": -16.4,
+  "change_5d": -15.7,
   "signal": "恐慌加深，减仓"
  }
 ]
