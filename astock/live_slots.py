@@ -96,12 +96,14 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
             picks.append(row)
 
     buys_open = invest and bool(gate.iloc[-1])
+    # 空仓或情绪开关关时不买，但仍列出排名靠前的几只作“观察”，方便看
     free = n - len(picks) if buys_open else 0
+    want = free + SPARES if buys_open else (0 if picks else SPARES * 2)
     cands = []
-    if buys_open and free > 0:
+    if want > 0:
         traded_t = p.traded.to_numpy()[t]
         for j in np.argsort(-np.where(np.isnan(score_t), -np.inf, score_t))[:n * 3]:
-            if len(cands) >= free + SPARES or np.isnan(score_t[j]):
+            if len(cands) >= want or np.isnan(score_t[j]):
                 break
             if j in held or not traded_t[j] or not np.isfinite(atr[t, j]):
                 continue
@@ -109,7 +111,8 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
             row = base(j)
             sl_pct, tp_pct = _pct(sl, a), _pct(tp, a)
             target, stop = levels(1.0, a, tp, sl)
-            row.update(action="买入" if len(cands) < free else "候补", selected=len(cands) < free, weight=weight,
+            act = ("买入" if len(cands) < free else "候补") if buys_open else "观察"
+            row.update(action=act, selected=act == "买入", weight=weight,
                        stop_pct=round(-sl_pct, 4), take_profit_pct=None if tp_pct is None else round(tp_pct, 4),
                        stop_price_ref=round(float(close_t[j] * stop), 2),
                        take_profit_price_ref=None if tp is None else round(float(close_t[j] * target), 2))
@@ -121,6 +124,8 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
         strategy=sm["strategy"], hold_note=sm["hold_note"], signal_date=str(dates[t].date()), trade_date=str(T.date()),
         fear_cn=None, fear_date=model.fear_date(), fear_floor=None,
         gate_open=buys_open, invest=invest, emotion_on=bool(gate.iloc[-1]),
+        equity_vs_ma20=None if not len(eq) else round(float(eq.iloc[-1] / ma.iloc[-1] - 1), 4),
+        equity_20d=None if len(eq) < 21 else round(float(eq.iloc[-1] / eq.iloc[-21] - 1), 4),
         gate="情绪开关（近 5 日平均涨停家数高于近 20 日平均）开才买新的；组合净值跌破 20 日均线时空仓",
         top_n=n, capital_share=sm.get("capital_share", 1.0), per_name_weight=weight,
         universe_size=int(elig.iloc[-1].sum()), picks=picks, sells=sells, n_selected=len(sel),
