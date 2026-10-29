@@ -13,19 +13,26 @@ on:
     - cron: "7,37 15-20 * * 1-5"
     - cron: "7 21 * * 1-5"
   workflow_dispatch:
+    inputs:
+      loop:
+        description: "开市期间循环运行（false = 只跑一次）"
+        default: "true"
 
 permissions:
   contents: write
   issues: write
+  actions: write
 
+# 有市场开着时一次运行会循环约 2 分钟算一次，最长约 5 小时 40 分钟，到时还在交易时段就再起一次自己。
+# 运行中再被触发（定时或手动）的会排队等它结束，不会打断循环。
 concurrency:
   group: intraday
-  cancel-in-progress: true
+  cancel-in-progress: false
  
 jobs:
   estimate:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 350
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,16 +52,30 @@ jobs:
           else
             mkdir state && git -C state init -b intraday && git -C state remote add origin "$REMOTE"
           fi
-      - name: Estimate
+      - name: Estimate (loop while any market is open)
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: python scripts/run_intraday.py --out state
-      - name: Commit
+          GH_TOKEN: ${{ github.token }}
         run: |
-          cd state
-          git config user.name "fear-index-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
-          git commit -q -m "intraday: $(TZ=Asia/Shanghai date '+%F %H:%M')"
-          git push origin intraday
+          git config --global user.name "fear-index-bot"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          start=$(date +%s)
+          while :; do
+            # 选股名单白天也会更新（收盘后），每轮取 main 上最新的一份
+            git fetch -q --depth 1 origin main && git checkout -q FETCH_HEAD -- docs/astock/picks.json || echo "picks.json not refreshed"
+            python scripts/run_intraday.py --out state || echo "::warning::run_intraday failed"
+            (
+              cd state
+              git add -A
+              if ! git diff --cached --quiet; then
+                git commit -q -m "intraday: $(TZ=Asia/Shanghai date '+%F %H:%M')"
+                git push -q origin intraday || { git pull -q --rebase origin intraday && git push -q origin intraday; } || echo "::warning::push failed"
+              fi
+            )
+            elapsed=$(( $(date +%s) - start ))
+            if [ "${{ inputs.loop }}" = "false" ] || [ $elapsed -gt 20400 ] || ! python scripts/run_intraday.py --any-open; then break; fi
+            sleep 60
+          done
+          if [ $elapsed -gt 20400 ] && python scripts/run_intraday.py --any-open; then
+            gh workflow run intraday.yml --ref main
+          fi
