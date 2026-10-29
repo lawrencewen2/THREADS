@@ -19,11 +19,13 @@ log = logging.getLogger(__name__)
 CN_TZ = ZoneInfo("Asia/Shanghai")
 UA = {"User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"}
 
-# 每个序列的盘中行情来源。Yahoo 代码与每日版所用的一致（data/raw/_sources.json）。
+# 每个序列的盘中行情来源。实时源（腾讯、新浪）优先，拿不到时用 Yahoo（港股、日股在 Yahoo 上延迟约 15 分钟）。
+# Yahoo 代码与每日版所用的一致（data/raw/_sources.json）。
 YAHOO = {"spx": "^GSPC", "vix": "^VIX", "vix3m": "^VIX3M", "hyg": "HYG", "ief": "IEF", "sx5e": "^STOXX50E",
          "eurchf": "EURCHF=X", "n225": "^N225", "usdjpy": "JPY=X", "topix": "1306.T", "hsi": "^HSI",
          "hstech": "3033.HK", "gold": "GC=F", "us10y": "^TNX"}
-TENCENT = {"csi300": "sh000300"}
+TENCENT = {"csi300": "sh000300", "hsi": "r_hkHSI", "hstech": "r_hk03033"}  # r_ 前缀是港股实时行情
+SINA = {"n225": "b_NKY", "gold": "hf_GC"}
 TURNOVER_CODES = ("sh000001", "sz399001")
 NO_INTRADAY = ("sh_margin", "move")
 # 区域的主指数有了新行情，这个区域才算进入新的一天。汇率、黄金等几乎 24 小时交易，
@@ -77,8 +79,30 @@ def _tencent_raw(codes, session):
 
 
 def _tencent_time(f):
-    t = datetime.strptime(f[30], "%Y%m%d%H%M%S").replace(tzinfo=CN_TZ)
+    """A股是 20261029150003，港股是 2026/10/29 16:08:00，都是北京时间。"""
+    raw = f[30]
+    t = datetime.strptime(raw, "%Y/%m/%d %H:%M:%S" if "/" in raw else "%Y%m%d%H%M%S").replace(tzinfo=CN_TZ)
     return t.astimezone(timezone.utc), pd.Timestamp(t.date())
+
+
+def _sina_raw(codes, session):
+    r = session.get("https://hq.sinajs.cn/list=" + ",".join(codes), timeout=15,
+                    headers={**UA, "Referer": "https://finance.sina.com.cn"})
+    r.raise_for_status()
+    text = r.content.decode("gbk", errors="replace")
+    return {code: body.split(",") for code, body in re.findall(r'hq_str_(\w+)="([^"]+)"', text)}
+
+
+def _sina_quote(code, f):
+    """新浪全球指数（b_）和外盘期货（hf_）的报价，日期和时间都是北京时间。"""
+    if code.startswith("b_"):
+        value, day, clock = f[1], f[6], f[7]
+    elif code.startswith("hf_"):
+        value, day, clock = f[0], f[12], f[6]
+    else:
+        raise ValueError(f"unknown sina code {code}")
+    t = datetime.strptime(f"{day} {clock}", "%Y-%m-%d %H:%M:%S").replace(tzinfo=CN_TZ)
+    return dict(value=float(value), time=t.astimezone(timezone.utc), date=pd.Timestamp(t.date()))
 
 
 def _a_share_minutes(t_cn):
@@ -93,26 +117,38 @@ def fetch_quotes(session=None):
 
     session = session or requests.Session()
     quotes, errors = {}, {}
-    for key, sym in YAHOO.items():
-        try:
-            quotes[key] = _yahoo_quote(sym)
-        except Exception as exc:
-            errors[key] = f"yahoo {sym}: {type(exc).__name__}: {str(exc)[:100]}"
+    try:
+        raw = _sina_raw(list(SINA.values()), session)
+        for key, code in SINA.items():
+            if code in raw:
+                quotes[key] = _sina_quote(code, raw[code])
+    except Exception as exc:
+        log.warning("sina: %s: %s", type(exc).__name__, str(exc)[:100])
     try:
         raw = _tencent_raw(list(TENCENT.values()) + list(TURNOVER_CODES), session)
         for key, code in TENCENT.items():
             if code in raw:
                 t, d = _tencent_time(raw[code])
                 quotes[key] = dict(value=float(raw[code][3]), time=t, date=d)
-            else:
-                errors[key] = f"tencent {code}: missing"
         if all(c in raw for c in TURNOVER_CODES):
             t, d = _tencent_time(raw[TURNOVER_CODES[0]])
             amount = sum(float(raw[c][37]) for c in TURNOVER_CODES)  # 万元
             quotes["a_turnover"] = dict(value=amount, time=t, date=d, partial=True,
                                         minutes=_a_share_minutes(t.astimezone(CN_TZ)))
     except Exception as exc:
-        errors["csi300"] = errors["a_turnover"] = f"tencent: {type(exc).__name__}: {str(exc)[:100]}"
+        errors["a_turnover"] = f"tencent: {type(exc).__name__}: {str(exc)[:100]}"
+        log.warning("tencent: %s", errors["a_turnover"])
+    # 实时源没拿到的序列用 Yahoo 补上
+    for key, sym in YAHOO.items():
+        if key in quotes:
+            continue
+        try:
+            quotes[key] = _yahoo_quote(sym)
+        except Exception as exc:
+            errors[key] = f"yahoo {sym}: {type(exc).__name__}: {str(exc)[:100]}"
+    for key, code in TENCENT.items():
+        if key not in quotes and key not in YAHOO:
+            errors[key] = f"tencent {code}: missing"
     try:
         quotes["qvix50"] = _qvix_quote()
     except Exception as exc:
@@ -262,3 +298,68 @@ def alerts(est):
         if s >= EXTREME_HIGH > r["official"]:
             out.append((key, "extreme_high", f"{name}盘中进入极度贪婪：{s}"))
     return out
+
+
+def any_market_open(now=None):
+    """有市场在交易时段（含午休）内就返回 True，盘中任务据此决定是否继续循环。"""
+    return any(market_session(r, now) in ("盘中", "午休") for r in MARKET_HOURS)
+
+
+# ---------- A股选股名单的盘中行情 ----------
+
+NEAR_PCT = 2.0  # 离止损/止盈不到这么多（%）时标“接近”
+
+
+def _pct(a, b):
+    return round((a / b - 1) * 100, 2) if a and b else None
+
+
+def pick_rows(picks_doc, session=None):
+    """给选股名单（docs/astock/picks.json）的每只股票配上腾讯实时行情。
+
+    返回 (rows, 提醒列表)。持有中的股票用实际止损/止盈价，买入、候补、观察的用参考价（ref=True）。
+    触及按当天最高/最低价判断。
+    """
+    import requests
+
+    session = session or requests.Session()
+    picks = picks_doc.get("picks") or []
+    codes = [p["code"].replace(".", "") for p in picks]
+    raw = _tencent_raw(codes, session) if codes else {}
+    rows, notes = [], []
+    for p, code in zip(picks, codes):
+        held = p.get("stop_price") is not None
+        stop = p.get("stop_price") if held else p.get("stop_price_ref")
+        take = p.get("take_profit_price") if held else p.get("take_profit_price_ref")
+        row = dict(code=p["code"], name=p.get("name"), action=p.get("action") or "", rank=p.get("rank"),
+                   trade_date=picks_doc.get("trade_date"), entry_price=p.get("entry_price"), stop=stop, take=take,
+                   ref=not held, price=None, pct=None, from_entry=None, to_stop=None, to_take=None, time=None,
+                   status="无行情")
+        f = raw.get(code)
+        if f:
+            price, prev = float(f[3]), float(f[4])
+            high, low = float(f[33] or 0), float(f[34] or 0)
+            t, d = _tencent_time(f)
+            row.update(price=price, pct=_pct(price, prev), time=f"{t.astimezone(CN_TZ):%m-%d %H:%M}",
+                       from_entry=_pct(price, p.get("entry_price")),
+                       to_stop=_pct(stop, price) if stop else None, to_take=_pct(take, price) if take else None)
+            today = d == pd.Timestamp(datetime.now(CN_TZ).date())
+            if price <= 0:
+                row["status"] = "停牌"
+            elif today and stop and low and low <= stop:
+                row["status"] = "触及止损"
+            elif today and take and high and high >= take:
+                row["status"] = "触及止盈"
+            elif stop and price <= stop * (1 + NEAR_PCT / 100):
+                row["status"] = "接近止损"
+            elif take and price >= take * (1 - NEAR_PCT / 100):
+                row["status"] = "接近止盈"
+            else:
+                row["status"] = "正常" if today else "未开盘"
+            if held and row["status"] in ("触及止损", "触及止盈"):
+                level = stop if row["status"] == "触及止损" else take
+                notes.append((p["code"], row["status"],
+                              f"{p.get('name')}（{p['code']}）盘中{row['status']} {level}：现价 {price}，"
+                              f"今日 {row['pct']:+.2f}%，相对买入价 {row['from_entry']:+.2f}%"))
+        rows.append(row)
+    return rows, notes
