@@ -266,3 +266,45 @@ def test_intraday_apply_quotes():
     # 主指数还没开盘时，24 小时交易的汇率不接
     fx = {"usdjpy": dict(value=149.0, time=t, date=nxt)}
     assert intraday.apply_quotes(series, fx)[1] == []
+
+
+def test_intraday_realtime_parsers():
+    from fearindex import intraday
+
+    hk = ["100", "恒生指数", "HSI", "22993.070"] + ["0"] * 26 + ["2026/10/29 15:40:38"]
+    t, d = intraday._tencent_time(hk)
+    assert d == pd.Timestamp("2026-10-29") and t.hour == 7 and t.minute == 40  # 北京 15:40 = UTC 07:40
+    a = ["1"] * 30 + ["20261029154012"]
+    assert intraday._tencent_time(a)[1] == pd.Timestamp("2026-10-29")
+    nky = "日经225指数,64659.2500,705.06,1.10,2:12 AM,14:12:00,2026-10-29,14:30:01,64126.25".split(",")
+    q = intraday._sina_quote("b_NKY", nky)
+    assert q["value"] == 64659.25 and q["date"] == pd.Timestamp("2026-10-29") and q["time"].hour == 6
+    gc = "4039.133,,4039.700,4039.900,4081.700,4033.400,15:40:40,4051.600,4081.400,0,1,1,2026-10-29,纽约黄金,0".split(",")
+    assert intraday._sina_quote("hf_GC", gc)["value"] == 4039.133
+
+
+def test_intraday_pick_rows(monkeypatch):
+    from datetime import datetime
+
+    from fearindex import intraday
+
+    now = datetime.now(intraday.CN_TZ).strftime("%Y%m%d%H%M%S")
+
+    def fields(price, prev, high, low):
+        f = ["0"] * 40
+        f[3], f[4], f[30], f[33], f[34] = str(price), str(prev), now, str(high), str(low)
+        return f
+
+    raw = {"sz002772": fields(8.0, 8.5, 8.6, 7.9), "sh603334": fields(30.0, 28.0, 31.2, 28.0),
+           "sz301317": fields(33.0, 32.6, 33.5, 32.5)}
+    monkeypatch.setattr(intraday, "_tencent_raw", lambda codes, session: {c: raw[c] for c in codes if c in raw})
+    doc = {"trade_date": "2026-10-29", "picks": [
+        dict(code="sz.002772", name="A", action="继续持有", entry_price=8.5, stop_price=7.95, take_profit_price=9.5),
+        dict(code="sh.603334", name="B", action="继续持有", entry_price=28.0, stop_price=26.0, take_profit_price=31.0),
+        dict(code="sz.301317", name="C", action="观察", stop_price_ref=31.0, take_profit_price_ref=36.0),
+        dict(code="sz.000001", name="D", action="观察", stop_price_ref=9.0, take_profit_price_ref=11.0)]}
+    rows, notes = intraday.pick_rows(doc, session=object())
+    st = {r["code"]: r["status"] for r in rows}
+    assert st == {"sz.002772": "触及止损", "sh.603334": "触及止盈", "sz.301317": "正常", "sz.000001": "无行情"}
+    assert rows[0]["from_entry"] == -5.88 and rows[2]["ref"] is True and rows[0]["ref"] is False
+    assert [k for _, k, _ in notes] == ["触及止损", "触及止盈"]  # 观察的股票不提醒
