@@ -4,12 +4,12 @@
   "name": "全球",
   "fresh": true,
   "date": "2026-10-29",
-  "score": 41.3,
-  "change": 0.3,
+  "score": 41.6,
+  "change": 0.6,
   "band": "中性",
   "signal": "正常",
   "session": "盘中",
-  "time": "10-29 12:13"
+  "time": "10-29 13:15"
  },
  {
   "key": "us",
@@ -21,7 +21,7 @@
   "band": "中性",
   "signal": "短期触底（仅供参考）",
   "session": "未开盘",
-  "time": "10-29 12:13"
+  "time": "10-29 13:15"
  },
  {
   "key": "eu",
@@ -33,31 +33,31 @@
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
   "session": "未开盘",
-  "time": "10-29 12:13"
+  "time": "10-29 13:15"
  },
  {
   "key": "jp",
   "name": "日本",
   "fresh": true,
   "date": "2026-10-29",
-  "score": 21.6,
-  "change": 2.0,
+  "score": 22.7,
+  "change": 3.1,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
   "session": "盘中",
-  "time": "10-29 12:13"
+  "time": "10-29 13:15"
  },
  {
   "key": "cn",
   "name": "A股",
   "fresh": true,
   "date": "2026-10-29",
-  "score": 26.6,
-  "change": 1.0,
+  "score": 27.7,
+  "change": 2.1,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
-  "session": "午休",
-  "time": "10-29 12:13"
+  "session": "盘中",
+  "time": "10-29 13:15"
  },
  {
   "key": "hk",
@@ -68,7 +68,7 @@
   "change": -0.1,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
-  "session": "午休",
-  "time": "10-29 12:13"
+  "session": "盘中",
+  "time": "10-29 13:15"
  }
 ]
