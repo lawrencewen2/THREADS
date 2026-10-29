@@ -13,13 +13,13 @@
  "picks": [
   {
    "rank": 1,
-   "code": "sz.301292",
-   "name": "海科新源",
+   "code": "sh.603991",
+   "name": "领先股份",
    "score": 0.3571,
    "selected": true,
    "action": "买入",
-   "close": 43.67,
-   "limit_up": 52.4,
+   "close": 130.08,
+   "limit_up": 143.09,
    "factors": {
     "eps_chg60": 10.0,
     "fc_chg": 500.0,
@@ -29,13 +29,13 @@
   },
   {
    "rank": 2,
-   "code": "sh.603991",
-   "name": "领先股份",
+   "code": "sz.301292",
+   "name": "海科新源",
    "score": 0.3571,
    "selected": true,
    "action": "买入",
-   "close": 130.08,
-   "limit_up": 143.09,
+   "close": 43.67,
+   "limit_up": 52.4,
    "factors": {
     "eps_chg60": 10.0,
     "fc_chg": 500.0,
@@ -237,22 +237,6 @@
   },
   {
    "rank": 15,
-   "code": "sz.000701",
-   "name": "厦门信达",
-   "score": 0.3423,
-   "selected": true,
-   "action": "买入",
-   "close": 5.11,
-   "limit_up": 5.62,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
-  },
-  {
-   "rank": 16,
    "code": "sh.688530",
    "name": "欧莱新材",
    "score": 0.3423,
@@ -268,14 +252,30 @@
    }
   },
   {
-   "rank": 17,
-   "code": "sh.688110",
-   "name": "东芯股份",
+   "rank": 16,
+   "code": "sz.300497",
+   "name": "富祥股份",
    "score": 0.3423,
    "selected": true,
    "action": "买入",
-   "close": 57.33,
-   "limit_up": 68.8,
+   "close": 13.45,
+   "limit_up": 16.14,
+   "factors": {
+    "eps_chg60": 10.0,
+    "fc_chg": 500.0,
+    "fc_sign": 1.0,
+    "fc_fresh20": null
+   }
+  },
+  {
+   "rank": 17,
+   "code": "sz.000701",
+   "name": "厦门信达",
+   "score": 0.3423,
+   "selected": true,
+   "action": "买入",
+   "close": 5.11,
+   "limit_up": 5.62,
    "factors": {
     "eps_chg60": 10.0,
     "fc_chg": 500.0,
@@ -285,13 +285,13 @@
   },
   {
    "rank": 18,
-   "code": "sz.300497",
-   "name": "富祥股份",
+   "code": "sh.688110",
+   "name": "东芯股份",
    "score": 0.3423,
    "selected": true,
    "action": "买入",
-   "close": 13.45,
-   "limit_up": 16.14,
+   "close": 57.33,
+   "limit_up": 68.8,
    "factors": {
     "eps_chg60": 10.0,
     "fc_chg": 500.0,
