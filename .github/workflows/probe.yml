@@ -1,0 +1,28 @@
+name: probe-realtime
+on:
+  push:
+    branches: [claude/realtime-probe]
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - run: |
+          date -u
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/124 Safari/537.36"
+          echo "== tencent"
+          curl -s -m 15 -A "$UA" "http://qt.gtimg.cn/q=hkHSI,r_hkHSI,hkHSTECH,r_hkHSTECH,r_hk03033,usINX,us.INX,usDJI,usIXIC,usVIX,us.VIX,usHYG,us.HYG,usIEF,usSPY,sh000300" | iconv -f gbk -t utf-8 | cut -c1-400
+          echo "== sina"
+          curl -s -m 15 -A "$UA" -H "Referer: https://finance.sina.com.cn" "https://hq.sinajs.cn/list=b_NKY,b_SX5E,b_TPX,b_HSI,b_SPX,b_VIX,int_nikkei,int_sp500,znb_NKY,znb_SX5E,znb_VIX,gb_\$vix,gb_\$inx,gb_hyg,gb_ief,gb_spy,hf_GC,fx_susdjpy,fx_seurchf,gb_\$tnx,rt_hkHSI,rt_hk03033,hkHSI" | iconv -f gbk -t utf-8 | cut -c1-400
+          echo "== eastmoney global"
+          curl -s -m 15 -A "$UA" "https://push2.eastmoney.com/api/qt/ulist.np/get?fltt=2&fields=f2,f3,f12,f14,f124&secids=100.N225,100.SX5E,100.SPX,100.VIX,100.HSI,100.TOPX" | cut -c1-600
+          echo "== yahoo 1m freshness"
+          pip -q install yfinance >/dev/null 2>&1
+          python - <<'PY'
+          import yfinance as yf
+          for s in ["^N225","^HSI","3033.HK","1306.T","^GSPC","^STOXX50E","JPY=X","GC=F"]:
+              try:
+                  df=yf.Ticker(s).history(period="1d",interval="1m")
+                  print(s, df.index[-1] if len(df) else None, float(df["Close"].iloc[-1]) if len(df) else None)
+              except Exception as e: print(s, "ERR", e)
+          PY
