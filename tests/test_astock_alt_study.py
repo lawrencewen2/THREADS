@@ -98,3 +98,124 @@ def test_live_forecast_portfolio(monkeypatch, tmp_path):
     screen.write(res2, rows, days)
     live = (tmp_path / "page" / "live.json").read_text()
     assert '"mode": "portfolio"' in live
+
+
+def test_stability_runs(monkeypatch, tmp_path):
+    import json
+
+    from astock import stability
+
+    k, basic = synthetic_kline(n_codes=40, start="2014-01-01", end="2016-06-30", seed=4)
+    monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
+    monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
+    monkeypatch.setattr(config, "TEST_START", "2016-01-01")
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    live = tmp_path / "forecast_model.json"
+    live.write_text(json.dumps(dict(weights=dict(eps_chg60=0.5, fc_chg=0.5))))
+    monkeypatch.setattr(stability, "LIVE_FILE", live)
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    res = stability.run(k, basic, val, _forecast(codes[:10], "2015-04-01"))
+    stability.write(res)
+    assert len(res["rows"]) == len(stability.VARIANTS) + len(stability.OVERLAYS)
+    assert res["chosen"] in {r["variant"] for r in res["rows"] if r["gate"]}
+    assert "样本外分年收益" in (tmp_path / "rep" / "stability.md").read_text()
+
+
+def test_winrate_study_runs(monkeypatch, tmp_path):
+    import json
+
+    from astock import winrate
+
+    k, basic = synthetic_kline(n_codes=40, start="2014-01-01", end="2016-06-30", seed=5)
+    monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
+    monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
+    monkeypatch.setattr(config, "TEST_START", "2016-01-01")
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    live = tmp_path / "forecast_model.json"
+    live.write_text(json.dumps(dict(weights=dict(eps_chg60=0.5, fc_chg=0.5))))
+    monkeypatch.setattr(winrate, "LIVE_FILE", live)
+    monkeypatch.setattr(winrate, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    res = winrate.run(k, basic, val, _forecast(codes[:10], "2015-04-01"))
+    winrate.write(res)
+    r = res["rows"][0]
+    assert r["test"]["trades"] > 0 and 0 <= r["test"]["win"] <= 1
+    # 止盈越小胜率越高（同样的买入），每笔收益不会超过止盈减成本太多
+    small = next(x for x in res["rows"] if x["take_profit"] == 0.02 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
+    big = next(x for x in res["rows"] if x["take_profit"] == 0.08 and x["stop_loss"] is None and x["max_hold"] == 20 and x["top_n"] == 20)
+    assert small["train"]["win"] >= big["train"]["win"]
+    assert "胜率能做到多高" in (tmp_path / "rep" / "winrate.md").read_text()
+
+
+def test_slots_portfolio(monkeypatch, tmp_path):
+    import json
+
+    from astock import slots
+
+    k, basic = synthetic_kline(n_codes=40, start="2014-01-01", end="2016-06-30", seed=6)
+    monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
+    monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
+    monkeypatch.setattr(config, "TEST_START", "2016-01-01")
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    live = tmp_path / "forecast_model.json"
+    live.write_text(json.dumps(dict(weights=dict(eps_chg60=0.5, fc_chg=0.5))))
+    monkeypatch.setattr(slots, "LIVE_FILE", live)
+    monkeypatch.setattr(slots, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    monkeypatch.setattr(slots, "N", 5)
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    res = slots.run(k, basic, val, _forecast(codes[:10], "2015-04-01"))
+    slots.write(res)
+    r = res["chosen"]
+    assert r["test"]["trades"] > 0 and r["train"]["days"] > 0
+    for row in res["rows"]:
+        assert (row["test"].get("avg_hold_days") or 0) <= row["max_hold"] + 1
+    assert "真实账户模拟" in (tmp_path / "rep" / "slots.md").read_text()
+
+
+def test_live_slots_screen(monkeypatch, tmp_path):
+    import json
+
+    from astock import live_slots
+
+    k, basic = synthetic_kline(n_codes=40, start="2015-01-01", end="2016-06-30", seed=7)
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    monkeypatch.setattr(live_slots, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    fc = _forecast(codes[:10], "2016-03-01")
+    dates = sorted(k["date"].unique())
+    sm = dict(strategy="s", hold_note="h", weights=dict(eps_chg60=0.4, fc_chg=0.3, fc_sign=0.3), n=5,
+              take_profit="atr2", stop_loss="atr3", max_hold=10, capital_share=0.5, start=str(pd.Timestamp(dates[-40]).date()))
+    res, live = live_slots.screen(k, basic, dates[-1] + pd.Timedelta(days=1), sm, val, fc)
+    live_slots.write(res, live)
+    held = [r for r in res["picks"] + res["sells"] if "entry_price" in r]
+    assert held
+    assert res["n_selected"] <= 5 and res["per_name_weight"] == 0.1
+    for r in held:
+        assert r["stop_price"] < r["entry_price"] < r["take_profit_price"] and r["days_held"] <= 10
+    for r in res["picks"]:
+        if r["action"] == "买入":
+            assert r["stop_pct"] < 0 < r["take_profit_pct"]
+    assert live["summary"]["mode"] == "slots"
+    # 同一天的清单只用当天及以前的数据：加上之后的行情不改变结果
+    cut = dates[-15]
+    a, _ = live_slots.screen(k[k["date"] <= cut], basic, cut, sm, val, fc)
+    k2 = k.copy()
+    k2.loc[k2["date"] > cut, ["open", "high", "low", "close"]] *= 1.5
+    b, _ = live_slots.screen(k2[k2["date"] <= cut], basic, cut, sm, val, fc)
+    assert [r["code"] for r in a["picks"]] == [r["code"] for r in b["picks"]]
+    assert json.loads((tmp_path / "page" / "picks.json").read_text())["top_n"] == 5

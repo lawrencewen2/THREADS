@@ -305,6 +305,18 @@ def track(kline, log_df):
     return out
 
 
+def rolling(days):
+    """线上组合的稳定性：近 3 个月、近 12 个月收益，最大回撤，赚钱月份占比。"""
+    if not days:
+        return {}
+    d = pd.Series({pd.Timestamp(x["trade_date"]): x["net"] for x in days}).sort_index()
+    eq = (1 + d).cumprod()
+    monthly = (1 + d).resample("ME").prod() - 1
+    return dict(ret_63d=float((1 + d.iloc[-63:]).prod() - 1), ret_244d=float((1 + d.iloc[-244:]).prod() - 1),
+                max_drawdown=float((eq / eq.cummax() - 1).min()), month_win=float((monthly > 0).mean()),
+                months=int(len(monthly)))
+
+
 def write(result, tracked, days=None):
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
     sel = [t for t in tracked if t.get("selected") and "day_net" in t]
@@ -314,7 +326,8 @@ def write(result, tracked, days=None):
         summary = dict(mode="portfolio", days=len(nets), trades=len(sel),
                        hit_net=float((nets > 0).mean()) if len(nets) else None,
                        avg_next_open_net=float(nets.mean()) if len(nets) else None,
-                       cum_net=float(np.prod(1 + nets) - 1) if len(nets) else None, daily=days[-250:])
+                       cum_net=float(np.prod(1 + nets) - 1) if len(nets) else None, daily=days[-250:],
+                       **rolling(days))
     else:
         summary = dict(
             trades=len(sel),

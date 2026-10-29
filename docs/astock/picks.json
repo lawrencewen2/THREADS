@@ -1,360 +1,187 @@
 {
- "strategy": "业绩预期 + 涨停情绪开关",
- "hold_note": "持有 20 只，排名跌出前 80 才卖；情绪开关关时清仓",
+ "strategy": "业绩预期 + 情绪开关，止盈 2 倍 ATR、止损 3 倍 ATR、最长 10 天，净值跌破 20 日均线空仓",
+ "hold_note": "最多 20 只；每只买入后挂好止盈单和止损单，碰到就卖，满 10 个交易日开盘卖；组合净值跌破 20 日均线时全部卖出、暂停买入",
  "signal_date": "2026-10-28",
  "trade_date": "2026-10-29",
  "fear_cn": 25.6,
  "fear_date": "2026-10-28",
  "fear_floor": null,
- "gate_open": true,
- "gate": "情绪开关：近 5 日平均涨停家数高于近 20 日平均",
+ "gate_open": false,
+ "invest": false,
+ "emotion_on": true,
+ "equity_vs_ma20": -0.0638,
+ "equity_20d": -0.1441,
+ "gate": "情绪开关（近 5 日平均涨停家数高于近 20 日平均）开才买新的；组合净值跌破 20 日均线时空仓",
  "top_n": 20,
+ "capital_share": 0.5,
+ "per_name_weight": 0.025,
  "universe_size": 4034,
  "picks": [
   {
-   "rank": 1,
    "code": "sz.301292",
    "name": "海科新源",
+   "rank": 2,
    "score": 0.3571,
-   "selected": true,
-   "action": "买入",
    "close": 43.67,
-   "limit_up": 52.4,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.2182,
+   "take_profit_pct": 0.1454,
+   "stop_price_ref": 34.14,
+   "take_profit_price_ref": 50.02
   },
   {
-   "rank": 2,
    "code": "sh.603991",
    "name": "领先股份",
+   "rank": 1,
    "score": 0.3571,
-   "selected": true,
-   "action": "买入",
    "close": 130.08,
-   "limit_up": 143.09,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.1749,
+   "take_profit_pct": 0.1166,
+   "stop_price_ref": 107.33,
+   "take_profit_price_ref": 145.25
   },
   {
-   "rank": 3,
    "code": "sz.002812",
    "name": "恩捷股份",
+   "rank": 3,
    "score": 0.3543,
-   "selected": true,
-   "action": "买入",
    "close": 47.52,
-   "limit_up": 52.27,
-   "factors": {
-    "eps_chg60": 4.4175,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.1887,
+   "take_profit_pct": 0.1258,
+   "stop_price_ref": 38.55,
+   "take_profit_price_ref": 53.5
   },
   {
-   "rank": 4,
    "code": "sz.300199",
    "name": "翰宇药业",
+   "rank": 4,
    "score": 0.3527,
-   "selected": true,
-   "action": "买入",
    "close": 23.16,
-   "limit_up": 27.79,
-   "factors": {
-    "eps_chg60": 3.2518,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.185,
+   "take_profit_pct": 0.1233,
+   "stop_price_ref": 18.88,
+   "take_profit_price_ref": 26.02
   },
   {
-   "rank": 5,
    "code": "sz.300821",
    "name": "东岳硅材",
+   "rank": 5,
    "score": 0.3521,
-   "selected": true,
-   "action": "买入",
    "close": 15.76,
-   "limit_up": 18.91,
-   "factors": {
-    "eps_chg60": 2.8815,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.2845,
+   "take_profit_pct": 0.1897,
+   "stop_price_ref": 11.28,
+   "take_profit_price_ref": 18.75
   },
   {
-   "rank": 6,
    "code": "sz.000703",
    "name": "恒逸石化",
+   "rank": 6,
    "score": 0.3512,
-   "selected": true,
-   "action": "买入",
    "close": 13.02,
-   "limit_up": 14.32,
-   "factors": {
-    "eps_chg60": 2.5587,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.15,
+   "take_profit_pct": 0.1,
+   "stop_price_ref": 11.07,
+   "take_profit_price_ref": 14.32
   },
   {
-   "rank": 7,
    "code": "sz.301536",
    "name": "星宸科技",
+   "rank": 7,
    "score": 0.3506,
-   "selected": true,
-   "action": "买入",
    "close": 96.3,
-   "limit_up": 115.56,
-   "factors": {
-    "eps_chg60": 2.4927,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.286,
+   "take_profit_pct": 0.1907,
+   "stop_price_ref": 68.76,
+   "take_profit_price_ref": 114.66
   },
   {
-   "rank": 8,
    "code": "sz.002466",
    "name": "天齐锂业",
+   "rank": 8,
    "score": 0.3456,
-   "selected": true,
-   "action": "买入",
    "close": 36.22,
-   "limit_up": 39.84,
-   "factors": {
-    "eps_chg60": 1.6338,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.1157,
+   "take_profit_pct": 0.0771,
+   "stop_price_ref": 32.03,
+   "take_profit_price_ref": 39.01
   },
   {
-   "rank": 9,
    "code": "sh.688388",
    "name": "嘉元科技",
+   "rank": 9,
    "score": 0.3455,
-   "selected": true,
-   "action": "买入",
    "close": 22.14,
-   "limit_up": 26.57,
-   "factors": {
-    "eps_chg60": 1.6294,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.2131,
+   "take_profit_pct": 0.142,
+   "stop_price_ref": 17.42,
+   "take_profit_price_ref": 25.28
   },
   {
-   "rank": 10,
    "code": "sz.000626",
    "name": "远大控股",
+   "rank": 10,
    "score": 0.3452,
-   "selected": true,
-   "action": "买入",
    "close": 7.33,
-   "limit_up": 8.06,
-   "factors": {
-    "eps_chg60": 1.6102,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 11,
-   "code": "sz.002493",
-   "name": "荣盛石化",
-   "score": 0.345,
-   "selected": true,
-   "action": "买入",
-   "close": 11.77,
-   "limit_up": 12.95,
-   "factors": {
-    "eps_chg60": 1.5933,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 12,
-   "code": "sh.688808",
-   "name": "联讯仪器",
-   "score": 0.3443,
-   "selected": true,
-   "action": "买入",
-   "close": 1046.0,
-   "limit_up": 1255.2,
-   "factors": {
-    "eps_chg60": 1.5043,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 13,
-   "code": "sz.002552",
-   "name": "宝鼎科技",
-   "score": 0.3439,
-   "selected": true,
-   "action": "买入",
-   "close": 35.54,
-   "limit_up": 39.09,
-   "factors": {
-    "eps_chg60": 1.4918,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 14,
-   "code": "sz.001309",
-   "name": "德明利",
-   "score": 0.3426,
-   "selected": true,
-   "action": "买入",
-   "close": 230.56,
-   "limit_up": 253.62,
-   "factors": {
-    "eps_chg60": 1.3164,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 15,
-   "code": "sz.000701",
-   "name": "厦门信达",
-   "score": 0.3423,
-   "selected": true,
-   "action": "买入",
-   "close": 5.11,
-   "limit_up": 5.62,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
-  },
-  {
-   "rank": 16,
-   "code": "sh.688530",
-   "name": "欧莱新材",
-   "score": 0.3423,
-   "selected": true,
-   "action": "买入",
-   "close": 43.1,
-   "limit_up": 51.72,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
-  },
-  {
-   "rank": 17,
-   "code": "sh.688110",
-   "name": "东芯股份",
-   "score": 0.3423,
-   "selected": true,
-   "action": "买入",
-   "close": 57.33,
-   "limit_up": 68.8,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
-  },
-  {
-   "rank": 18,
-   "code": "sz.300497",
-   "name": "富祥股份",
-   "score": 0.3423,
-   "selected": true,
-   "action": "买入",
-   "close": 13.45,
-   "limit_up": 16.14,
-   "factors": {
-    "eps_chg60": 10.0,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
-  },
-  {
-   "rank": 19,
-   "code": "sz.300209",
-   "name": "行云科技",
-   "score": 0.3419,
-   "selected": true,
-   "action": "买入",
-   "close": 24.99,
-   "limit_up": 29.99,
-   "factors": {
-    "eps_chg60": 3.4506,
-    "fc_chg": 466.4116,
-    "fc_sign": 1.0,
-    "fc_fresh20": 1.0
-   }
-  },
-  {
-   "rank": 20,
-   "code": "sz.002289",
-   "name": "宇顺电子",
-   "score": 0.3411,
-   "selected": true,
-   "action": "买入",
-   "close": 33.17,
-   "limit_up": 36.49,
-   "factors": {
-    "eps_chg60": 7.0633,
-    "fc_chg": 500.0,
-    "fc_sign": 1.0,
-    "fc_fresh20": null
-   }
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.1764,
+   "take_profit_pct": 0.1176,
+   "stop_price_ref": 6.04,
+   "take_profit_price_ref": 8.19
   }
  ],
  "sells": [],
+ "n_selected": 0,
  "backtest": {
   "train": {
    "days": 1462,
-   "ann_return": 0.13098324782034543,
-   "sharpe": 0.6341792762692731,
-   "max_drawdown": -0.42859814140388175,
-   "day_win": 0.26265389876880985,
-   "trades": 2217,
-   "trade_win": 0.4370771312584574,
-   "avg_trade": 0.009499253705143929,
-   "avg_hold_days": 6.5444294091114115
+   "ann_return": 0.29599068838738574,
+   "sharpe": 1.3490326661219756,
+   "max_drawdown": -0.24229641077142794,
+   "trade_win": 0.5866372980910426,
+   "trades": 2724,
+   "avg_trade": 0.014532618524408002,
+   "avg_hold_days": 7.682452276064611,
+   "payoff": 1.0152337800384346
   },
   "test": {
-   "days": 1405,
-   "ann_return": 0.11246482880289466,
-   "sharpe": 0.6178387187472301,
-   "max_drawdown": -0.27456165541467525,
-   "day_win": 0.22846975088967972,
-   "trades": 2553,
-   "trade_win": 0.4394829612220917,
-   "avg_trade": 0.006054229568690062,
-   "avg_hold_days": 5.09479044261653
+   "days": 1407,
+   "ann_return": 0.22069541333666898,
+   "sharpe": 1.1091489534602648,
+   "max_drawdown": -0.18785816694407542,
+   "trade_win": 0.5337179949513162,
+   "trades": 2773,
+   "avg_trade": 0.01028380176433792,
+   "avg_hold_days": 7.446808510638298,
+   "payoff": 1.1320383915452046
   }
  }
 }
