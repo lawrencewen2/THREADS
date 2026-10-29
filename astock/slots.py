@@ -19,7 +19,7 @@ import pandas as pd
 from . import config, model, portfolio
 from .alt_study import LIVE_FILE, emotion_regime, iter_alt_factors
 from .factors import Panel, eligible
-from .stability import overlay
+from .stability import SWITCH_COST, overlay
 from .winrate import adjusted_ohlc
 
 log = logging.getLogger(__name__)
@@ -36,6 +36,33 @@ OVERLAYS = [
     ("净值低于 20 日均线时空仓", "trend20"),
     ("回撤超过 10% 时半仓，回到 20 日均线上方恢复", "dd10"),
 ]
+
+# 2026-10-29 用户：行情不好的时候控制好仓位。在“净值跌破 20 日均线空仓”之上，再按大盘状态减仓
+REGIMES = [
+    ("（不再按大盘减仓，对照）", "none"),
+    ("+ 大盘（全市场等权）低于 60 日均线时半仓", "mkt60_half"),
+    ("+ 大盘低于 20 日均线时半仓", "mkt20_half"),
+    ("+ 大盘低于 60 日均线时空仓", "mkt60_cash"),
+    ("+ A股恐慌贪婪指数 ≤ 30（恐慌）时半仓", "fear30_half"),
+]
+
+
+def regime_overlay(daily, kind, market_daily, fear):
+    """trend20 空仓开关 × 大盘状态的仓位系数。都只用 T 开盘前已知的数据：净值和大盘错开两行，恐慌指数（t 收盘）错开一行。"""
+    eq = (1 + daily).cumprod()
+    pos = (eq >= eq.rolling(20, min_periods=10).mean()).astype(float).shift(2).fillna(1.0)
+    if kind == "none":
+        bad = pd.Series(False, index=daily.index)
+    elif kind.startswith("mkt"):
+        w = int(kind[3:5])
+        m = (1 + market_daily.reindex(daily.index).fillna(0)).cumprod()
+        bad = (m < m.rolling(w, min_periods=w // 2).mean()).shift(2).fillna(False)
+    else:
+        f = fear.reindex(daily.index)
+        bad = (f <= 30).shift(1).fillna(False)
+    mult = np.where(bad, 0.0 if kind.endswith("cash") else 0.5, 1.0)
+    pos = pos * mult
+    return daily * pos - pos.diff().abs().fillna(0) * SWITCH_COST / 2
 
 
 def levels(entry, atr, tp, sl):
@@ -158,7 +185,19 @@ def run(kline, basic, valuation=None, forecast=None):
         row["meets"] = {k: bool((row[k].get("trade_win") or 0) >= GOAL_WIN and row[k].get("max_drawdown", -1) >= GOAL_DD
                                 and row[k].get("ann_return", -1) > 0) for k in periods}
         overlays.append(row)
-    return dict(updated=end, n=N, rows=rows, chosen=chosen, chosen_meets_win=pool is not rows, overlays=overlays)
+    ctx = portfolio.context(p)
+    fear = model.load_fear(p.dates)
+    regimes = []
+    for name, kind in REGIMES:
+        row = dict(overlay="净值低于 20 日均线时空仓 " + name, kind=kind)
+        for k, (s, e) in periods.items():
+            d, t = simulate(p, ohl, sc, gate, N, chosen["take_profit"], chosen["stop_loss"], chosen["max_hold"], s, e)
+            mkt = portfolio.market(ctx, elig, None, s, e)
+            row[k] = stats(regime_overlay(d, kind, mkt, fear), t)
+            row[k]["half_dd"] = float(stats(regime_overlay(d, kind, mkt, fear) * 0.5, t).get("max_drawdown", 0))
+            row[k]["half_ann"] = float(stats(regime_overlay(d, kind, mkt, fear) * 0.5, t).get("ann_return", 0))
+        regimes.append(row)
+    return dict(regimes=regimes, updated=end, n=N, rows=rows, chosen=chosen, chosen_meets_win=pool is not rows, overlays=overlays)
 
 
 def _p(x, d=1):
@@ -195,6 +234,15 @@ def to_markdown(res):
         lines.append(f"| {r['overlay']} | {_p(a.get('ann_return'))} | {_p(a.get('max_drawdown'))} | {_p(t.get('ann_return'))} | "
                      f"{t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('trade_win'), 0)} | "
                      f"{'是' if r['meets']['train'] else '否'} | {'是' if r['meets']['test'] else '否'} |")
+    lines += ["", "## 再按大盘状态减仓（用户：行情不好的时候控制好仓位）", "",
+              "“一半资金”两列是只用一半资金时、折算到总仓位的年化和最大回撤。", "",
+              "| 仓位控制 | 训练期年化 | 训练期回撤 | 样本外年化 | 样本外夏普 | 样本外回撤 | 一半资金：样本外年化 | 一半资金：样本外回撤 | 一半资金：训练期回撤 |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in res.get("regimes", []):
+        a, t = r["train"], r["test"]
+        lines.append(f"| {r['overlay']} | {_p(a.get('ann_return'))} | {_p(a.get('max_drawdown'))} | {_p(t.get('ann_return'))} | "
+                     f"{t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('half_ann'))} | {_p(t.get('half_dd'))} | "
+                     f"{_p(a.get('half_dd'))} |")
     years = sorted(c["test"].get("yearly", {}))
     lines += ["", "## 挑出规则的样本外分年收益", "", "| " + " | ".join(years) + " |", "|" + " --- |" * len(years),
               "| " + " | ".join(_p(c["test"]["yearly"][y]) for y in years) + " |", "", "仅供个人研究参考，不构成投资建议。"]
