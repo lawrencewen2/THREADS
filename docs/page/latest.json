@@ -21,18 +21,18 @@
   "key": "eu",
   "name": "欧洲",
   "date": "2026-10-28",
-  "score": 31.1,
+  "score": 31.0,
   "band": "恐慌",
-  "change_5d": -8.9,
+  "change_5d": -9.0,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "jp",
   "name": "日本",
   "date": "2026-10-28",
-  "score": 19.7,
+  "score": 19.6,
   "band": "极度恐慌",
-  "change_5d": -6.2,
+  "change_5d": -6.3,
   "signal": "恐慌加深，减仓"
  },
  {
@@ -48,9 +48,9 @@
   "key": "hk",
   "name": "港股",
   "date": "2026-10-28",
-  "score": 35.9,
+  "score": 35.2,
   "band": "恐慌",
-  "change_5d": -15.7,
+  "change_5d": -16.4,
   "signal": "恐慌加深，减仓"
  }
 ]

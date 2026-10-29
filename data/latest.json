@@ -20,17 +20,17 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 31.1,
+      "score": 31.0,
       "band": "恐慌",
-      "change_5d": -8.9,
+      "change_5d": -9.0,
       "risk_off": true,
       "signal": "risk_off"
     },
     "jp": {
       "name": "日本",
-      "score": 19.7,
+      "score": 19.6,
       "band": "极度恐慌",
-      "change_5d": -6.2,
+      "change_5d": -6.3,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -44,9 +44,9 @@
     },
     "hk": {
       "name": "港股",
-      "score": 35.9,
+      "score": 35.2,
       "band": "恐慌",
-      "change_5d": -15.7,
+      "change_5d": -16.4,
       "risk_off": true,
       "signal": "risk_off"
     }
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 4.9
+      "score": 4.7
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -115,22 +115,22 @@
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 13.3
+      "score": 12.9
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 14.9
+      "score": 14.4
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 40.9
+      "score": 41.7
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 6.5
+      "score": 6.2
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 1.9
+      "score": 2.1
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 21.6
+      "score": 7.7
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 76.3
+      "score": 76.4
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
