@@ -104,12 +104,25 @@ def today_bars(codes, day, kline, valuation, session=None):
     return bars, val, failed
 
 
+def check(bars, kline):
+    """字段对不上时宁可不补：腾讯的昨收要和缓存里上一天的收盘价一致，最高、最低要包住开盘和收盘。"""
+    last = kline.sort_values("date").groupby("code").tail(1).set_index("code")["close"]
+    pc = bars.set_index("code")["preclose"]
+    lc = last.reindex(pc.index)
+    ok = ((pc - lc).abs() / lc < 0.002)[lc.notna()]
+    t = bars[bars["tradestatus"] == 1]
+    sane = (t["low"] <= t[["open", "close"]].min(axis=1) + 1e-6) & (t["high"] >= t[["open", "close"]].max(axis=1) - 1e-6)
+    if ok.mean() < 0.9 or (len(t) and sane.mean() < 0.99):
+        raise RuntimeError(f"tencent quotes look wrong: preclose matches {ok.mean():.0%}, high/low sane {sane.mean():.0%}")
+
+
 def fill_today(codes, day, kline, valuation, session=None):
     """把当天收盘拼出的日线和估值并进缓存；返回新的 (kline, valuation)。"""
     bars, val, failed = today_bars(codes, day, kline, valuation, session)
     if bars is None or len(bars) < 0.9 * len(codes):
         raise RuntimeError(f"tencent quotes for {pd.Timestamp(day).date()}: got {0 if bars is None else len(bars)} "
                            f"of {len(codes)} ({len(failed)} failed)")
+    check(bars, kline)
     log.info("tencent: %d bars for %s (%d failed)", len(bars), pd.Timestamp(day).date(), len(failed))
     kline = data._merge(kline, [bars], "kline")
     if val is not None:

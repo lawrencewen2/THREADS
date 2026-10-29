@@ -67,7 +67,16 @@ jobs:
         run: python scripts/astock_backtest.py --offline
       - name: Daily screen
         # 分支上推送时按最近一个交易日出一份清单，用来检查流程
+        # baostock 卡住时不占着并发组（2026-10-29 一次卡了两个小时）
+        timeout-minutes: 90
         run: python scripts/astock_daily.py ${{ github.event_name == 'push' && '--offline' || '' }}
+      - name: Save updated cache
+        # 把当天拉到的行情和业绩预告也存下来：下次少拉，回测也能离线用业绩预告
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}-done
       - name: Decision insight
         # 市场温度、行业强弱、个股体检、策略可信度、决策清单、行情新闻；出错不影响当天的选股清单
         run: python scripts/astock_insight.py

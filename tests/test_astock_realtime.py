@@ -63,3 +63,51 @@ def test_fill_today_rejects_stale_quotes(monkeypatch):
     except RuntimeError:
         return
     raise AssertionError("should refuse quotes taken before the close")
+
+
+def test_baostock_blacklist_fails_fast(monkeypatch):
+    class _RS:
+        error_code, error_msg = "10001011", "黑名单用户，请与管理员联系"
+
+    class _BS:
+        calls = 0
+
+        def query_forecast_report(self, *a, **k):
+            _BS.calls += 1
+            return _RS()
+
+    s = data.Session()
+    s.bs = _BS()
+    monkeypatch.setattr(data.time, "sleep", lambda x: None)
+    try:
+        s.query("query_forecast_report", "sh.600000")
+    except data.BaostockBlocked:
+        assert _BS.calls == 1
+        return
+    raise AssertionError("should raise BaostockBlocked")
+
+
+def test_forecast_chunk_stops_when_blocked(monkeypatch):
+    class _Sess:
+        n = 0
+
+        def query(self, *a, **k):
+            _Sess.n += 1
+            raise data.BaostockBlocked("黑名单用户")
+
+    monkeypatch.setattr(data, "_worker_session", _Sess())
+    parts, failed = data._fetch_forecast_chunk((["sh.1", "sh.2", "sh.3"], "2026-01-01", "2026-10-29"))
+    assert parts == [] and failed == ["sh.1", "sh.2", "sh.3"] and _Sess.n == 1
+
+
+def test_fill_today_rejects_mismatched_fields(monkeypatch):
+    monkeypatch.setattr(data, "save_kline", lambda df, kind="kline": None)
+    k, _ = synthetic_kline(n_codes=3, start="2026-09-01", end="2026-10-28", seed=1)
+    codes = sorted(k["code"].unique())
+    q = {c.replace(".", ""): _quote(10, 999, 10, 11, 9, 100, 10, "20261029150003") for c in codes}  # 昨收对不上
+    try:
+        realtime.fill_today(codes, pd.Timestamp("2026-10-29"), k, None, session=_Session(q))
+    except RuntimeError as exc:
+        assert "look wrong" in str(exc)
+        return
+    raise AssertionError("should refuse")
