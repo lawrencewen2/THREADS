@@ -18,7 +18,7 @@ def main():
     if not data.KINDS["kline"][1].exists():
         raise SystemExit("no price cache")
     basic = data.load_basic()
-    if not args.offline:
+    if not args.offline and data.load_forecast() is None:
         _, failed = data.update_forecast(data.stock_codes(basic))
         if failed:
             logging.warning("%d forecast codes failed", len(failed))
