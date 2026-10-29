@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import alt_study, data, screen  # noqa: E402
+from astock import alt_study, data, live_slots, screen  # noqa: E402
 
 
 def main():
@@ -66,18 +66,25 @@ def main():
     last = kline["date"].max()
     if (trade_date - last).days > 7:
         raise RuntimeError(f"stale data: last bar {last.date()} for trade date {trade_date.date()}")
+    sm = live_slots.load_model()
     if fm:
         forecast = data.load_forecast()
         if forecast is None:
             # 分支上 --offline 检查流程时缓存里可能还没有业绩预告：补拉一次（Actions 上能连 baostock）
             forecast, _ = data.update_forecast(data.stock_codes(basic, listed_only=True),
                                                start=(kline["date"].max() - pd.Timedelta(days=screen.PANEL_DAYS + 60)).strftime("%Y-%m-%d"))
-        result, state = screen.screen_forecast(kline, basic, trade_date, fm, valuation=data.load_valuation(),
-                                               forecast=forecast)
-        screen.save_state(state)
-        log_df = screen.append_port_log(result)
-        rows, days_done = screen.track_portfolio(kline, log_df, fm["n"])
-        screen.write(result, rows, days_done)
+        if sm:
+            # 2026-10-30 起：最多 20 只，止盈止损 + 均线空仓（astock/slot_model.json）
+            result, live = live_slots.screen(kline, basic, trade_date, sm, valuation=data.load_valuation(),
+                                             forecast=forecast)
+            live_slots.write(result, live)
+        else:
+            result, state = screen.screen_forecast(kline, basic, trade_date, fm, valuation=data.load_valuation(),
+                                                   forecast=forecast)
+            screen.save_state(state)
+            log_df = screen.append_port_log(result)
+            rows, days_done = screen.track_portfolio(kline, log_df, fm["n"])
+            screen.write(result, rows, days_done)
     else:
         result = screen.screen(kline, basic, trade_date, valuation=data.load_valuation())
         log_df = screen.append_log(result)

@@ -182,3 +182,40 @@ def test_slots_portfolio(monkeypatch, tmp_path):
     for row in res["rows"]:
         assert (row["test"].get("avg_hold_days") or 0) <= row["max_hold"] + 1
     assert "真实账户模拟" in (tmp_path / "rep" / "slots.md").read_text()
+
+
+def test_live_slots_screen(monkeypatch, tmp_path):
+    import json
+
+    from astock import live_slots
+
+    k, basic = synthetic_kline(n_codes=40, start="2015-01-01", end="2016-06-30", seed=7)
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    monkeypatch.setattr(live_slots, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    val = k[["date", "code"]].copy()
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = 15.0, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    fc = _forecast(codes[:10], "2016-03-01")
+    dates = sorted(k["date"].unique())
+    sm = dict(strategy="s", hold_note="h", weights=dict(eps_chg60=0.4, fc_chg=0.3, fc_sign=0.3), n=5,
+              take_profit="atr2", stop_loss="atr3", max_hold=10, capital_share=0.5, start=str(pd.Timestamp(dates[-40]).date()))
+    res, live = live_slots.screen(k, basic, dates[-1] + pd.Timedelta(days=1), sm, val, fc)
+    live_slots.write(res, live)
+    held = [r for r in res["picks"] + res["sells"] if "entry_price" in r]
+    assert held
+    assert res["n_selected"] <= 5 and res["per_name_weight"] == 0.1
+    for r in held:
+        assert r["stop_price"] < r["entry_price"] < r["take_profit_price"] and r["days_held"] <= 10
+    for r in res["picks"]:
+        if r["action"] == "买入":
+            assert r["stop_pct"] < 0 < r["take_profit_pct"]
+    assert live["summary"]["mode"] == "slots"
+    # 同一天的清单只用当天及以前的数据：加上之后的行情不改变结果
+    cut = dates[-15]
+    a, _ = live_slots.screen(k[k["date"] <= cut], basic, cut, sm, val, fc)
+    k2 = k.copy()
+    k2.loc[k2["date"] > cut, ["open", "high", "low", "close"]] *= 1.5
+    b, _ = live_slots.screen(k2[k2["date"] <= cut], basic, cut, sm, val, fc)
+    assert [r["code"] for r in a["picks"]] == [r["code"] for r in b["picks"]]
+    assert json.loads((tmp_path / "page" / "picks.json").read_text())["top_n"] == 5

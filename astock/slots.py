@@ -45,7 +45,8 @@ def levels(entry, atr, tp, sl):
     return target, stop
 
 
-def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end):
+def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end, state=None):
+    """state 给一个 dict 时，跑到最后一个交易日（含当天的卖出和买入），并把收盘后的持仓写进 state["held"]。"""
     o, h, l, atr, locked = ohl
     up, _ = p.limit_prices()
     up_v, raw_open, traded = up.to_numpy(), p.open.to_numpy(), p.traded.to_numpy()
@@ -53,7 +54,7 @@ def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end):
     gate_v = gate.reindex(p.dates).fillna(False).to_numpy(dtype=bool)
     dates = p.dates
     i0 = max(dates.searchsorted(pd.Timestamp(start)), 15)
-    i1 = min(dates.searchsorted(pd.Timestamp(end), side="right"), len(dates) - 1)
+    i1 = min(dates.searchsorted(pd.Timestamp(end), side="right"), len(dates) - (0 if state is not None else 1))
     buy_cost = config.SLIPPAGE + config.COMMISSION
     stamp_change = pd.Timestamp(config.STAMP_DUTY_CHANGE)
     held = {}  # 列号 -> [买入价, 止盈价, 止损价, 买入日序号]
@@ -75,7 +76,7 @@ def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end):
             if px is None:
                 continue
             r += (px / o[T, j] - 1 - sell_cost) / n  # 当天开盘到卖出价
-            trades.append(dict(entry=dates[d0], exit=dates[T],
+            trades.append(dict(entry=dates[d0], exit=dates[T], code=p.codes[j],
                                net=px * (1 - sell_cost) / (entry * (1 + buy_cost)) - 1))
             del held[j]
         if gate_v[T - 1] and len(held) < n:
@@ -92,10 +93,14 @@ def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end):
                 target, stop = levels(o[T, j], a, tp, sl)
                 held[j] = [o[T, j], target, stop, T]
                 r -= buy_cost / n
+        if T + 1 >= len(dates):
+            break  # 最后一天：下一天开盘还不知道，不计收益
         for j in held:  # 当天开盘（或买入价）到下一天开盘
             if np.isfinite(o[T + 1, j]) and o[T, j] > 0:
                 r += (o[T + 1, j] / o[T, j] - 1) / n
         daily.append((dates[T], r))
+    if state is not None:
+        state["held"] = held
     return pd.Series(dict(daily), dtype="float64"), trades
 
 
