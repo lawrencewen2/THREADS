@@ -107,6 +107,8 @@ def run(kline, basic, valuation=None, forecast=None):
     kline = kline() if callable(kline) else kline
     valuation = valuation() if callable(valuation) else valuation
     forecast = forecast() if callable(forecast) else forecast
+    if forecast is None or forecast.empty:
+        raise RuntimeError("no forecast data: the live ranking needs 业绩预告")
     sm = json.loads(MODEL_FILE.read_text())
     weights = {k: v for k, v in sm["weights"].items() if v}
     p = Panel(kline, valuation)

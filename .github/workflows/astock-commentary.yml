@@ -35,7 +35,7 @@ jobs:
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
       - name: Commentary methods backtest
-        run: python scripts/astock_commentary.py --offline
+        run: python scripts/astock_commentary.py
       - name: Commit results
         run: |
           git config user.name "astock-bot"
