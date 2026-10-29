@@ -219,3 +219,38 @@ def test_live_slots_screen(monkeypatch, tmp_path):
     b, _ = live_slots.screen(k2[k2["date"] <= cut], basic, cut, sm, val, fc)
     assert [r["code"] for r in a["picks"]] == [r["code"] for r in b["picks"]]
     assert json.loads((tmp_path / "page" / "picks.json").read_text())["top_n"] == 5
+
+
+def test_commentary_study(monkeypatch, tmp_path):
+    import json
+
+    from astock import commentary
+
+    k, basic = synthetic_kline(n_codes=30, start="2014-01-01", end="2016-06-30", seed=7)
+    monkeypatch.setattr(config, "TRAIN_START", "2014-06-01")
+    monkeypatch.setattr(config, "TRAIN_END", "2015-12-31")
+    monkeypatch.setattr(config, "TEST_START", "2016-01-01")
+    monkeypatch.setattr(config, "MIN_AMOUNT_20D", 0)
+    monkeypatch.setattr(config, "REPORT_DIR", tmp_path / "rep")
+    monkeypatch.setattr(config, "PAGE_DIR", tmp_path / "page")
+    sm = tmp_path / "slot_model.json"
+    sm.write_text(json.dumps(dict(weights=dict(eps_chg60=0.5, fc_chg=0.5), n=5, take_profit="atr2", stop_loss="atr3",
+                                  max_hold=10, overlay="trend20", capital_share=0.5)))
+    monkeypatch.setattr(commentary, "MODEL_FILE", sm)
+    monkeypatch.setattr(commentary, "emotion_regime", lambda p, elig: pd.Series(True, index=p.dates))
+    val = k[["date", "code"]].copy()
+    eps = np.where(k["date"] >= "2015-04-01", 0.6, 0.5)  # 一次“新财报”
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = k["close"].to_numpy() / eps, 2.0, 3.0
+    codes = sorted(k["code"].unique())
+    res = commentary.run(k, basic, val, _forecast(codes[:10], "2015-04-01"))
+    commentary.write(res)
+    kinds = {r["kind"] for r in res["rows"]}
+    assert {"base", "csi_ma5", "ew_ma5", "ear", "miss", "resist"} <= kinds
+    assert all(r["train"]["days"] > 0 for r in res["rows"])
+    assert "盘面点评" in (tmp_path / "rep" / "commentary.md").read_text()
+
+    p = Panel(k, val)
+    from astock.factors import eligible
+    ear, miss, resist, _ = commentary.stock_signals(p, eligible(p, basic))
+    ev = p.dates.get_loc(p.dates[p.dates >= "2015-04-01"][0])
+    assert ear.iloc[:ev + 1].isna().all().all() and ear.iloc[ev + 1].notna().any()  # 公告后第二天收盘才知道
