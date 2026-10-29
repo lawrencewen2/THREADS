@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import alt_study, data, live_slots, screen  # noqa: E402
+from astock import alt_study, data, live_slots, realtime, screen  # noqa: E402
 
 
 def main():
@@ -48,6 +48,11 @@ def main():
         start = (today - pd.Timedelta(days=200)).strftime("%Y-%m-%d")
         kline, failed = data.update_kline(sorted(set(codes) | tracked_codes), start=start)
         data.update_kline(codes, start=start, kind="valuation")
+        now = pd.Timestamp.now(tz="Asia/Shanghai").tz_localize(None)
+        if (not args.trade_date and trade_date == today and now.hour * 60 + now.minute >= 15 * 60 + 5
+                and kline["date"].max() < today):
+            # 收盘后 baostock 要到 17:30 以后才有当天日线：先用腾讯实时行情拼出今天这一根，下一个交易日的清单马上能出
+            kline, _ = realtime.fill_today(codes, today, kline, data.load_valuation())
         if fm:
             fc_start = (today - pd.Timedelta(days=screen.PANEL_DAYS + 60)).strftime("%Y-%m-%d")
             _, fc_failed = data.update_forecast(codes, start=fc_start, merge=True)
