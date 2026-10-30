@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-30T19:41+00:00",
+  "as_of": "2026-10-30T19:43+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -23,12 +23,12 @@
     "us": {
       "name": "美国",
       "fresh": true,
-      "score": 43.1,
+      "score": 43.0,
       "band": "中性",
       "date": "2026-10-30",
       "official": 54.3,
       "official_date": "2026-10-29",
-      "change": -11.2,
+      "change": -11.3,
       "signal": "short_bottom",
       "signal_text": "短期触底（仅供参考）",
       "official_signal": "short_bottom",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3884.992,
-      "time": "2026-10-30T19:41+00:00",
+      "value": 3885.74,
+      "time": "2026-10-30T19:43+00:00",
       "date": "2026-10-31",
       "fresh": false
     },
@@ -149,19 +149,19 @@
       "fresh": true
     },
     "spx": {
-      "value": 7551.689941,
+      "value": 7551.089844,
       "time": "2026-10-30T19:33+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "vix": {
-      "value": 21.32,
+      "value": 21.290001,
       "time": "2026-10-30T19:08+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "vix3m": {
-      "value": 21.870001,
+      "value": 21.799999,
       "time": "2026-10-30T19:08+00:00",
       "date": "2026-10-30",
       "fresh": true
@@ -173,8 +173,8 @@
       "fresh": true
     },
     "ief": {
-      "value": 91.639999,
-      "time": "2026-10-30T19:39+00:00",
+      "value": 91.635002,
+      "time": "2026-10-30T19:41+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92009,
-      "time": "2026-10-30T19:35+00:00",
+      "value": 0.9201,
+      "time": "2026-10-30T19:36+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.531006,
-      "time": "2026-10-30T19:41+00:00",
+      "value": 157.554001,
+      "time": "2026-10-30T19:42+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
