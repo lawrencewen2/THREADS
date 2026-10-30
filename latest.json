@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-30T03:21+00:00",
+  "as_of": "2026-10-30T03:22+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 41.3,
+      "score": 41.4,
       "band": "中性",
       "date": "2026-10-30",
       "official": 41.0,
       "official_date": "2026-10-28",
-      "change": 0.3,
+      "change": 0.4,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 25.4,
+      "score": 25.8,
       "band": "恐慌",
       "date": "2026-10-30",
       "official": 25.6,
       "official_date": "2026-10-28",
-      "change": -0.2,
+      "change": 0.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,32 +119,32 @@
       "fresh": true
     },
     "gold": {
-      "value": 4002.736,
-      "time": "2026-10-30T03:21+00:00",
+      "value": 4003.335,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "csi300": {
-      "value": 4001.7,
-      "time": "2026-10-30T03:21+00:00",
+      "value": 4010.56,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "hsi": {
-      "value": 23301.49,
-      "time": "2026-10-30T03:21+00:00",
+      "value": 23314.27,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "hstech": {
-      "value": 3.71,
-      "time": "2026-10-30T03:21+00:00",
+      "value": 3.714,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "a_turnover": {
-      "value": 96650862.0,
-      "time": "2026-10-30T03:21+00:00",
+      "value": 97098557.0,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
@@ -209,8 +209,8 @@
       "fresh": true
     },
     "qvix50": {
-      "value": 15.68,
-      "time": "2026-10-30T03:20+00:00",
+      "value": 15.6,
+      "time": "2026-10-30T03:22+00:00",
       "date": "2026-10-30",
       "fresh": true
     }
