@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-30T11:22+00:00",
+  "as_of": "2026-10-30T11:23+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 34.4,
+      "score": 34.3,
       "band": "恐慌",
       "date": "2026-10-30",
       "official": 33.9,
       "official_date": "2026-10-29",
-      "change": 0.5,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 21.3,
+      "score": 21.2,
       "band": "恐慌",
       "date": "2026-10-30",
       "official": 23.2,
       "official_date": "2026-10-29",
-      "change": -1.9,
+      "change": -2.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3980.251,
-      "time": "2026-10-30T11:22+00:00",
+      "value": 3979.47,
+      "time": "2026-10-30T11:23+00:00",
       "date": "2026-10-30",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 18.42,
-      "time": "2026-10-30T11:07+00:00",
+      "value": 18.41,
+      "time": "2026-10-30T11:08+00:00",
       "date": "2026-10-30",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6163.740234,
-      "time": "2026-10-30T11:07+00:00",
+      "value": 6162.22998,
+      "time": "2026-10-30T11:08+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.9197,
-      "time": "2026-10-30T11:22+00:00",
+      "value": 0.91952,
+      "time": "2026-10-30T11:23+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.167999,
-      "time": "2026-10-30T11:22+00:00",
+      "value": 157.082993,
+      "time": "2026-10-30T11:23+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
