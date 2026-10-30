@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-10-30T18:40+00:00",
+  "as_of": "2026-10-30T18:41+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -23,12 +23,12 @@
     "us": {
       "name": "美国",
       "fresh": true,
-      "score": 41.3,
+      "score": 41.4,
       "band": "中性",
       "date": "2026-10-30",
       "official": 54.3,
       "official_date": "2026-10-29",
-      "change": -13.0,
+      "change": -12.9,
       "signal": "short_bottom",
       "signal_text": "短期触底（仅供参考）",
       "official_signal": "short_bottom",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3892.041,
-      "time": "2026-10-30T18:40+00:00",
+      "value": 3892.452,
+      "time": "2026-10-30T18:41+00:00",
       "date": "2026-10-31",
       "fresh": false
     },
@@ -149,31 +149,31 @@
       "fresh": true
     },
     "spx": {
-      "value": 7535.509766,
+      "value": 7536.040039,
       "time": "2026-10-30T18:38+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "vix": {
-      "value": 22.75,
-      "time": "2026-10-30T18:17+00:00",
+      "value": 22.719999,
+      "time": "2026-10-30T18:18+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "vix3m": {
-      "value": 22.41,
-      "time": "2026-10-30T18:17+00:00",
+      "value": 22.4,
+      "time": "2026-10-30T18:18+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "hyg": {
-      "value": 77.375,
+      "value": 77.379997,
       "time": "2026-10-30T18:40+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "ief": {
-      "value": 91.675102,
+      "value": 91.665001,
       "time": "2026-10-30T18:40+00:00",
       "date": "2026-10-30",
       "fresh": true
@@ -185,13 +185,13 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91962,
+      "value": 0.91966,
       "time": "2026-10-30T18:40+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.341003,
+      "value": 157.356003,
       "time": "2026-10-30T18:40+00:00",
       "date": "2026-10-30",
       "fresh": true
