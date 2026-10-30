@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-10-30T09:09+00:00",
+  "as_of": "2026-10-30T09:10+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 42.0,
+      "score": 42.1,
       "band": "中性",
       "date": "2026-10-30",
       "official": 42.2,
       "official_date": "2026-10-29",
-      "change": -0.2,
+      "change": -0.1,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 34.8,
+      "score": 35.0,
       "band": "恐慌",
       "date": "2026-10-30",
       "official": 33.9,
       "official_date": "2026-10-29",
-      "change": 0.9,
+      "change": 1.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3999.088,
-      "time": "2026-10-30T09:09+00:00",
+      "value": 3998.107,
+      "time": "2026-10-30T09:10+00:00",
       "date": "2026-10-30",
       "fresh": false
     },
@@ -132,7 +132,7 @@
     },
     "hsi": {
       "value": 23294.42,
-      "time": "2026-10-30T09:09+00:00",
+      "time": "2026-10-30T09:10+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 18.15,
-      "time": "2026-10-30T08:54+00:00",
+      "value": 18.1,
+      "time": "2026-10-30T08:55+00:00",
       "date": "2026-10-30",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6172.109863,
-      "time": "2026-10-30T08:53+00:00",
+      "value": 6173.689941,
+      "time": "2026-10-30T08:55+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92006,
-      "time": "2026-10-30T09:09+00:00",
+      "value": 0.92014,
+      "time": "2026-10-30T09:10+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.367004,
-      "time": "2026-10-30T09:09+00:00",
+      "value": 157.352997,
+      "time": "2026-10-30T09:10+00:00",
       "date": "2026-10-30",
       "fresh": true
     },
