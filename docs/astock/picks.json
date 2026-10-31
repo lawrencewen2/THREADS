@@ -3,8 +3,8 @@
  "hold_note": "最多 20 只；每只买入后挂好止盈单和止损单，碰到就卖，满 10 个交易日开盘卖；组合净值跌破 20 日均线时全部卖出、暂停买入",
  "signal_date": "2026-10-29",
  "trade_date": "2026-10-30",
- "fear_cn": 25.6,
- "fear_date": "2026-10-28",
+ "fear_cn": 26.6,
+ "fear_date": "2026-10-29",
  "fear_floor": null,
  "gate_open": false,
  "invest": false,
@@ -18,20 +18,6 @@
  "universe_size": 4026,
  "picks": [
   {
-   "code": "sh.603991",
-   "name": "领先股份",
-   "rank": 1,
-   "score": 0.3566,
-   "close": 125.55,
-   "action": "观察",
-   "selected": false,
-   "weight": 0.025,
-   "stop_pct": -0.1732,
-   "take_profit_pct": 0.1155,
-   "stop_price_ref": 103.81,
-   "take_profit_price_ref": 140.05
-  },
-  {
    "code": "sz.301292",
    "name": "海科新源",
    "rank": 2,
@@ -44,6 +30,20 @@
    "take_profit_pct": 0.1358,
    "stop_price_ref": 33.41,
    "take_profit_price_ref": 47.66
+  },
+  {
+   "code": "sh.603991",
+   "name": "领先股份",
+   "rank": 1,
+   "score": 0.3566,
+   "close": 125.55,
+   "action": "观察",
+   "selected": false,
+   "weight": 0.025,
+   "stop_pct": -0.1732,
+   "take_profit_pct": 0.1155,
+   "stop_price_ref": 103.81,
+   "take_profit_price_ref": 140.05
   },
   {
    "code": "sz.002812",
