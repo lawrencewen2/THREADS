@@ -266,6 +266,10 @@ def test_intraday_apply_quotes():
     # 主指数还没开盘时，24 小时交易的汇率不接
     fx = {"usdjpy": dict(value=149.0, time=t, date=nxt)}
     assert intraday.apply_quotes(series, fx)[1] == []
+    # 北京时间过零点后，按北京日期标注的行情不能比主指数多出一天
+    late = {"n225": dict(value=250.0, time=t, date=nxt), "usdjpy": dict(value=149.0, time=t, date=nxt + pd.offsets.BDay())}
+    out, fresh = intraday.apply_quotes(series, late)
+    assert sorted(fresh) == ["n225", "usdjpy"] and out["usdjpy"].index[-1] == nxt
 
 
 def test_intraday_realtime_parsers():

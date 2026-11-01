@@ -167,7 +167,9 @@ def _qvix_quote():
     now = datetime.now(CN_TZ)
     hh, mm = (int(x) for x in str(last.iloc[0]).split(":")[:2])
     t = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
-    return dict(value=float(last.iloc[-1]), time=t.astimezone(timezone.utc), date=pd.Timestamp(now.date()))
+    if t > now:  # 零点后拿到的是上一交易日的最后一笔
+        t -= pd.Timedelta(days=1)
+    return dict(value=float(last.iloc[-1]), time=t.astimezone(timezone.utc), date=pd.Timestamp(t.date()))
 
 
 def market_session(region, now=None):
@@ -200,6 +202,8 @@ def apply_quotes(series, quotes):
     """把比历史更新的行情接到序列末尾。返回 (新的 series, 接上了的 key 列表)。
 
     一个序列只在用到它的每个区域的主指数都有新行情时才接上（见 PRIMARY）。
+    接上的日期不晚于这些主指数的行情日期：黄金按北京时间、50ETF 波动率按当天日期标日期，
+    北京时间过了零点、亚洲还没开盘时会比主指数多出一天，那样会让序列凭空多平滑一天。
     """
     def newer(key):
         hist, q = series.get(key), quotes.get(key)
@@ -216,7 +220,8 @@ def apply_quotes(series, quotes):
         value = _turnover_value(q, hist) if q.get("partial") else q["value"]
         if value is None or not value > 0:
             continue
-        out[key] = pd.concat([hist, pd.Series([value], index=[q["date"]])])
+        day = min([q["date"]] + [quotes[PRIMARY[r]]["date"] for r in users])
+        out[key] = pd.concat([hist, pd.Series([value], index=[day])])
         fresh.append(key)
     return out, fresh
 
