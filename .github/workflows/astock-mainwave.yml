@@ -1,0 +1,50 @@
+name: astock-mainwave
+
+# 主升浪选股 + 市场阶段仓位回测（2026-11-01）。只读行情和业绩预告缓存，单独一个并发组。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-ozu040]
+    paths: ["astock/mainwave.py", "scripts/astock_mainwave.py", "tests/test_astock_mainwave.py", ".github/workflows/astock-mainwave.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-mainwave
+  cancel-in-progress: false
+
+jobs:
+  mainwave:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_mainwave.py
+      - name: Restore price cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}
+          restore-keys: astock-kline-
+      - name: Main-wave backtest
+        run: python scripts/astock_mainwave.py
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/mainwave.md docs/astock/mainwave.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: main-wave study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
