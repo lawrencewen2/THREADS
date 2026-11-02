@@ -1,5 +1,6 @@
 """每日清单：业绩预期 + 情绪开关，最多 20 只，每只买入前定好止盈价、止损价和最长持有天数，
 组合净值跌破 20 日均线时空仓（2026-10-29 用户在决策卡上选定；建议只用一半资金，每只占总资金 2.5%）。
+2026-11-02 起建议资金降到 40%，每只占总资金 2%（回测样本外总回撤约 −7.5%，比按市场阶段减仓划算，见 reports/astock/mainwave.md）。
 
 和回测（slots.simulate + stability.overlay 的 trend20）是同一套规则：
 - “影子组合”从 START 起按规则逐日买卖（持仓由行情重新推出来，不靠手工记录）；
@@ -139,7 +140,7 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
     if len(fear) and not np.isnan(fear.iloc[-1]):
         result["fear_cn"] = round(float(fear.iloc[-1]), 1)
 
-    # 跟踪：START 以来影子组合的结果（叠加空仓开关，按一半资金折算总仓位）
+    # 跟踪：START 以来影子组合的结果（叠加空仓开关，按 capital_share 折算总仓位）
     pos = (eq >= ma).astype(float).shift(2).fillna(1.0).reindex(daily.index).fillna(1.0)
     real = daily * pos - pos.diff().abs().fillna(0) * (config.SLIPPAGE * 2 + config.COMMISSION * 2 + config.STAMP_DUTY_NEW) / 2
     share = sm.get("capital_share", 1.0)
