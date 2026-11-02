@@ -36,12 +36,12 @@ jobs:
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
       - name: Main-wave backtest
-        run: python scripts/astock_mainwave.py
+        run: python scripts/astock_mainwave.py --industry
       - name: Commit results
         run: |
           git config user.name "astock-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/astock/mainwave.md docs/astock/mainwave.json
+          git add reports/astock/mainwave.md docs/astock/mainwave.json reports/astock/industry_cap.md docs/astock/industry_cap.json
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "astock: main-wave study $(date -u +%F) [skip ci]"
           for i in 1 2 3 4; do

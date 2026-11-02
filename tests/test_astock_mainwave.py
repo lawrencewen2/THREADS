@@ -65,3 +65,19 @@ def test_cap_zero_sells_everything():
     d, t, expo = mainwave.simulate(p, ohl, sc, gate, 5, ex, "2014-09-01", "2015-12-31", cap)
     assert expo.loc["2015-06-03":].max() == 0
     assert expo.loc["2014-10-01":"2015-05-29"].max() > 0
+
+
+def test_industry_cap_limits_holdings_per_industry():
+    k, basic = synthetic_kline(n_codes=12, start="2014-01-01", end="2015-12-31", seed=4)
+    p = Panel(k)
+    elig = eligible(p, basic)
+    from astock.winrate import adjusted_ohlc
+    ohl = adjusted_ohlc(p)
+    sc = _live(p, elig)
+    gate = pd.Series(True, index=p.dates)
+    ind = np.zeros(len(p.codes), dtype=int)  # 全部同一行业
+    ex = (None, "x", None, 0.5, None, None, 1000)
+    _, _, expo = mainwave.simulate(p, ohl, sc, gate, 10, ex, "2014-09-01", "2015-12-31", None, ind, 2)
+    assert expo.max() <= 0.2 + 1e-9
+    _, _, expo2 = mainwave.simulate(p, ohl, sc, gate, 10, ex, "2014-09-01", "2015-12-31")
+    assert expo2.max() > 0.2

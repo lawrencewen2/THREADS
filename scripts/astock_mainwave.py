@@ -28,6 +28,7 @@ def describe():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--fetch-forecast", action="store_true")
+    ap.add_argument("--industry", action="store_true", help="只跑线上规则 + 同一行业持股上限")
     args = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     if not data.KINDS["kline"][1].exists():
@@ -39,6 +40,11 @@ def main():
         describe()
         return
     describe()
+    if args.industry:
+        res = mainwave.run_industry(data.load_kline, basic, data.load_valuation, data.load_forecast)
+        mainwave.write_industry(res)
+        print(mainwave.industry_markdown(res))
+        return
     res = mainwave.run(data.load_kline, basic, data.load_valuation, data.load_forecast)
     mainwave.write(res)
     print(mainwave.to_markdown(res))

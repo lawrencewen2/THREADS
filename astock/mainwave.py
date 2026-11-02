@@ -133,7 +133,7 @@ def market_regimes(p, elig):
     return out, mkt
 
 
-def simulate(p, ohl, sc, gate, n, ex, start, end, cap=None):
+def simulate(p, ohl, sc, gate, n, ex, start, end, cap=None, ind=None, ind_cap=None):
     """真实账户模拟（同 slots.simulate），多了移动止损、保本线和按市场阶段限制持仓数。
 
     cap：按信号日对齐的仓位比例（0..1）。T 开盘最多持有 round(n × cap[t]) 只；为 0 时开盘全部卖出。
@@ -145,6 +145,8 @@ def simulate(p, ohl, sc, gate, n, ex, start, end, cap=None):
     sc_v = sc.to_numpy()
     gate_v = gate.reindex(p.dates).fillna(False).to_numpy(dtype=bool)
     cap_v = None if cap is None else cap.reindex(p.dates).fillna(1.0).to_numpy()
+    # ind：每列股票的行业编号（-1 = 不知道，不受限制）；ind_cap：同一行业最多持有几只
+    use_ind = ind is not None and ind_cap is not None
     dates = p.dates
     i0 = max(dates.searchsorted(pd.Timestamp(start)), 15)
     i1 = min(dates.searchsorted(pd.Timestamp(end), side="right"), len(dates) - 1)
@@ -191,6 +193,8 @@ def simulate(p, ohl, sc, gate, n, ex, start, end, cap=None):
                 if len(held) >= limit or not ok[j]:
                     break
                 if j in held or not traded[T, j] or raw_open[T, j] >= up_v[T, j] - 0.005:
+                    continue
+                if use_ind and ind[j] >= 0 and sum(ind[k] == ind[j] for k in held) >= ind_cap:
                     continue
                 a = atr[T - 1, j]
                 if not np.isfinite(a) or not np.isfinite(o[T, j]):
@@ -310,6 +314,88 @@ def run(kline, basic, valuation=None, forecast=None):
     return dict(updated=end, n=N, capital_share=share, rows=rows, chosen=chosen["variant"], best_test=best_test["variant"],
                 top=[r["variant"] for r in top], regime_check=regime_check, curve=curve,
                 chosen_meets_win=pool is not rows)
+
+
+IND_CAPS = (None, 2, 3, 4)
+
+
+def run_industry(kline, basic, valuation=None, forecast=None):
+    """线上规则 + 同一行业最多持有 k 只（2026-11-02 用户：继续优化策略）。行业用证监会行业分类（当前归属）。"""
+    from .insight import load_industry
+    kline = kline() if callable(kline) else kline
+    valuation = valuation() if callable(valuation) else valuation
+    forecast = forecast() if callable(forecast) else forecast
+    sm = json.loads(MODEL_FILE.read_text())
+    weights = {k: v for k, v in sm["weights"].items() if v}
+    share = sm.get("capital_share", 1.0)
+    p = Panel(kline, valuation)
+    del kline, valuation
+    elig = eligible(p, basic)
+    ranks = {}
+    for k, v in iter_alt_factors(p, forecast):
+        if k in weights:
+            ranks[k] = model.xs_rank(v, elig)
+        del v
+    live = model.score(ranks, weights, elig)
+    del ranks
+    emotion = emotion_regime(p, elig)
+    ohl = adjusted_ohlc(p)
+    ind_df = load_industry()
+    names = ind_df.set_index("code")["industry"].reindex(p.codes)
+    codes_map = {v: i for i, v in enumerate(sorted(names.dropna().unique()))}
+    ind = names.map(codes_map).fillna(-1).astype(int).to_numpy()
+    end = str(p.dates[-1].date())
+    periods = dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, end))
+    rows, curves = [], {}
+    for c in IND_CAPS:
+        name = "线上规则（对照）" if c is None else f"线上规则 + 同一行业最多 {c} 只"
+        row = dict(variant=name, ind_cap=c)
+        eq = []
+        for k, (s, e) in periods.items():
+            d, t, expo = simulate(p, ohl, live, emotion, N, EXITS[0], s, e, None, ind, c)
+            d = overlay(d, "trend20")
+            row[k] = stats(d, t)
+            part = stats(d * share, t)
+            row[k]["share_ann"], row[k]["share_dd"] = part.get("ann_return"), part.get("max_drawdown")
+            eq.append(d)
+        curves[name] = pd.concat(eq)
+        log.info("%s: train %.3f/%.2f/%.3f test %.3f/%.2f/%.3f", name, row["train"].get("ann_return", 0),
+                 row["train"].get("sharpe", 0), row["train"].get("max_drawdown", 0), row["test"].get("ann_return", 0),
+                 row["test"].get("sharpe", 0), row["test"].get("max_drawdown", 0))
+        rows.append(row)
+    pool = [r for r in rows if (r["train"].get("trade_win") or 0) >= GOAL_WIN] or rows
+    chosen = max(pool, key=lambda r: r["train"].get("sharpe", -9))["variant"]
+    wk = {k: ((1 + v).cumprod()).resample("W-FRI").last().ffill() for k, v in curves.items()}
+    idx = next(iter(wk.values())).index
+    curve = dict(dates=[str(d.date()) for d in idx],
+                 series={k: [None if pd.isna(x) else round(float(x), 4) for x in v.reindex(idx)] for k, v in wk.items()})
+    return dict(updated=end, capital_share=share, rows=rows, chosen=chosen, curve=curve,
+                unknown_industry=int((ind < 0).sum()), n_industries=len(codes_map))
+
+
+def industry_markdown(res):
+    lines = ["# 线上规则 + 同一行业持股上限：回测", "",
+             f"数据截至 {res['updated']}。线上规则（业绩预期 + 情绪开关，最多 20 只，止盈 2 倍 ATR、止损 3 倍 ATR、最长 10 天，净值跌破 20 日线空仓），"
+             f"只加“同一行业最多持有 k 只”。行业用证监会行业分类（{res['n_industries']} 个，当前归属，有轻微前视）。"
+             "只用 2015–2020 挑（每笔胜率 ≥ 50% 里夏普最高），2021 至今只检验。", "",
+             f"训练期挑出：**{res['chosen']}**", "",
+             f"“按 {res['capital_share'] * 100:.0f}% 资金”两列折算到总仓位。", "",
+             "| 做法 | 训练期年化 | 训练期夏普 | 训练期回撤 | 样本外年化 | 样本外夏普 | 样本外回撤 | 样本外胜率 | 按建议资金：样本外年化 | 按建议资金：样本外回撤 |",
+             "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for r in res["rows"]:
+        a, t = r["train"], r["test"]
+        lines.append(f"| {r['variant']} | {_p(a.get('ann_return'))} | {a.get('sharpe', 0):.2f} | {_p(a.get('max_drawdown'))} | "
+                     f"{_p(t.get('ann_return'))} | {t.get('sharpe', 0):.2f} | {_p(t.get('max_drawdown'))} | {_p(t.get('trade_win'), 0)} | "
+                     f"{_p(t.get('share_ann'))} | {_p(t.get('share_dd'))} |")
+    lines += ["", "仅供个人研究参考，不构成投资建议。"]
+    return "\n".join(lines) + "\n"
+
+
+def write_industry(res):
+    config.REPORT_DIR.mkdir(parents=True, exist_ok=True)
+    config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
+    (config.REPORT_DIR / "industry_cap.md").write_text(industry_markdown(res))
+    (config.PAGE_DIR / "industry_cap.json").write_text(json.dumps(res, ensure_ascii=False, default=str))
 
 
 def _p(x, d=1):
