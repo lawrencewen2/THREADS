@@ -3,7 +3,7 @@
  "hold_note": "最多 20 只；每只买入后挂好止盈单和止损单，碰到就卖，满 10 个交易日开盘卖；组合净值跌破 20 日均线时全部卖出、暂停买入",
  "signal_date": "2026-10-30",
  "trade_date": "2026-11-02",
- "fear_cn": 25.2,
+ "fear_cn": 25.1,
  "fear_date": "2026-10-30",
  "fear_floor": null,
  "gate_open": false,
