@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-02T06:59+00:00",
+  "as_of": "2026-11-02T07:00+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 25.4,
+      "score": 25.2,
       "band": "恐慌",
       "date": "2026-11-02",
       "official": 25.1,
       "official_date": "2026-10-30",
-      "change": 0.3,
+      "change": 0.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -90,7 +90,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "盘中"
+      "session": "已收盘"
     },
     "hk": {
       "name": "港股",
@@ -119,32 +119,32 @@
       "fresh": true
     },
     "gold": {
-      "value": 3917.362,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 3919.637,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
     "csi300": {
-      "value": 4010.36,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 4016.92,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
     "hsi": {
-      "value": 23422.16,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 23417.96,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
     "hstech": {
       "value": 3.772,
-      "time": "2026-11-02T06:59+00:00",
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
     "a_turnover": {
-      "value": 176599384.0,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 177780541.0,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92075,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 0.92071,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.843994,
-      "time": "2026-11-02T06:59+00:00",
+      "value": 157.841003,
+      "time": "2026-11-02T07:00+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
@@ -210,9 +210,9 @@
     },
     "qvix50": {
       "value": 16.03,
-      "time": "2026-11-01T07:00+00:00",
-      "date": "2026-11-01",
-      "fresh": false
+      "time": "2026-11-02T07:00+00:00",
+      "date": "2026-11-02",
+      "fresh": true
     }
   },
   "fresh": [
@@ -221,6 +221,7 @@
     "hsi",
     "hstech",
     "n225",
+    "qvix50",
     "topix",
     "usdjpy"
   ],
