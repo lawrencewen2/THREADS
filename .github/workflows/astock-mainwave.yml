@@ -1,6 +1,7 @@
 name: astock-mainwave
 
 # 主升浪选股 + 市场阶段仓位回测（2026-11-01）。只读行情和业绩预告缓存，单独一个并发组。
+# 2026-11-02 已用 --fetch-forecast 重拉过一次完整业绩预告，存进本分支缓存（key 以 -fullfc 结尾）；之后不要再在这里重拉。
 on:
   workflow_dispatch:
   push:
@@ -34,14 +35,6 @@ jobs:
           path: data/astock/cache
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
-      - name: Refetch all 业绩预告 once (2026-11-02, user approved)
-        timeout-minutes: 120
-        run: python scripts/astock_mainwave.py --fetch-forecast
-      - name: Save cache with full forecasts
-        uses: actions/cache/save@v4
-        with:
-          path: data/astock/cache
-          key: astock-kline-${{ github.run_id }}-fullfc
       - name: Main-wave backtest
         run: python scripts/astock_mainwave.py
       - name: Commit results

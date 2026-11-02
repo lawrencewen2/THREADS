@@ -300,6 +300,7 @@ def run(kline, basic, valuation=None, forecast=None):
                                          fwd20=float(f[m].mean()) if m.any() else None))
     keep = {base["variant"], chosen["variant"], best_test["variant"]} | {r["variant"] for r in top}
     keep |= {r["variant"] for r in grid if r["exit"] == "live"}
+    keep |= {r["variant"] for r in stage2 if r["selection"] == "live"}  # 线上规则叠加市场阶段仓位的各种做法都画出来
     eq = {k: ((1 + v).cumprod()).resample("W-FRI").last().round(4) for k, v in curves.items() if k in keep}
     m = mkt.resample("W-FRI").last()
     curve = dict(dates=[str(d.date()) for d in m.index],
