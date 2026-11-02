@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-02T22:52+00:00",
+  "as_of": "2026-11-02T23:04+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -54,7 +54,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "已收盘"
+      "session": "未开盘"
     },
     "jp": {
       "name": "日本",
@@ -119,8 +119,8 @@
       "fresh": false
     },
     "gold": {
-      "value": 3958.628,
-      "time": "2026-11-02T21:59+00:00",
+      "value": 3956.932,
+      "time": "2026-11-02T23:04+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.91593,
-      "time": "2026-11-02T22:52+00:00",
+      "value": 0.9158,
+      "time": "2026-11-02T23:04+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.886993,
-      "time": "2026-11-02T22:52+00:00",
+      "value": 157.934998,
+      "time": "2026-11-02T23:04+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
