@@ -36,9 +36,9 @@
     },
     "cn": {
       "name": "A股",
-      "score": 25.2,
+      "score": 25.1,
       "band": "恐慌",
-      "change_5d": 1.2,
+      "change_5d": 1.1,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 1.6
+      "score": 0.9
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",

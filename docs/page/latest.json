@@ -39,9 +39,9 @@
   "key": "cn",
   "name": "A股",
   "date": "2026-10-30",
-  "score": 25.2,
+  "score": 25.1,
   "band": "恐慌",
-  "change_5d": 1.2,
+  "change_5d": 1.1,
   "signal": "恐慌加深，减仓"
  },
  {
