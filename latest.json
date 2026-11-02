@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-02T00:54+00:00",
+  "as_of": "2026-11-02T00:56+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 37.9,
+      "score": 38.1,
       "band": "恐慌",
       "date": "2026-11-02",
       "official": 38.0,
       "official_date": "2026-10-30",
-      "change": -0.1,
+      "change": 0.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -94,13 +94,13 @@
     },
     "hk": {
       "name": "港股",
-      "fresh": false,
-      "score": 35.6,
+      "fresh": true,
+      "score": 38.0,
       "band": "恐慌",
-      "date": "2026-10-30",
+      "date": "2026-11-02",
       "official": 35.6,
       "official_date": "2026-10-30",
-      "change": 0.0,
+      "change": 2.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -108,19 +108,19 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     }
   },
   "quotes": {
     "n225": {
-      "value": 63050.58,
-      "time": "2026-11-02T00:54+00:00",
+      "value": 63063.82,
+      "time": "2026-11-02T00:55+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
     "gold": {
-      "value": 3908.851,
-      "time": "2026-11-02T00:54+00:00",
+      "value": 3908.912,
+      "time": "2026-11-02T00:55+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
@@ -132,15 +132,15 @@
     },
     "hsi": {
       "value": 23294.42,
-      "time": "2026-10-30T10:31+00:00",
-      "date": "2026-10-30",
-      "fresh": false
+      "time": "2026-11-02T01:00+00:00",
+      "date": "2026-11-02",
+      "fresh": true
     },
     "hstech": {
       "value": 3.692,
-      "time": "2026-10-30T08:08+00:00",
-      "date": "2026-10-30",
-      "fresh": false
+      "time": "2026-11-02T01:00+00:00",
+      "date": "2026-11-02",
+      "fresh": true
     },
     "a_turnover": {
       "value": 167446802.0,
@@ -186,19 +186,19 @@
     },
     "eurchf": {
       "value": 0.92065,
-      "time": "2026-11-02T00:54+00:00",
+      "time": "2026-11-02T00:55+00:00",
       "date": "2026-11-02",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.742004,
-      "time": "2026-11-02T00:54+00:00",
+      "value": 157.742996,
+      "time": "2026-11-02T00:55+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
     "topix": {
-      "value": 415.100006,
-      "time": "2026-11-02T00:39+00:00",
+      "value": 414.899994,
+      "time": "2026-11-02T00:40+00:00",
       "date": "2026-11-02",
       "fresh": true
     },
@@ -216,6 +216,8 @@
     }
   },
   "fresh": [
+    "hsi",
+    "hstech",
     "n225",
     "topix",
     "usdjpy"
