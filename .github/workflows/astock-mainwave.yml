@@ -17,7 +17,7 @@ concurrency:
 jobs:
   mainwave:
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +34,14 @@ jobs:
           path: data/astock/cache
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
+      - name: Refetch all 业绩预告 once (2026-11-02, user approved)
+        timeout-minutes: 120
+        run: python scripts/astock_mainwave.py --fetch-forecast
+      - name: Save cache with full forecasts
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}-fullfc
       - name: Main-wave backtest
         run: python scripts/astock_mainwave.py
       - name: Commit results
