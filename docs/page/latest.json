@@ -3,9 +3,9 @@
   "key": "global",
   "name": "全球",
   "date": "2026-11-02",
-  "score": 35.1,
+  "score": 35.2,
   "band": "恐慌",
-  "change_5d": -1.6,
+  "change_5d": -1.5,
   "signal": "恐慌加深，减仓"
  },
  {
@@ -21,9 +21,9 @@
   "key": "eu",
   "name": "欧洲",
   "date": "2026-11-02",
-  "score": 33.9,
+  "score": 34.4,
   "band": "恐慌",
-  "change_5d": 3.9,
+  "change_5d": 4.4,
   "signal": "恐慌加深，减仓"
  },
  {

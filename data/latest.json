@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 35.1,
+      "score": 35.2,
       "band": "恐慌",
-      "change_5d": -1.6,
+      "change_5d": -1.5,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -20,9 +20,9 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 33.9,
+      "score": 34.4,
       "band": "恐慌",
-      "change_5d": 3.9,
+      "change_5d": 4.4,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 11.0
+      "score": 18.0
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -120,17 +120,17 @@
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 8.1
+      "score": 8.2
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 37.9
+      "score": 36.7
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 17.9
+      "score": 18.3
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 0.9
+      "score": 1.2
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 63.3
+      "score": 65.1
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
