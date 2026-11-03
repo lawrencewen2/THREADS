@@ -1,1 +1,1 @@
-{"summary": {"days": 0, "mode": "slots", "capital_share": 0.5, "closed_trades": 0, "daily": []}, "rows": []}
+{"summary": {"days": 1, "ann_return": 0.0, "sharpe": 0.0, "max_drawdown": 0.0, "day_win": 0.0, "trades": 0, "trade_win": null, "avg_trade": null, "avg_hold_days": null, "yearly": {"2026": 0.0}, "mode": "slots", "capital_share": 0.5, "closed_trades": 0, "daily": [{"trade_date": "2026-10-30", "net": -0.0}]}, "rows": []}
