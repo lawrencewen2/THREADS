@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-03T00:54+00:00",
+  "as_of": "2026-11-03T00:55+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
-      "fresh": false,
-      "score": 35.1,
+      "fresh": true,
+      "score": 35.4,
       "band": "恐慌",
-      "date": "2026-11-02",
+      "date": "2026-11-03",
       "official": 35.1,
       "official_date": "2026-11-02",
-      "change": 0.0,
+      "change": 0.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -94,21 +94,21 @@
     },
     "hk": {
       "name": "港股",
-      "fresh": false,
-      "score": 38.7,
-      "band": "恐慌",
-      "date": "2026-11-02",
+      "fresh": true,
+      "score": 41.7,
+      "band": "中性",
+      "date": "2026-11-03",
       "official": 38.7,
       "official_date": "2026-11-02",
-      "change": 0.0,
-      "signal": "risk_off",
-      "signal_text": "恐慌加深，减仓",
+      "change": 3.0,
+      "signal": "normal",
+      "signal_text": "正常",
       "official_signal": "risk_off",
       "new_event": {
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     }
   },
   "quotes": {
@@ -119,8 +119,8 @@
       "fresh": false
     },
     "gold": {
-      "value": 3966.765,
-      "time": "2026-11-03T00:54+00:00",
+      "value": 3968.003,
+      "time": "2026-11-03T00:55+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -132,15 +132,15 @@
     },
     "hsi": {
       "value": 23393.32,
-      "time": "2026-11-02T10:31+00:00",
-      "date": "2026-11-02",
-      "fresh": false
+      "time": "2026-11-03T01:00+00:00",
+      "date": "2026-11-03",
+      "fresh": true
     },
     "hstech": {
       "value": 3.76,
-      "time": "2026-11-02T08:08+00:00",
-      "date": "2026-11-02",
-      "fresh": false
+      "time": "2026-11-03T01:00+00:00",
+      "date": "2026-11-03",
+      "fresh": true
     },
     "a_turnover": {
       "value": 178369534.0,
@@ -186,13 +186,13 @@
     },
     "eurchf": {
       "value": 0.91604,
-      "time": "2026-11-03T00:54+00:00",
+      "time": "2026-11-03T00:55+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.854996,
-      "time": "2026-11-03T00:54+00:00",
+      "value": 157.891006,
+      "time": "2026-11-03T00:55+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -209,7 +209,10 @@
       "fresh": false
     }
   },
-  "fresh": [],
+  "fresh": [
+    "hsi",
+    "hstech"
+  ],
   "errors": {
     "qvix50": "qvix: ValueError: empty"
   }
