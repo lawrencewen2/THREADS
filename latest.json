@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-02T23:04+00:00",
+  "as_of": "2026-11-03T00:07+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -18,7 +18,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "盘中"
     },
     "us": {
       "name": "美国",
@@ -72,7 +72,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "盘中"
     },
     "cn": {
       "name": "A股",
@@ -119,8 +119,8 @@
       "fresh": false
     },
     "gold": {
-      "value": 3956.932,
-      "time": "2026-11-02T23:04+00:00",
+      "value": 3959.6,
+      "time": "2026-11-03T00:07+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -185,15 +185,15 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.9158,
-      "time": "2026-11-02T23:04+00:00",
-      "date": "2026-11-02",
+      "value": 0.91568,
+      "time": "2026-11-03T00:07+00:00",
+      "date": "2026-11-03",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.934998,
-      "time": "2026-11-02T23:04+00:00",
-      "date": "2026-11-02",
+      "value": 157.875,
+      "time": "2026-11-03T00:07+00:00",
+      "date": "2026-11-03",
       "fresh": false
     },
     "topix": {
