@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-03T01:20+00:00",
+  "as_of": "2026-11-03T01:21+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 35.4,
+      "score": 35.5,
       "band": "恐慌",
       "date": "2026-11-03",
       "official": 35.1,
       "official_date": "2026-11-02",
-      "change": 0.3,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 41.8,
+      "score": 42.1,
       "band": "中性",
       "date": "2026-11-03",
       "official": 38.7,
       "official_date": "2026-11-02",
-      "change": 3.1,
+      "change": 3.4,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "risk_off",
@@ -119,20 +119,20 @@
       "fresh": false
     },
     "gold": {
-      "value": 3965.68,
-      "time": "2026-11-03T01:20+00:00",
+      "value": 3969.01,
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
     "csi300": {
       "value": 4016.92,
-      "time": "2026-11-03T01:20+00:00",
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": true
     },
     "hsi": {
-      "value": 23393.32,
-      "time": "2026-11-03T01:20+00:00",
+      "value": 23469.64,
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": true
     },
@@ -144,7 +144,7 @@
     },
     "a_turnover": {
       "value": 0.0,
-      "time": "2026-11-03T01:20+00:00",
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.91638,
-      "time": "2026-11-03T01:20+00:00",
+      "value": 0.91642,
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.919998,
-      "time": "2026-11-03T01:20+00:00",
+      "value": 157.934998,
+      "time": "2026-11-03T01:21+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
