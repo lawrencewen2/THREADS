@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-03T01:09+00:00",
+  "as_of": "2026-11-03T01:10+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -76,13 +76,13 @@
     },
     "cn": {
       "name": "A股",
-      "fresh": false,
-      "score": 25.4,
+      "fresh": true,
+      "score": 25.8,
       "band": "恐慌",
-      "date": "2026-11-02",
+      "date": "2026-11-03",
       "official": 25.4,
       "official_date": "2026-11-02",
-      "change": 0.0,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -90,7 +90,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     },
     "hk": {
       "name": "港股",
@@ -119,20 +119,20 @@
       "fresh": false
     },
     "gold": {
-      "value": 3959.792,
-      "time": "2026-11-03T01:09+00:00",
+      "value": 3957.768,
+      "time": "2026-11-03T01:10+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
     "csi300": {
       "value": 4016.92,
-      "time": "2026-11-02T08:14+00:00",
-      "date": "2026-11-02",
-      "fresh": false
+      "time": "2026-11-03T01:10+00:00",
+      "date": "2026-11-03",
+      "fresh": true
     },
     "hsi": {
       "value": 23393.32,
-      "time": "2026-11-03T01:09+00:00",
+      "time": "2026-11-03T01:10+00:00",
       "date": "2026-11-03",
       "fresh": true
     },
@@ -143,9 +143,9 @@
       "fresh": true
     },
     "a_turnover": {
-      "value": 178369534.0,
-      "time": "2026-11-02T08:15+00:00",
-      "date": "2026-11-02",
+      "value": 0.0,
+      "time": "2026-11-03T01:10+00:00",
+      "date": "2026-11-03",
       "fresh": false
     },
     "spx": {
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.91619,
-      "time": "2026-11-03T01:09+00:00",
+      "value": 0.9162,
+      "time": "2026-11-03T01:10+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.934006,
-      "time": "2026-11-03T01:09+00:00",
+      "value": 157.923996,
+      "time": "2026-11-03T01:10+00:00",
       "date": "2026-11-03",
       "fresh": false
     },
@@ -210,6 +210,7 @@
     }
   },
   "fresh": [
+    "csi300",
     "hsi",
     "hstech"
   ],
