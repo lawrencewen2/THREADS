@@ -12,9 +12,9 @@
   "stop_loss": "atr3",
   "max_hold": 10,
   "overlay": "trend20",
-  "capital_share": 0.5,
+  "capital_share": 0.4,
   "start": "2026-10-30",
-  "decided": "2026-10-29 用户在决策卡上选择：改，面板建议只用一半资金",
+  "decided": "2026-10-29 用户在决策卡上选择：改，面板建议只用一半资金；2026-11-02 用户同意降到 40% 资金（总回撤约 −7.5%，代替按市场阶段减仓）",
   "backtest": {
     "train": {
       "days": 1462,
