@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-06T01:08+00:00",
+  "as_of": "2026-11-06T01:09+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 12.7,
+      "score": 12.6,
       "band": "极度恐慌",
       "date": "2026-11-06",
       "official": 18.1,
       "official_date": "2026-11-05",
-      "change": -5.4,
+      "change": -5.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -113,14 +113,14 @@
   },
   "quotes": {
     "n225": {
-      "value": 57200.38,
-      "time": "2026-11-06T01:08+00:00",
+      "value": 57023.77,
+      "time": "2026-11-06T01:09+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
     "gold": {
-      "value": 4100.002,
-      "time": "2026-11-06T01:08+00:00",
+      "value": 4095.233,
+      "time": "2026-11-06T01:09+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
@@ -132,13 +132,13 @@
     },
     "hsi": {
       "value": 24796.98,
-      "time": "2026-11-06T01:08+00:00",
+      "time": "2026-11-06T01:09+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
     "hstech": {
       "value": 3.996,
-      "time": "2026-11-06T01:08+00:00",
+      "time": "2026-11-06T01:09+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
@@ -191,7 +191,7 @@
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.848007,
+      "value": 157.843994,
       "time": "2026-11-06T01:06+00:00",
       "date": "2026-11-06",
       "fresh": true
@@ -207,12 +207,6 @@
       "time": "2026-11-05T19:59+00:00",
       "date": "2026-11-05",
       "fresh": false
-    },
-    "qvix50": {
-      "value": 16.03,
-      "time": "2026-11-05T06:56+00:00",
-      "date": "2026-11-05",
-      "fresh": false
     }
   },
   "fresh": [
@@ -222,5 +216,7 @@
     "topix",
     "usdjpy"
   ],
-  "errors": {}
+  "errors": {
+    "qvix50": "qvix: ValueError: empty"
+  }
 }
