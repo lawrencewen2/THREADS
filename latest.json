@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-06T13:50+00:00",
+  "as_of": "2026-11-06T13:51+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 32.3,
+      "score": 32.2,
       "band": "恐慌",
       "date": "2026-11-06",
       "official": 33.4,
       "official_date": "2026-11-05",
-      "change": -1.1,
+      "change": -1.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 34.7,
+      "score": 34.3,
       "band": "恐慌",
       "date": "2026-11-06",
       "official": 37.3,
       "official_date": "2026-11-05",
-      "change": -2.6,
+      "change": -3.0,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4058.008,
-      "time": "2026-11-06T13:50+00:00",
+      "value": 4057.439,
+      "time": "2026-11-06T13:51+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 26.9,
-      "time": "2026-11-06T13:35+00:00",
+      "value": 27.040001,
+      "time": "2026-11-06T13:36+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6146.609863,
-      "time": "2026-11-06T13:34+00:00",
+      "value": 6137.169922,
+      "time": "2026-11-06T13:36+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91461,
-      "time": "2026-11-06T13:50+00:00",
+      "value": 0.91466,
+      "time": "2026-11-06T13:51+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
     "usdjpy": {
-      "value": 158.429993,
-      "time": "2026-11-06T13:50+00:00",
+      "value": 158.412003,
+      "time": "2026-11-06T13:51+00:00",
       "date": "2026-11-06",
       "fresh": true
     },
@@ -203,8 +203,8 @@
       "fresh": true
     },
     "us10y": {
-      "value": 4.882,
-      "time": "2026-11-06T13:35+00:00",
+      "value": 4.878,
+      "time": "2026-11-06T13:36+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
