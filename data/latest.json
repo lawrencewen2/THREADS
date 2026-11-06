@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 33.3,
+      "score": 33.4,
       "band": "恐慌",
-      "change_5d": -8.8,
+      "change_5d": -8.7,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -20,17 +20,17 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 37.1,
+      "score": 37.3,
       "band": "恐慌",
-      "change_5d": 3.2,
+      "change_5d": 3.4,
       "risk_off": false,
       "signal": "normal"
     },
     "jp": {
       "name": "日本",
-      "score": 18.1,
+      "score": 18.3,
       "band": "极度恐慌",
-      "change_5d": -5.1,
+      "change_5d": -4.9,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -44,9 +44,9 @@
     },
     "hk": {
       "name": "港股",
-      "score": 52.2,
+      "score": 51.6,
       "band": "中性",
-      "change_5d": 17.3,
+      "change_5d": 16.7,
       "risk_off": false,
       "signal": "short_bottom"
     }
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 8.1
+      "score": 11.5
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -110,7 +110,7 @@
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 19.9
+      "score": 19.8
     },
     "jp_dd": {
       "name": "日经225 回撤",
@@ -125,7 +125,7 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 34.4
+      "score": 39.7
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 1.8
+      "score": 2.1
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 22.3
+      "score": 11.2
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 28.6
+      "score": 32.5
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
