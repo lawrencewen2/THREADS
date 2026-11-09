@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-09T14:29+00:00",
+  "as_of": "2026-11-09T14:30+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 30.3,
+      "score": 29.4,
       "band": "恐慌",
       "date": "2026-11-09",
       "official": 30.2,
       "official_date": "2026-11-06",
-      "change": 0.1,
+      "change": -0.8,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -22,13 +22,13 @@
     },
     "us": {
       "name": "美国",
-      "fresh": false,
-      "score": 23.2,
+      "fresh": true,
+      "score": 21.2,
       "band": "恐慌",
-      "date": "2026-11-06",
+      "date": "2026-11-09",
       "official": 23.2,
       "official_date": "2026-11-06",
-      "change": 0.0,
+      "change": -2.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -36,7 +36,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "盘中"
     },
     "eu": {
       "name": "欧洲",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 10.7,
+      "score": 10.8,
       "band": "极度恐慌",
       "date": "2026-11-09",
       "official": 12.5,
       "official_date": "2026-11-06",
-      "change": -1.8,
+      "change": -1.7,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,10 +119,10 @@
       "fresh": true
     },
     "gold": {
-      "value": 4137.09,
-      "time": "2026-11-09T14:29+00:00",
+      "value": 4138.227,
+      "time": "2026-11-09T14:30+00:00",
       "date": "2026-11-09",
-      "fresh": false
+      "fresh": true
     },
     "csi300": {
       "value": 4056.11,
@@ -149,50 +149,50 @@
       "fresh": true
     },
     "spx": {
-      "value": 7374.850098,
-      "time": "2026-11-06T20:59+00:00",
-      "date": "2026-11-06",
-      "fresh": false
+      "value": 7438.959961,
+      "time": "2026-11-09T14:30+00:00",
+      "date": "2026-11-09",
+      "fresh": true
     },
     "vix": {
-      "value": 23.200001,
-      "time": "2026-11-09T14:14+00:00",
+      "value": 23.17,
+      "time": "2026-11-09T14:15+00:00",
       "date": "2026-11-09",
-      "fresh": false
+      "fresh": true
     },
     "vix3m": {
       "value": 24.629999,
-      "time": "2026-11-06T20:59+00:00",
+      "time": "2026-11-06T20:55+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
     "hyg": {
-      "value": 77.230003,
-      "time": "2026-11-06T20:59+00:00",
-      "date": "2026-11-06",
-      "fresh": false
+      "value": 77.400002,
+      "time": "2026-11-09T14:30+00:00",
+      "date": "2026-11-09",
+      "fresh": true
     },
     "ief": {
       "value": 91.839996,
-      "time": "2026-11-06T20:59+00:00",
+      "time": "2026-11-06T20:55+00:00",
       "date": "2026-11-06",
       "fresh": false
     },
     "sx5e": {
-      "value": 6265.549805,
+      "value": 6265.75,
       "time": "2026-11-09T14:14+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91828,
-      "time": "2026-11-09T14:29+00:00",
+      "value": 0.91841,
+      "time": "2026-11-09T14:30+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
     "usdjpy": {
-      "value": 157.925995,
-      "time": "2026-11-09T14:29+00:00",
+      "value": 157.942993,
+      "time": "2026-11-09T14:30+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
@@ -203,10 +203,10 @@
       "fresh": true
     },
     "us10y": {
-      "value": 4.839,
-      "time": "2026-11-09T14:14+00:00",
+      "value": 4.835,
+      "time": "2026-11-09T14:15+00:00",
       "date": "2026-11-09",
-      "fresh": false
+      "fresh": true
     },
     "qvix50": {
       "value": 15.95,
@@ -219,13 +219,18 @@
     "a_turnover",
     "csi300",
     "eurchf",
+    "gold",
     "hsi",
     "hstech",
+    "hyg",
     "n225",
     "qvix50",
+    "spx",
     "sx5e",
     "topix",
-    "usdjpy"
+    "us10y",
+    "usdjpy",
+    "vix"
   ],
   "errors": {}
 }
