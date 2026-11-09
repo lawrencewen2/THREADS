@@ -2,55 +2,55 @@
  {
   "key": "global",
   "name": "全球",
-  "date": "2026-11-06",
-  "score": 30.2,
+  "date": "2026-11-09",
+  "score": 31.5,
   "band": "恐慌",
-  "change_5d": -7.8,
+  "change_5d": -3.6,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "us",
   "name": "美国",
-  "date": "2026-11-06",
-  "score": 23.2,
+  "date": "2026-11-09",
+  "score": 25.4,
   "band": "恐慌",
-  "change_5d": -22.7,
+  "change_5d": -13.1,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "eu",
   "name": "欧洲",
-  "date": "2026-11-06",
-  "score": 36.0,
+  "date": "2026-11-09",
+  "score": 38.2,
   "band": "恐慌",
-  "change_5d": 3.1,
+  "change_5d": 3.8,
   "signal": "正常"
  },
  {
   "key": "jp",
   "name": "日本",
-  "date": "2026-11-06",
-  "score": 12.5,
+  "date": "2026-11-09",
+  "score": 10.7,
   "band": "极度恐慌",
-  "change_5d": -9.1,
+  "change_5d": -9.5,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "cn",
   "name": "A股",
-  "date": "2026-11-06",
-  "score": 31.1,
+  "date": "2026-11-09",
+  "score": 30.2,
   "band": "恐慌",
-  "change_5d": 6.1,
+  "change_5d": 5.1,
   "signal": "恐慌加深，减仓"
  },
  {
   "key": "hk",
   "name": "港股",
-  "date": "2026-11-06",
-  "score": 53.6,
+  "date": "2026-11-09",
+  "score": 54.4,
   "band": "中性",
-  "change_5d": 18.0,
+  "change_5d": 15.7,
   "signal": "短期触底（仅供参考）"
  }
 ]
