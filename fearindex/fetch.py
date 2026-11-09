@@ -9,6 +9,7 @@ import logging
 import time
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from . import config
 
@@ -163,6 +164,32 @@ def _load_sources():
         return {}
 
 
+LEVEL_BREAK = 3.0  # 新旧数据量级相差超过这个倍数，视为口径变化
+LAST_REBASED = []  # 最近一次 update_all 中因口径变化而整段重拉的序列
+
+
+def _level_break(cached, fresh):
+    """增量数据和缓存是否量级不一致。
+
+    同日重叠部分本应几乎相同（只允许小幅补录修正）；接缝处前后各 20 天的中位数也不应相差数倍。
+    """
+    cached, fresh = cached.dropna(), fresh.dropna()
+    if cached.empty or fresh.empty:
+        return False
+    common = cached.index.intersection(fresh.index)
+    if len(common) >= 5:
+        ratio = (fresh[common] / cached[common]).replace([np.inf, -np.inf], np.nan).dropna()
+        if len(ratio) and not (1 / 1.5 < ratio.median() < 1.5):
+            return True
+    before = cached[cached.index < fresh.index[0]].tail(20)
+    if len(before) < 5:
+        return False
+    a, b = before.median(), fresh.head(20).median()
+    if a <= 0 or b <= 0:
+        return False
+    return not (1 / LEVEL_BREAK < b / a < LEVEL_BREAK)
+
+
 def update_all(keys=None, start=config.START_DATE, full=False):
     """拉取并合并所有序列。返回 (dict key->Series, dict key->错误信息)。
 
@@ -172,6 +199,7 @@ def update_all(keys=None, start=config.START_DATE, full=False):
     keys = keys or list(config.SERIES)
     sources = _load_sources()
     out, errors = {}, {}
+    LAST_REBASED.clear()
     for key in keys:
         cached = load_cached(key)
         failures = []
@@ -193,6 +221,19 @@ def update_all(keys=None, start=config.START_DATE, full=False):
                 failures.append(f"{label} {type(exc).__name__}: {str(exc)[:120]}")
                 log.warning("%s via %s failed: %s", key, label, failures[-1])
                 continue
+            if same_source and not full and _level_break(cached, fresh):
+                # 同一数据源但口径变了（例如接口把成交量换成成交额），新旧拼接会出现断层，整段重拉
+                log.warning("%s via %s: level break vs cache, refetching full history", key, label)
+                try:
+                    fresh = FETCHERS[source](code, start)
+                    if len(fresh) < MIN_HISTORY_ROWS:
+                        raise ValueError(f"only {len(fresh)} rows of history")
+                except Exception as exc:
+                    failures.append(f"{label} 口径变化后整段重拉失败 {type(exc).__name__}: {str(exc)[:100]}")
+                    log.warning("%s via %s failed: %s", key, label, failures[-1])
+                    continue
+                same_source = False
+                LAST_REBASED.append(key)
             merged = pd.concat([cached[cached.index < fresh.index[0]], fresh]) if same_source else fresh
             merged = sanitize(key, _clean(merged))
             save_cached(key, merged)

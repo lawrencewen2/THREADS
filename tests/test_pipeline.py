@@ -137,6 +137,33 @@ def test_fetch_rejects_short_history(tmp_path, monkeypatch):
     assert len(out["x"]) == 300
 
 
+def test_fetch_refetches_full_history_on_level_break(tmp_path, monkeypatch):
+    from fearindex import fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
+    monkeypatch.setattr(config, "SERIES", {"x": [("akshare", "B")]})
+    idx = pd.bdate_range("2020-01-01", periods=600)
+    old = pd.Series(1e9, index=idx)
+    fetch.save_cached("x", old.iloc[:-1])
+    (tmp_path / "_sources.json").write_text('{"x": "akshare:B"}')
+    calls = []
+
+    def unit_changed(code, start):
+        calls.append(start)
+        s = pd.Series(1.7e12, index=idx)
+        return s[s.index >= pd.Timestamp(start)]
+
+    monkeypatch.setattr(fetch, "FETCHERS", {"akshare": unit_changed})
+    out, errors = fetch.update_all()
+    assert not errors and calls[-1] == config.START_DATE and fetch.LAST_REBASED == ["x"]
+    assert (out["x"] == 1.7e12).all() and len(out["x"]) == 600
+    # 量级一致时只做增量拉取
+    calls.clear()
+    fetch.update_all()
+    assert len(calls) == 1 and calls[0] != config.START_DATE and fetch.LAST_REBASED == []
+
+
 def test_short_series_does_not_break_build():
     series = synthetic_series()
     series["hstech"] = series["hstech"].iloc[-1:]
@@ -152,6 +179,7 @@ def test_drift_check(built):
     tampered.loc[tampered.index[100], "global"] += 5
     assert not check.run_checks(series, {}, idx, tampered)["ok"]
     assert check.run_checks(series, {}, idx, tampered, method_changed=True)["ok"]
+    assert check.run_checks(series, {}, idx, tampered, rebased=["x"])["ok"]
     assert check.run_checks(series, {}, idx, idx)["ok"]
 
 
