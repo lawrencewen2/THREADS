@@ -19,10 +19,12 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from astock import live_market  # noqa: E402
 from fearindex import fetch, intraday  # noqa: E402
 
 ISSUE_TITLE = "盘中监控：恐慌贪婪指数"
 PICKS_PATH = Path(__file__).resolve().parent.parent / "docs" / "astock" / "picks.json"
+MARKET_REF_PATH = PICKS_PATH.parent / "market_ref.json"  # 盘中市场温度的参考数据
 TODAY_HOURS = 24  # today.json 保留最近这么多小时的读数
 ORDER = ["global", "us", "eu", "jp", "cn", "hk"]
 
@@ -111,6 +113,25 @@ def write_today(out, now_cn):
     (out / "today.json").write_text(json.dumps(rows, ensure_ascii=False))
 
 
+def update_market(out):
+    """A股盘中市场温度和涨跌家数，写 market.json。收盘后算过一次当天的最终数就不再重算。"""
+    if not MARKET_REF_PATH.exists():
+        return
+    path = out / "market.json"
+    now_cn = datetime.now(live_market.CN_TZ)
+    try:
+        old = json.loads(path.read_text()) if path.exists() else {}
+        if old.get("date") == str(now_cn.date()) and old.get("session") == "已收盘":
+            return
+        res = live_market.run(json.loads(MARKET_REF_PATH.read_text()), now_cn)
+    except Exception as exc:
+        logging.warning("market: %s: %s", type(exc).__name__, exc)
+        return
+    if res is not None:
+        path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
+        logging.info("market: %s 温度 %s 涨 %s 跌 %s", res["time"], res["temperature"], res["up"], res["down"])
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="data/intraday")
@@ -142,6 +163,7 @@ def main():
         except Exception as exc:
             logging.warning("picks: %s: %s", type(exc).__name__, exc)
     (out / "picks.json").write_text(json.dumps(picks, ensure_ascii=False, indent=1))
+    update_market(out)
 
     # 每次运行一行，供当天走势和收盘后与正式读数核对
     now_cn = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)
