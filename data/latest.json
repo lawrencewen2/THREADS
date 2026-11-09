@@ -209,9 +209,7 @@
     }
   },
   "status": {
-    "warnings": [
-      "数据源口径变化、已整段重拉：a_turnover，本次跳过历史值漂移检查"
-    ],
+    "warnings": [],
     "failures": [],
     "ok": true
   }
