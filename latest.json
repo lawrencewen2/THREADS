@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-09T07:47+00:00",
+  "as_of": "2026-11-09T07:48+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 54.3,
+      "score": 54.4,
       "band": "中性",
       "date": "2026-11-09",
       "official": 53.6,
       "official_date": "2026-11-06",
-      "change": 0.7,
+      "change": 0.8,
       "signal": "short_bottom",
       "signal_text": "短期触底（仅供参考）",
       "official_signal": "short_bottom",
@@ -119,32 +119,32 @@
       "fresh": true
     },
     "gold": {
-      "value": 4092.137,
-      "time": "2026-11-09T07:47+00:00",
+      "value": 4093.349,
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": false
     },
     "csi300": {
       "value": 4056.11,
-      "time": "2026-11-09T07:47+00:00",
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
     "hsi": {
-      "value": 24446.23,
-      "time": "2026-11-09T07:47+00:00",
+      "value": 24451.61,
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
     "hstech": {
-      "value": 3.956,
-      "time": "2026-11-09T07:47+00:00",
+      "value": 3.96,
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
     "a_turnover": {
       "value": 148261334.0,
-      "time": "2026-11-09T07:46+00:00",
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.91382,
-      "time": "2026-11-09T07:47+00:00",
+      "value": 0.91394,
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.020996,
-      "time": "2026-11-09T07:47+00:00",
+      "value": 158.013,
+      "time": "2026-11-09T07:48+00:00",
       "date": "2026-11-09",
       "fresh": true
     },
