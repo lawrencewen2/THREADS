@@ -155,7 +155,7 @@
     "cn_turnover": {
       "name": "两市成交量萎缩",
       "region": "cn",
-      "score": 0.4
+      "score": 0.6
     },
     "cn_margin": {
       "name": "沪市融资余额下降",
@@ -209,10 +209,10 @@
     }
   },
   "status": {
-    "warnings": [],
-    "failures": [
-      "历史值漂移：2025-12-25 的全球分变化 1.4"
+    "warnings": [
+      "数据源口径变化、已整段重拉：a_turnover，本次跳过历史值漂移检查"
     ],
-    "ok": false
+    "failures": [],
+    "ok": true
   }
 }
