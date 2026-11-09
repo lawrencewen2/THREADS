@@ -244,8 +244,9 @@ CROSS_CHECKS = [
     ("n225", "新浪 日经225指数", lambda: _ak("index_global_hist_sina", symbol="日经225指数"), "level", 0.005),
     ("usdjpy", "欧洲央行参考汇率（JPY/USD 交叉）", lambda: _ecb("JPY/USD"), "level", 0.015),
     ("csi300", "新浪 沪深300", lambda: _ak("stock_zh_index_daily", symbol="sh000300"), "level", 0.005),
-    ("a_turnover", "新浪 上证+深成 成交量", lambda: _ak_sum("stock_zh_index_daily", ["sh000001", "sz399001"], "volume"),
-     "ratio", 0.03),
+    # 我方是成交额、新浪只有成交量，两者比值是平均股价，会随行情浮动几个百分点，所以容差放宽，只防单位错和数据错位
+    ("a_turnover", "新浪 上证+深成 成交量（我方为成交额，只核对走势）",
+     lambda: _ak_sum("stock_zh_index_daily", ["sh000001", "sz399001"], "volume"), "ratio", 0.15),
     ("sh_margin", "上交所官网 融资余额", _sse_margin, "ratio", 0.005),
     ("hsi", "新浪 恒生指数", lambda: _ak("stock_hk_index_daily_sina", symbol="HSI"), "level", 0.005),
     ("hstech", "新浪 恒生科技指数（3033.HK 为跟踪 ETF）", lambda: _ak("stock_hk_index_daily_sina", symbol="HSTECH"),
