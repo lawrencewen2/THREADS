@@ -16,13 +16,14 @@ import logging
 import numpy as np
 import pandas as pd
 
-from . import config, model
+from . import config, live_market, model
 from .factors import Panel
 
 log = logging.getLogger(__name__)
 
 INDUSTRY_FILE = config.DATA_DIR / "industry.csv"
 OUT_FILE = config.PAGE_DIR / "insight.json"
+REF_FILE = config.PAGE_DIR / "market_ref.json"  # 盘中市场温度用（astock/live_market.py）
 TEMP_DAYS = 60  # 面板上画的市场温度天数
 TEMP_RANK_WINDOW = 250  # 温度分：各指标在近 250 个交易日里的分位
 MIN_INDUSTRY_SIZE = 10  # 行业内股票少于这个数不列
@@ -50,17 +51,7 @@ def market_temperature(p):
         "above_ma20": (p.close > ma20).sum(axis=1) / ma20.notna().sum(axis=1).replace(0, np.nan),
         "median_ret": ret.median(axis=1),
     })
-    df["up_share"] = df["up"] / (df["up"] + df["down"]).replace(0, np.nan)
-    df["net_limit"] = df["limit_up"] - df["limit_down"]
-    df["amount_ratio"] = df["amount"] / df["amount"].rolling(20, min_periods=10).mean()
-
-    def pr(s):
-        return s.rolling(TEMP_RANK_WINDOW, min_periods=60).rank(pct=True)
-
-    parts = [pr(df["up_share"].rolling(5, min_periods=3).mean()), pr(df["above_ma20"]),
-             pr(df["net_limit"].rolling(5, min_periods=3).mean()), pr(df["amount_ratio"])]
-    df["temperature"] = (pd.concat(parts, axis=1).mean(axis=1) * 100)
-    return df
+    return live_market.temperature_from_metrics(df)
 
 
 def temperature_label(v):
@@ -70,6 +61,21 @@ def temperature_label(v):
         if v < upper:
             return label
     return "过热"
+
+
+def live_ref(p, temp):
+    """盘中温度要用的参考数据：每只股票前 19 天收盘均价和涨跌停幅度，以及最近的每日指标。"""
+    close19 = p.close.iloc[-19:]
+    mean19 = close19.mean().where(close19.notna().sum() >= 14)
+    pct = p.limit_pct().where(~p.is_st, 0.05).iloc[-1]
+    traded_recently = p.traded.iloc[-20:].any()
+    codes = {c: [None if np.isnan(m) else round(float(m), 4), float(pct[c])]
+             for c, m in mean19.items() if traded_recently.get(c, False)}
+    cols = ["up", "down", "limit_up", "limit_down", "amount", "above_ma20"]
+    h = temp[cols].iloc[-live_market.HIST_DAYS:]
+    hist = {"date": [d.strftime("%Y-%m-%d") for d in h.index]}
+    hist.update({c: [None if pd.isna(v) else round(float(v), 4) for v in h[c]] for c in cols})
+    return dict(signal_date=str(p.dates[-1].date()), codes=codes, hist=hist)
 
 
 # ---------- 行业 ----------
@@ -377,9 +383,14 @@ def build(kline, basic, valuation, industry, ranking, picks, bt):
         sectors=sector_rows,
         confidence=conf,
         checkups=check_rows,
+        live_ref=live_ref(p, temp),
     )
 
 
 def write(out):
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
+    out = dict(out)
+    ref = out.pop("live_ref", None)
     OUT_FILE.write_text(json.dumps(out, ensure_ascii=False, default=_clean))
+    if ref is not None:
+        REF_FILE.write_text(json.dumps(ref, ensure_ascii=False, separators=(",", ":")))
