@@ -28,7 +28,7 @@ import logging
 import numpy as np
 import pandas as pd
 
-from . import config, model
+from . import cn_macro, config, model
 from .alt_study import emotion_regime, iter_alt_factors
 from .factors import Panel, eligible
 from .live_slots import MODEL_FILE
@@ -59,11 +59,21 @@ PORTFOLIO = [
     ("微观·两市成交额热（5 日 / 60 日）多买、冷少买", "turnover"),
     ("策略自身·最近 30 笔胜率高多买、低少买", "health"),
     ("策略自身·波动率目标年化 15%", "vol15"),
+    # 2026-11-10 用户：中国宏观数据也要测（PMI、货币、社融、价格；公开免密钥接口，按公布日错开）
+    ("中国宏观·制造业 PMI 越高仓位越高", "cn_pmi"),
+    ("中国宏观·PMI 近 3 个月回升多买、回落少买", "cn_pmi_chg"),
+    ("中国宏观·M1−M2 剪刀差越高（资金活化）仓位越高", "cn_m1m2"),
+    ("中国宏观·M1−M2 剪刀差近 3 个月走阔多买", "cn_m1m2_chg"),
+    ("中国宏观·M2 增速近半年加快多买", "cn_m2_chg"),
+    ("中国宏观·社融 12 个月累计同比（信贷脉冲）越高仓位越高", "cn_credit"),
+    ("中国宏观·PPI 同比近 3 个月回升多买", "cn_ppi_chg"),
 ]
 COMBOS = [
     ("组合·宏观（A股逆向恐慌 + 避险 + 利率）", ("fear_cn", "riskoff", "rates")),
     ("组合·微观资金面（融资 + 成交额）", ("margin", "turnover")),
     ("组合·宏观 + 微观 + 策略状态", ("fear_cn", "riskoff", "rates", "margin", "turnover", "health")),
+    ("组合·中国经济（PMI + 剪刀差 + 社融 + PPI）", ("cn_pmi", "cn_m1m2", "cn_credit", "cn_ppi_chg")),
+    ("组合·中国经济变化（PMI 回升 + 剪刀差走阔 + M2 加快）", ("cn_pmi_chg", "cn_m1m2_chg", "cn_m2_chg")),
 ]
 COMBO_TRADE = [
     ("组合·每只：等风险 + 趋势 + 估值", ("atr", "trend", "value")),
@@ -206,7 +216,9 @@ def market_multipliers(dates):
     tv = _raw("a_turnover")
     heat = (tv.rolling(5).mean() / tv.rolling(60).mean()) if tv is not None else None
     out["turnover"] = _clip(1 + (_align(heat, dates) - 1))
-    return {k: v.fillna(1.0).astype(float) for k, v in out.items()}
+    out = {k: v.fillna(1.0).astype(float) for k, v in out.items()}
+    out.update(cn_macro.multipliers(dates))
+    return out
 
 
 def health_multiplier(trades, dates, k=30):
@@ -260,6 +272,9 @@ def summarize(name, kind, group, d_train, d_test, t_train, t_test, share, target
         row[k] = {kk: st.get(kk) for kk in ("ann_return", "sharpe", "max_drawdown", "trade_win", "trades", "payoff", "yearly")}
         row[k]["live_share_ann"] = st0.get("ann_return")
         row[k]["live_share_dd"] = st0.get("max_drawdown")
+        st1 = stats(d, t)
+        row[k]["full_ann"], row[k]["full_dd"], row[k]["full_sharpe"] = (st1.get("ann_return"), st1.get("max_drawdown"),
+                                                                        st1.get("sharpe"))
         avg_w = np.mean([x.get("w", 1.0) for x in t]) if t else None
         row[k]["avg_w"] = float(avg_w) if avg_w is not None else None
     return row
@@ -321,9 +336,12 @@ def run(kline, basic, valuation=None, forecast=None):
             add(name, kind, "market", base, msrc=lambda dd, tt: health_multiplier(tt, dd.index))
         elif kind == "vol15":
             add(name, kind, "market", base, msrc=lambda dd, tt: vol_target(dd).shift(1).fillna(1.0))
-        else:
+        elif kind in mm:
             add(name, kind, "market", base, m=mm[kind])
     for name, keys in COMBOS:
+        if any(k not in mm and k != "health" for k in keys):
+            continue
+
         def src(dd, tt, keys=keys):
             parts = [health_multiplier(tt, dd.index) if k == "health" else mm[k].reindex(dd.index) for k in keys]
             return sum(parts) / len(parts)
@@ -382,6 +400,8 @@ def to_markdown(res):
              f"训练期最好的方案：**{ch['name']}**，样本外年化 {_p(ch['test']['ann_return'])}、回撤 {_p(ch['test']['max_drawdown'])}；"
              f"线上 {_p(live['test']['ann_return'])}、回撤 {_p(live['test']['max_drawdown'])}。"
              f"随机仓位 {nz['n']} 组的样本外年化 10%–90% 区间 {_p(nz['test_p10'])} ~ {_p(nz['test_p90'])}。", "",
+             f"线上规则用 100% 资金：训练期年化 {_p(live['train']['full_ann'])}、回撤 {_p(live['train']['full_dd'])}；"
+             f"样本外年化 {_p(live['test']['full_ann'])}、回撤 {_p(live['test']['full_dd'])}、夏普 {live['test']['full_sharpe'] or 0:.2f}。", "",
              "**结论：" + ("这个方案样本外跑赢线上规则和随机仓位，可以考虑上线。" if res["beats_live"]
                          else "没有方案在样本外稳定跑赢线上规则（或没跑出随机仓位的区间），建议线上规则不变。") + "**", "",
              "| 方案 | 资金占比（同回撤） | 训练期年化 | 训练期夏普 | 样本外年化 | 样本外夏普 | 样本外回撤 | 样本外胜率 | 盈亏比 | 40% 资金：样本外年化 | 40% 资金：样本外回撤 |",

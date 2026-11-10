@@ -76,3 +76,39 @@ def test_run_end_to_end(monkeypatch):
     md = sizing.to_markdown(res)
     assert "动态仓位" in md
     assert len(res["curve"]["dates"]) == len(res["curve"]["series"]["live"])
+
+
+def test_cn_macro_uses_publication_dates(tmp_path, monkeypatch):
+    from astock import cn_macro
+    months = pd.date_range("2010-01-01", "2016-12-01", freq="MS")
+    rng = np.random.default_rng(2)
+    df = pd.DataFrame(dict(pmi=50 + rng.normal(0, 1, len(months)), m1_yoy=rng.normal(8, 3, len(months)),
+                           m2_yoy=rng.normal(11, 1, len(months)), ppi_yoy=rng.normal(0, 3, len(months)),
+                           tsf=rng.uniform(1e4, 3e4, len(months))), index=pd.Index(months, name="month"))
+    f = tmp_path / "cn_macro.csv"
+    monkeypatch.setattr(cn_macro, "FILE", f)
+    df.to_csv(f)
+    dates = pd.bdate_range("2014-01-01", "2016-06-30")
+    m1 = cn_macro.multipliers(dates)
+    assert {"cn_pmi", "cn_m1m2", "cn_credit", "cn_ppi_chg"} <= set(m1)
+    # 2015-06 的 PMI 改掉：2015-07-01 之前的系数不能变；M1 改掉：2015-07-18 之前不能变
+    df2 = df.copy()
+    df2.loc["2015-06-01", "pmi"] = 60
+    df2.loc["2015-06-01", "m1_yoy"] = 40
+    df2.to_csv(f)
+    m2 = cn_macro.multipliers(dates)
+    pd.testing.assert_series_equal(m1["cn_pmi"].loc[:"2015-06-30"], m2["cn_pmi"].loc[:"2015-06-30"])
+    assert m2["cn_pmi"].loc["2015-07-01"] > m1["cn_pmi"].loc["2015-07-01"]
+    pd.testing.assert_series_equal(m1["cn_m1m2"].loc[:"2015-07-17"], m2["cn_m1m2"].loc[:"2015-07-17"])
+    assert m2["cn_m1m2"].loc["2015-07-20"] > m1["cn_m1m2"].loc["2015-07-20"]
+    for v in m2.values():
+        assert v.min() >= 0.5 and v.max() <= 1.5
+
+
+def test_cn_macro_validate_flags_bad_values():
+    from astock import cn_macro
+    months = pd.date_range("2008-01-01", "2026-09-01", freq="MS")
+    df = pd.DataFrame(dict(pmi=50.0, pmi_non=52.0, m2_yoy=9.0, m1_yoy=5.0, ppi_yoy=1.0, cpi_yoy=2.0), index=months)
+    assert cn_macro.validate(df) == []
+    df.iloc[-1, 0] = 500
+    assert any("pmi out of range" in p for p in cn_macro.validate(df))

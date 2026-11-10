@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches: [claude/project-thread-exfcys]
-    paths: ["astock/sizing.py", "scripts/astock_sizing.py", "tests/test_astock_sizing.py", ".github/workflows/astock-sizing.yml"]
+    paths: ["astock/sizing.py", "astock/cn_macro.py", "scripts/fetch_cn_macro.py", "scripts/astock_sizing.py", "tests/test_astock_sizing.py", ".github/workflows/astock-sizing.yml"]
 
 permissions:
   contents: write
@@ -45,13 +45,16 @@ jobs:
         with:
           path: data/astock/cache
           key: astock-kline-sizing-fullfc
+      - name: Fetch China macro data (public endpoints, no token)
+        timeout-minutes: 10
+        run: python scripts/fetch_cn_macro.py
       - name: Sizing backtest
         run: python scripts/astock_sizing.py
       - name: Commit results
         run: |
           git config user.name "astock-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/astock/sizing.md docs/astock/sizing.json
+          git add reports/astock/sizing.md docs/astock/sizing.json data/raw/cn_macro.csv reports/astock/cn_macro_check.json
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "astock: sizing study $(date -u +%F) [skip ci]"
           for i in 1 2 3 4; do
