@@ -381,7 +381,14 @@ def run(kline, basic, valuation=None, forecast=None):
     wk = eq.resample("W-FRI").last()
     curve = dict(dates=[str(d.date()) for d in wk.index], series={k: [round(float(x), 4) for x in wk[k].ffill()] for k in wk})
     m_now = {k: float(v.iloc[-1]) for k, v in mm.items()}
-    return dict(updated=end, n=n, share=share, target_dd=target_dd, rows=rows, noise=noise, random=rand,
+    levels = []
+    for c in (0.4, 0.6, 0.8, 1.0):
+        row = dict(share=c)
+        for k in periods:
+            st = stats(bt[k] * c, base[k][1])
+            row[k] = {kk: st.get(kk) for kk in ("ann_return", "sharpe", "max_drawdown", "trade_win")}
+        levels.append(row)
+    return dict(levels=levels, updated=end, n=n, share=share, target_dd=target_dd, rows=rows, noise=noise, random=rand,
                 chosen=chosen["kind"], beats_live=verdict, curve=curve, market_now=m_now)
 
 
@@ -411,6 +418,13 @@ def to_markdown(res):
         lines.append(f"| {r['name']} | {_p(r['share'], 0)} | {_p(a['ann_return'])} | {a['sharpe'] or 0:.2f} | {_p(t['ann_return'])} | "
                      f"{t['sharpe'] or 0:.2f} | {_p(t['max_drawdown'])} | {_p(t['trade_win'], 0)} | {t['payoff'] or 0:.2f} | "
                      f"{_p(t['live_share_ann'])} | {_p(t['live_share_dd'])} |")
+    lines += ["", "## 线上规则用不同资金占比", "",
+              "| 资金占比 | 每只占总资金 | 训练期年化 | 训练期回撤 | 样本外年化 | 样本外回撤 | 样本外夏普 | 每笔胜率 |",
+              "| --- | --- | --- | --- | --- | --- | --- | --- |"]
+    for lv in res.get("levels", []):
+        a, t = lv["train"], lv["test"]
+        lines.append(f"| {_p(lv['share'], 0)} | {_p(lv['share'] / res['n'], 1)} | {_p(a['ann_return'])} | {_p(a['max_drawdown'])} | "
+                     f"{_p(t['ann_return'])} | {_p(t['max_drawdown'])} | {t['sharpe'] or 0:.2f} | {_p(t['trade_win'], 0)} |")
     years = sorted(live["test"].get("yearly") or {})
     lines += ["", "## 样本外分年收益（同回撤资金占比）", "", "| 方案 | " + " | ".join(years) + " |", "| --- |" + " --- |" * len(years)]
     for r in res["rows"]:

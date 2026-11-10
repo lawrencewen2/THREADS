@@ -96,7 +96,7 @@ def fetch_nbs_pmi():
 def validate(df):
     """范围检查：数值离谱或月份断档太多就报错，不写文件。"""
     problems = []
-    rng = dict(pmi=(35, 60), pmi_non=(30, 65), m2_yoy=(0, 35), m1_yoy=(-15, 50), ppi_yoy=(-15, 20), cpi_yoy=(-5, 10))
+    rng = dict(pmi=(35, 60), pmi_non=(25, 65), m2_yoy=(0, 35), m1_yoy=(-15, 50), ppi_yoy=(-15, 20), cpi_yoy=(-5, 10))
     for c, (lo, hi) in rng.items():
         if c not in df:
             problems.append(f"{c} missing")
@@ -111,7 +111,17 @@ def validate(df):
         gaps = len(pd.date_range(recent.index.min(), recent.index.max(), freq="MS")) - len(recent) if len(recent) else 99
         if gaps > 3:
             problems.append(f"{c} has {gaps} missing months since 2014")
+    # 统计局官网境外 IP 常被拒（403），所以再用几个公开的历史值核对口径（统计局 / 人民银行公布数）
+    for (c, m), v in ANCHORS.items():
+        got = df[c].get(pd.Timestamp(m)) if c in df else None
+        if got is None or not np.isfinite(got) or abs(got - v) > 0.051:
+            problems.append(f"{c} {m}: got {got}, official {v}")
     return problems
+
+
+ANCHORS = {("pmi", "2020-02-01"): 35.7, ("pmi", "2024-12-01"): 50.1, ("pmi_non", "2020-02-01"): 29.6,
+           ("m2_yoy", "2023-12-01"): 9.7, ("m1_yoy", "2023-12-01"): 1.3, ("cpi_yoy", "2023-12-01"): -0.3,
+           ("ppi_yoy", "2023-12-01"): -2.7}
 
 
 def fetch():

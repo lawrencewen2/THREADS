@@ -109,6 +109,14 @@ def test_cn_macro_validate_flags_bad_values():
     from astock import cn_macro
     months = pd.date_range("2008-01-01", "2026-09-01", freq="MS")
     df = pd.DataFrame(dict(pmi=50.0, pmi_non=52.0, m2_yoy=9.0, m1_yoy=5.0, ppi_yoy=1.0, cpi_yoy=2.0), index=months)
-    assert cn_macro.validate(df) == []
+    monkeypatch_anchors = {}
+    cn_macro.ANCHORS, old = monkeypatch_anchors, cn_macro.ANCHORS
+    try:
+        assert cn_macro.validate(df) == []
+        df.iloc[-1, 0] = 500
+        assert any("pmi out of range" in p for p in cn_macro.validate(df))
+    finally:
+        cn_macro.ANCHORS = old
+    return
     df.iloc[-1, 0] = 500
     assert any("pmi out of range" in p for p in cn_macro.validate(df))
