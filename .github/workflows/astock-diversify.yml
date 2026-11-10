@@ -29,6 +29,7 @@ jobs:
       - run: pip install -r astock/requirements.txt
       - name: ETF history
         timeout-minutes: 15
+        continue-on-error: true
         run: python scripts/astock_diversify_dump.py --etf
       - name: Restore price cache
         id: restore

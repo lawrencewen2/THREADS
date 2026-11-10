@@ -114,10 +114,29 @@ def eastmoney(session, sym):
     return df
 
 
-def dump_etf():
-    import requests
+class _Resp:
+    def __init__(self, body):
+        self.body = body
 
-    s = requests.Session()
+    def raise_for_status(self):
+        pass
+
+    def json(self):
+        return json.loads(self.body)
+
+
+class _Session:
+    """标准库 urllib，astock 的依赖里没有 requests。"""
+
+    def get(self, url, headers=None, timeout=20):
+        import urllib.request
+        req = urllib.request.Request(url, headers=headers or {})
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return _Resp(r.read().decode("utf-8", errors="replace"))
+
+
+def dump_etf():
+    s = _Session()
     d = OUT / "etf"
     d.mkdir(parents=True, exist_ok=True)
     meta = []
