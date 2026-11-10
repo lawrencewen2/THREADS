@@ -28,7 +28,9 @@ HOUR_START = "2021-01-01"  # 从境外 runner 拉 baostock 60 分钟线很慢（
 HOUR_FIELDS = "date,time,code,open,high,low,close,volume,amount"
 TRAIN_END = "2023-12-31"
 TEST_START = "2024-01-01"
-MODEL_FILE = config.ROOT / "astock" / "early_volume_model.json"
+# 回测选出的规则只写进报告目录。实盘名单读 astock/early_volume_model.json（early_live.MODEL_FILE），
+# 只有回测真的过关、人工确认后才复制过去；2026-11-10 回测没过关，所以实盘只观察不出名单
+MODEL_FILE = config.REPORT_DIR / "early_volume_rule.json"
 REPORT_FILE = config.REPORT_DIR / "early_volume.md"
 PAGE_FILE = config.PAGE_DIR / "early_volume.json"
 

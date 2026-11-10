@@ -134,6 +134,9 @@ def update(out, ref, quotes, now_cn, model=None):
         phase = "已收盘"
     cand = match(q, model, breadth) if model else q.iloc[0:0]
     top_n = (model or {}).get("top_n", 5)
+    if not st.get("snapshot") and FREEZE <= now_cn.time() < time(11, 30):
+        _snapshot(out, q, auction, now_cn)  # 不管有没有规则都存 10:30 快照，以后检验竞价成交量
+        st["snapshot"] = now_cn.strftime("%H:%M")
     if model and not st["frozen"] and FREEZE <= now_cn.time() < time(11, 30):
         r = model["rule"]
         st["picks"] = [dict(_row(x, auction), entry=round(float(x["close"]), 2),
@@ -144,7 +147,6 @@ def update(out, ref, quotes, now_cn, model=None):
         st["breadth_at_freeze"] = round(breadth, 3)
         names = "、".join(f"{p['name']}（{p['code']}）" for p in st["picks"]) or "无（今天没有股票符合条件）"
         notes.append((f"early:{day}:freeze", f"早盘放量名单 {st['frozen_at']}：{names}"))
-        _snapshot(out, q, auction, now_cn)
     # 名单固定后跟踪现价、止损止盈（T+1，当天只能看不能卖）
     px = dict(zip(q["code"], q["close"]))
     for p in st["picks"]:
@@ -195,7 +197,9 @@ def issue_lines(st):
         if not st["picks"]:
             lines.append("| 今天没有符合条件的股票 | | | | | | | | |")
     else:
-        lines += ["量比最高（10:30 前随时变化，仅供观察）：", "", "| 股票 | 现价 | 今日 | 量比 | 竞价 | 符合规则 |", "| --- | --- | --- | --- | --- | --- |"]
+        if not st.get("rule"):
+            lines += ["回测（2021 年起）没找到扣成本后能赚钱的量比/竞价规则，这里只观察、不出买入名单；每天记竞价成交量，攒够数据再测。", ""]
+        lines += ["量比最高（随时变化，仅供观察）：", "", "| 股票 | 现价 | 今日 | 量比 | 竞价 | 符合规则 |", "| --- | --- | --- | --- | --- | --- |"]
         hits = {r["code"] for r in st.get("matching", [])}
         for r in st.get("top_volume", [])[:10]:
             lines.append(f"| {r['name']} {r['code']} | {r['price']} | {r['pct']:+.2f}% | {r['lb']} | {r['gap']:+.2f}% | "

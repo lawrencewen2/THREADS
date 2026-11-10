@@ -84,6 +84,16 @@ def test_live_monitor(tmp_path):
     st = __import__("json").loads((tmp_path / "early.json").read_text())
     assert st["picks"][0]["status"] == "触及止损"
 
+    # 没有规则文件：只观察，照样存 10:30 快照和竞价
+    obs = tmp_path / "obs"
+    obs.mkdir()
+    early_live.update(obs, ref, quotes(t1, 1, 1.01), t1, None)
+    assert early_live.update(obs, ref, quotes(t2, 40, 1.02), t2, None) == []
+    st = __import__("json").loads((obs / "early.json").read_text())
+    assert not st["picks"] and st["auction"] and st["top_volume"]
+    assert (obs / "early_log" / "2026-11-10.csv.gz").exists()
+    assert any("只观察" in x for x in early_live.issue_lines(st))
+
 
 def test_write_ref():
     from astock import early_live
