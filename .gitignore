@@ -3,3 +3,4 @@ __pycache__/
 .cache/
 .pytest_cache/
 data/astock/cache/
+data/astock/m5/
