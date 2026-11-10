@@ -10,12 +10,15 @@
 CPI / PPI 一般次月 9–10 日，按次月 12 日起可用；M1 / M2、贷款、社融一般次月 10–15 日，按次月 18 日起可用。
 """
 
+import json
 import logging
 import time
+import urllib.error
+import urllib.parse
+import urllib.request
 
 import numpy as np
 import pandas as pd
-import requests
 
 from . import config
 
@@ -36,13 +39,23 @@ EM_REPORTS = {
 AVAILABLE = {"pmi": 0, "pmi_non": 0, "cpi_yoy": 12, "ppi_yoy": 12, "m2_yoy": 18, "m1_yoy": 18, "loan_new": 18, "tsf": 18}
 
 
-def _get(url, tries=4, method="GET", **kw):
+class _Resp:
+    def __init__(self, body):
+        self.body = body
+
+    def json(self):
+        return json.loads(self.body)
+
+
+def _get(url, tries=4, method="GET", params=None):
+    """标准库 urllib 发只读请求（不加第三方依赖）。"""
+    full = url + ("?" + urllib.parse.urlencode(params) if params else "")
     for i in range(tries):
         try:
-            r = requests.request(method, url, headers=UA, timeout=30, **kw)
-            r.raise_for_status()
-            return r
-        except requests.RequestException as exc:
+            req = urllib.request.Request(full, headers=UA, method=method, data=b"" if method == "POST" else None)
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return _Resp(r.read().decode("utf-8"))
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as exc:
             log.warning("%s failed (%d/%d): %s", url, i + 1, tries, exc)
             time.sleep(2 ** i)
     raise RuntimeError(f"{url} unreachable")
