@@ -1,0 +1,30 @@
+name: astock-volume
+
+# 早盘放量（集合竞价 + 9:30–10:30 成交量）研究，2026-11-10。只在本分支推送或手动触发时跑。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-55jhv3]
+    paths: ["scripts/probe_minute.py", ".github/workflows/astock-volume.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-volume
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt requests
+      - run: python scripts/probe_minute.py
