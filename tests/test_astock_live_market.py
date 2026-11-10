@@ -55,3 +55,18 @@ def test_stale_quotes_ignored():
     q = _quotes_for(k, days[-2])  # 昨天的报价（停牌或还没开盘）不算
     now = datetime.combine(pd.Timestamp(days[-1]).date(), datetime.min.time()).replace(hour=10, tzinfo=live_market.CN_TZ)
     assert live_market.build(ref, q, now) is None
+
+
+def test_early_session_amount_uses_yesterday():
+    k, *_ = _setup()
+    days = sorted(k["date"].unique())
+    p_prev = Panel(k[k["date"] <= days[-2]])
+    ref = insight.live_ref(p_prev, insight.market_temperature(p_prev))
+    q = _quotes_for(k, days[-1])
+    q["amount"] = q["amount"] * 0.01  # 集合竞价时成交额很小
+    q["time"] = pd.Timestamp(days[-1]) + pd.Timedelta(hours=9, minutes=26)
+    now = datetime.combine(pd.Timestamp(days[-1]).date(), datetime.min.time()).replace(hour=9, minute=26,
+                                                                                       tzinfo=live_market.CN_TZ)
+    res = live_market.build(ref, q, now)
+    assert res["amount_full_day"] is None
+    assert res["amount_ratio"] > 0.5
