@@ -1,6 +1,9 @@
 """早盘放量（集合竞价 + 9:30–10:30 成交量）选股回测。在 GitHub Actions 里跑（需要 baostock 和日线缓存）。
 
-python scripts/astock_early_volume.py [--no-fetch]
+从境外 runner 拉 baostock 60 分钟线每只约 10 秒，全市场要十几个小时，所以分片并行：
+  python scripts/astock_early_volume.py --shard 3 --shards 8 --out parts/   # 只拉第 3 片，写 parts/hour1_3.pkl.gz
+  python scripts/astock_early_volume.py --merge parts/                      # 合并各片进缓存，然后回测
+  python scripts/astock_early_volume.py --no-fetch                          # 只用缓存回测
 """
 
 import argparse
@@ -8,9 +11,9 @@ import logging
 import sys
 from pathlib import Path
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import pandas as pd
 
-import pandas as pd  # noqa: E402
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from astock import data, early_volume  # noqa: E402
 
@@ -18,19 +21,33 @@ from astock import data, early_volume  # noqa: E402
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-fetch", action="store_true", help="只用缓存里的 60 分钟线")
+    ap.add_argument("--shard", type=int)
+    ap.add_argument("--shards", type=int, default=1)
+    ap.add_argument("--out", default="parts")
+    ap.add_argument("--merge", help="合并这个目录里的 hour1_*.pkl.gz 再回测")
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     basic = data.load_basic()
+    if a.shard is not None:
+        codes = early_volume.fetch_codes(basic)[a.shard::a.shards]
+        path = Path(a.out) / f"hour1_{a.shard}.pkl.gz"
+        hour, failed = early_volume.update_hour(codes, path=path)
+        logging.info("shard %d: %d codes, %d rows, %d failed", a.shard, len(codes), len(hour), len(failed))
+        return
     kline = data.load_kline()
     if kline is None:
         raise SystemExit("no daily kline cache")
-    hour = early_volume.load_hour()
-    if a.no_fetch:
-        logging.info("using cached hour bars (to %s)", None if hour is None else hour["date"].max().date())
+    if a.merge:
+        files = sorted(Path(a.merge).rglob("hour1_*.pkl.gz"))
+        logging.info("merging %d parts", len(files))
+        hour = early_volume.merge_parts(files)
+    elif a.no_fetch:
+        hour = early_volume.load_hour()
     else:
-        # 已经拉到近几天的股票跳过；没拉完的（上次超时）接着拉
-        hour, failed = early_volume.update_hour(data.stock_codes(basic), fresh_since=kline["date"].max() - pd.Timedelta(days=4))
+        hour, failed = early_volume.update_hour(early_volume.fetch_codes(basic),
+                                                fresh_since=kline["date"].max() - pd.Timedelta(days=4))
         logging.info("hour bars: %d rows, %d codes failed", len(hour), len(failed))
+    logging.info("hour bars to %s, %d codes", hour["date"].max().date(), hour["code"].nunique())
     panel = early_volume.build_panel(kline, hour, basic)
     logging.info("panel %d rows", len(panel))
     res = early_volume.run(panel)

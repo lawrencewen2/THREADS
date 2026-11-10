@@ -6,7 +6,7 @@ from astock import early_volume as ev
 
 def _fake(n_codes=40, n_days=900, seed=0):
     rng = np.random.default_rng(seed)
-    dates = pd.bdate_range("2019-11-01", periods=n_days)
+    dates = pd.bdate_range("2020-11-01", periods=n_days)
     rows, hrows = [], []
     for i in range(n_codes):
         code = f"sz.00{i:04d}"

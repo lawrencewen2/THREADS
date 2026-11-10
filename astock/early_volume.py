@@ -4,11 +4,11 @@
 而且按 A股 T+1 规则第二天卖出后（带止损止盈、扣成本）还赚钱的股票？
 
 数据：
-- baostock 60 分钟线（2020 年起），只留每天第一根（9:30–10:30）：10:30 价格、第一小时最高最低、成交量、成交额
+- baostock 60 分钟线（2021 年起），只留每天第一根（9:30–10:30）：10:30 价格、第一小时最高最低、成交量、成交额
 - 日线缓存（data/astock/cache/kline.pkl.gz）：开盘价 = 集合竞价成交价、昨收、收盘、第二天的开高低收
 - 集合竞价的成交量只有腾讯最近 5 天的 1 分钟线里有（9:30 那根），历史回测拿不到，只能实盘开始逐日记录
 
-训练期 2020–2022 定规则，2023 年起全部是样本外。
+训练期 2021–2023 定规则，2024 年起全部是样本外。
 """
 
 import json
@@ -24,10 +24,10 @@ from . import config, data
 log = logging.getLogger(__name__)
 
 HOUR_FILE = config.CACHE_DIR / "hour1.pkl.gz"
-HOUR_START = "2020-01-01"
+HOUR_START = "2021-01-01"  # 从境外 runner 拉 baostock 60 分钟线很慢（每只约 10 秒），只拉 2021 年起
 HOUR_FIELDS = "date,time,code,open,high,low,close,volume,amount"
-TRAIN_END = "2022-12-31"
-TEST_START = "2023-01-01"
+TRAIN_END = "2023-12-31"
+TEST_START = "2024-01-01"
 MODEL_FILE = config.ROOT / "astock" / "early_volume_model.json"
 REPORT_FILE = config.REPORT_DIR / "early_volume.md"
 PAGE_FILE = config.PAGE_DIR / "early_volume.json"
@@ -83,26 +83,41 @@ def clean_hour(df):
     return out
 
 
-def load_hour():
-    return pd.read_pickle(HOUR_FILE) if HOUR_FILE.exists() else None
+def load_hour(path=HOUR_FILE):
+    return pd.read_pickle(path) if path.exists() else None
 
 
-def _save_hour(old, parts):
+def fetch_codes(basic):
+    """要拉 60 分钟线的股票：沪深 A股，2021 年前已退市的不要。"""
+    b = basic[(basic["type"] == "1") & basic["code"].str[:5].isin(config.BOARD_PREFIXES)]
+    out = pd.to_datetime(b["outDate"], errors="coerce")
+    b = b[out.isna() | (out >= pd.Timestamp(HOUR_START))]
+    return sorted(b["code"])
+
+
+def merge_parts(files):
+    parts = [pd.read_pickle(f) for f in files]
+    old = load_hour()
+    return _save_hour(old, parts)
+
+
+def _save_hour(old, parts, path=HOUR_FILE):
     out = pd.concat(([old] if old is not None else []) + parts, ignore_index=True)
     out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
     config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    out.to_pickle(HOUR_FILE)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    out.to_pickle(path)
     return out
 
 
-def update_hour(codes, end=None, workers=config.FETCH_WORKERS, fresh_since=None):
+def update_hour(codes, end=None, workers=config.FETCH_WORKERS, fresh_since=None, path=HOUR_FILE):
     """每只股票一次查询（整段历史），已有缓存的从末尾前 5 天续拉。每只股票只查一次，避免再被 baostock 拉黑。
 
     第一次全量约需几个小时：每拉完约 300 只落盘一次，任务超时中断后下次只拉还没拉到的（缓存末尾 ≥ fresh_since 的跳过）。"""
     from multiprocessing import Pool
 
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
-    old = load_hour()
+    old = load_hour(path)
     last = old.groupby("code")["date"].max() if old is not None else pd.Series(dtype="datetime64[ns]")
     items = []
     for code in codes:
@@ -124,8 +139,8 @@ def update_hour(codes, end=None, workers=config.FETCH_WORKERS, fresh_since=None)
             failed += bad
             log.info("hour chunks %d/%d", i, len(jobs))
             if len(parts) >= 300:
-                old, parts = _save_hour(old, parts), []
-    return _save_hour(old, parts), failed
+                old, parts = _save_hour(old, parts, path), []
+    return _save_hour(old, parts, path), failed
 
 
 def limit_pct(code, date, st):
@@ -366,7 +381,7 @@ def describe(r):
 def to_markdown(res):
     b = res["best"]
     L = [f"# 早盘放量选股回测（集合竞价 + 9:30–10:30 成交量）", "",
-         f"数据 {res['start']} 至 {res['end']}，{res['rows']:,} 个可交易的股票日。训练期 2020–2022 定规则，2023 年起是样本外。",
+         f"数据 {res['start']} 至 {res['end']}，{res['rows']:,} 个可交易的股票日。训练期 2021–2023 定规则，2024 年起是样本外。",
          "10:30 按第一小时收盘价买入（加滑点和佣金），A股 T+1，第二天卖出。“当天收盘高于10:30”是用户关心的当天上涨，"
          "“胜率”是第二天卖出扣完成本后是否赚钱。集合竞价只用了开盘价（高开低开），竞价成交量没有历史数据。", "",
          "## 不挑股票的基准（所有股票 10:30 买、第二天收盘卖）", "",
