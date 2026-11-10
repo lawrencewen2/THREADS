@@ -33,8 +33,7 @@ jobs:
       - name: Restore daily kline cache
         uses: actions/cache/restore@v4
         with:
-          path: |
-            data/astock/cache/kline.pkl.gz
+          path: data/astock/cache
           key: astock-kline-${{ github.run_id }}
           restore-keys: astock-kline-
       - name: Restore hourly cache
@@ -43,6 +42,8 @@ jobs:
           path: data/astock/cache/hour1.pkl.gz
           key: astock-hour-${{ github.run_id }}
           restore-keys: astock-hour-
+      - name: Check daily cache
+        run: test -f data/astock/cache/kline.pkl.gz && ls -la data/astock/cache
       - name: Early-volume study
         run: python scripts/astock_early_volume.py
       - name: Save hourly cache
