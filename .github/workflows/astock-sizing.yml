@@ -37,7 +37,7 @@ jobs:
           restore-keys: astock-kline-
       - name: Make sure forecasts go back to 2014
         if: steps.restore.outputs.cache-matched-key != 'astock-kline-sizing-fullfc'
-        timeout-minutes: 40
+        timeout-minutes: 100
         run: python scripts/astock_sizing.py --ensure-forecast
       - name: Save cache with full forecasts
         if: steps.restore.outputs.cache-matched-key != 'astock-kline-sizing-fullfc'
