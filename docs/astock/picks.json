@@ -18,18 +18,18 @@
  "universe_size": 4004,
  "picks": [
   {
-   "code": "sz.000701",
-   "name": "厦门信达",
-   "rank": 13,
+   "code": "sh.688530",
+   "name": "欧莱新材",
+   "rank": 12,
    "score": 0.3411,
-   "close": 6.09,
+   "close": 44.77,
    "action": "观察",
    "selected": false,
    "weight": 0.02,
-   "stop_pct": -0.2292,
-   "take_profit_pct": 0.1528,
-   "stop_price_ref": 4.69,
-   "take_profit_price_ref": 7.02
+   "stop_pct": -0.2766,
+   "take_profit_pct": 0.1844,
+   "stop_price_ref": 32.39,
+   "take_profit_price_ref": 53.03
   },
   {
    "code": "sz.000889",
@@ -385,6 +385,21 @@
    "selected": false
   },
   {
+   "code": "sz.000701",
+   "name": "厦门信达",
+   "rank": 13,
+   "score": 0.3411,
+   "close": 6.09,
+   "entry_date": "2026-11-04",
+   "entry_price": 5.99,
+   "stop_price": 4.63,
+   "take_profit_price": 6.9,
+   "days_held": 5,
+   "weight": 0.02,
+   "action": "空仓卖出",
+   "selected": false
+  },
+  {
    "code": "sz.301292",
    "name": "海科新源",
    "rank": 2,
@@ -424,21 +439,6 @@
    "entry_price": 36.2,
    "stop_price": 32.1,
    "take_profit_price": 38.93,
-   "days_held": 4,
-   "weight": 0.02,
-   "action": "空仓卖出",
-   "selected": false
-  },
-  {
-   "code": "sh.688530",
-   "name": "欧莱新材",
-   "rank": 12,
-   "score": 0.3411,
-   "close": 44.77,
-   "entry_date": "2026-11-05",
-   "entry_price": 42.0,
-   "stop_price": 30.26,
-   "take_profit_price": 49.82,
    "days_held": 4,
    "weight": 0.02,
    "action": "空仓卖出",
