@@ -94,10 +94,11 @@ def fetch_quotes(codes, session=None):
         try:
             t = datetime.strptime(f[30], "%Y%m%d%H%M%S")
             rows.append(dict(code=s[:2] + "." + s[2:], time=t, close=float(f[3] or 0), preclose=float(f[4] or 0),
-                             volume=float(f[6] or 0), amount=float(f[37] or 0) * 1e4))
+                             volume=float(f[6] or 0), amount=float(f[37] or 0) * 1e4, open=float(f[5] or 0),
+                             high=float(f[33] or 0), low=float(f[34] or 0)))
         except (ValueError, IndexError):
             continue
-    return pd.DataFrame(rows, columns=["code", "time", "close", "preclose", "volume", "amount"])
+    return pd.DataFrame(rows, columns=["code", "time", "close", "preclose", "volume", "amount", "open", "high", "low"])
 
 
 def today_metrics(ref, quotes, day):
@@ -171,10 +172,11 @@ def build(ref, quotes, now_cn):
     )
 
 
-def run(ref, now_cn=None, session=None):
+def run(ref, now_cn=None, session=None, quotes=None):
     now_cn = now_cn or datetime.now(CN_TZ)
     if now_cn.weekday() >= 5 or now_cn.time() < time(9, 25):
         return None
-    quotes = fetch_quotes(list(ref["codes"].keys()), session)
+    if quotes is None:
+        quotes = fetch_quotes(list(ref["codes"].keys()), session)
     log.info("live market: %d quotes", len(quotes))
     return build(ref, quotes, now_cn)

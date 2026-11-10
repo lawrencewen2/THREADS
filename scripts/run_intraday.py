@@ -12,14 +12,14 @@ import json
 import logging
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, time
 from pathlib import Path
 
 import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import live_market  # noqa: E402
+from astock import early_live, live_market  # noqa: E402
 from fearindex import fetch, intraday  # noqa: E402
 
 ISSUE_TITLE = "盘中监控：恐慌贪婪指数"
@@ -42,7 +42,7 @@ def picks_table(rows):
     return lines
 
 
-def issue_body(est, errors, picks=None):
+def issue_body(est, errors, picks=None, early=None):
     t = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)
     lines = [f"**更新于北京时间 {t:%Y-%m-%d %H:%M}**（交易时段每 2 分钟左右自动刷新）", "",
              "分数 0 = 极度恐慌，100 = 极度贪婪。盘中读数 = 如果现在收盘，指数是多少；正式读数以收盘后为准。", "",
@@ -57,6 +57,8 @@ def issue_body(est, errors, picks=None):
             note = f"{r['session']}，显示 {r['official_date']} 收盘"
         lines.append(f"| {r['name']} | {r['score']:.1f}（{r['band']}） | {ch} | {r['signal_text']} | {note} |")
     lines += picks_table(picks or [])
+    if early and early.get("date") == f"{t:%Y-%m-%d}":
+        lines += early_live.issue_lines(early)
     lines += ["", "<details><summary>行情时间</summary>", "", "| 序列 | 最新值 | 行情时间（北京） | 已计入 |", "| --- | --- | --- | --- |"]
     for k, q in sorted(est["quotes"].items()):
         qt = datetime.fromisoformat(q["time"]).astimezone(intraday.CN_TZ)
@@ -113,23 +115,53 @@ def write_today(out, now_cn):
     (out / "today.json").write_text(json.dumps(rows, ensure_ascii=False))
 
 
-def update_market(out):
-    """A股盘中市场温度和涨跌家数，写 market.json。收盘后算过一次当天的最终数就不再重算。"""
-    if not MARKET_REF_PATH.exists():
-        return
-    path = out / "market.json"
-    now_cn = datetime.now(live_market.CN_TZ)
+def _read_json(path):
     try:
-        old = json.loads(path.read_text()) if path.exists() else {}
-        if old.get("date") == str(now_cn.date()) and old.get("session") == "已收盘":
-            return
-        res = live_market.run(json.loads(MARKET_REF_PATH.read_text()), now_cn)
+        return json.loads(path.read_text()) if path.exists() else None
+    except ValueError:
+        return None
+
+
+def update_market(out):
+    """A股盘中市场温度和涨跌家数，写 market.json；同一份全市场行情再给早盘放量监测用（early.json）。
+    收盘后算过一次当天的最终数就不再重算。返回早盘放量的新提醒。"""
+    now_cn = datetime.now(live_market.CN_TZ)
+    if now_cn.weekday() >= 5 or now_cn.time() < early_live.AUCTION_START:
+        return []
+    path = out / "market.json"
+    ref = json.loads(MARKET_REF_PATH.read_text()) if MARKET_REF_PATH.exists() else None
+    early_ref = json.loads(early_live.REF_FILE.read_text()) if early_live.REF_FILE.exists() else None
+    old = json.loads(path.read_text()) if path.exists() else {}
+    market_done = old.get("date") == str(now_cn.date()) and old.get("session") == "已收盘"
+    early_done = now_cn.time() >= time(15, 5)
+    codes = set()
+    if ref and not market_done:
+        codes |= set(ref["codes"])
+    if early_ref and not early_done:
+        codes |= set(early_ref["codes"])
+    if not codes:
+        return []
+    try:
+        quotes = live_market.fetch_quotes(sorted(codes))
     except Exception as exc:
-        logging.warning("market: %s: %s", type(exc).__name__, exc)
-        return
-    if res is not None:
-        path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
-        logging.info("market: %s 温度 %s 涨 %s 跌 %s", res["time"], res["temperature"], res["up"], res["down"])
+        logging.warning("quotes: %s: %s", type(exc).__name__, exc)
+        return []
+    if ref and not market_done:
+        try:
+            res = live_market.run(ref, now_cn, quotes=quotes)
+            if res is not None:
+                path.write_text(json.dumps(res, ensure_ascii=False, indent=1))
+                logging.info("market: %s 温度 %s 涨 %s 跌 %s", res["time"], res["temperature"], res["up"], res["down"])
+        except Exception as exc:
+            logging.warning("market: %s: %s", type(exc).__name__, exc)
+    notes = []
+    if early_ref and not early_done:
+        try:
+            model = json.loads(early_live.MODEL_FILE.read_text()) if early_live.MODEL_FILE.exists() else None
+            notes = early_live.update(out, early_ref, quotes, now_cn, model)
+        except Exception as exc:
+            logging.warning("early: %s: %s", type(exc).__name__, exc)
+    return notes
 
 
 def main():
@@ -163,7 +195,7 @@ def main():
         except Exception as exc:
             logging.warning("picks: %s: %s", type(exc).__name__, exc)
     (out / "picks.json").write_text(json.dumps(picks, ensure_ascii=False, indent=1))
-    update_market(out)
+    early_notes = update_market(out)
 
     # 每次运行一行，供当天走势和收盘后与正式读数核对
     now_cn = datetime.fromisoformat(est["as_of"]).astimezone(intraday.CN_TZ)
@@ -185,6 +217,9 @@ def main():
         tag = f"{est['regions'][key]['date']}:{key}:{kind}"
         if tag not in sent:
             new.append((tag, text))
+    for tag, text in early_notes:
+        if tag not in sent:
+            new.append((tag, text))
     for code, kind, text in pick_notes:
         tag = f"{now_cn:%Y-%m-%d}:{code}:{kind}"
         if tag not in sent:
@@ -194,7 +229,7 @@ def main():
     if token and repo:
         gh = GitHub(token, repo)
         number = state.get("issue") or gh.find_issue()
-        state["issue"] = gh.upsert_issue(number, issue_body(est, errors, picks))
+        state["issue"] = gh.upsert_issue(number, issue_body(est, errors, picks, _read_json(out / "early.json")))
         for tag, text in new:
             gh.comment(state["issue"], f"{text}\n\n北京时间 {now_cn:%m-%d %H:%M}，盘中预估，收盘后可能改变。")
             sent[tag] = now_cn.isoformat(timespec="minutes")

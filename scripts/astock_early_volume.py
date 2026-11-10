@@ -10,6 +10,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import pandas as pd  # noqa: E402
+
 from astock import data, early_volume  # noqa: E402
 
 
@@ -22,8 +24,10 @@ def main():
     kline = data.load_kline()
     if kline is None:
         raise SystemExit("no daily kline cache")
-    if a.no_fetch:
-        hour = early_volume.load_hour()
+    hour = early_volume.load_hour()
+    fresh = hour is not None and hour["date"].max() >= kline["date"].max() - pd.Timedelta(days=4)
+    if a.no_fetch or fresh:
+        logging.info("using cached hour bars (to %s)", None if hour is None else hour["date"].max().date())
     else:
         hour, failed = early_volume.update_hour(data.stock_codes(basic))
         logging.info("hour bars: %d rows, %d codes failed", len(hour), len(failed))

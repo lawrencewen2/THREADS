@@ -38,7 +38,7 @@ TOP_N = 5  # 每天最多买几只（按量比从高到低）
 CAPITAL_SHARE = 0.5  # T 日买、T+1 卖，资金分两半轮流用
 
 # 规则网格
-LB_MIN = (1.5, 2.0, 3.0, 5.0)  # 10:30 量比下限（标准量比：每分钟成交量 / 过去 5 日每分钟均量）
+LB_MIN = (1.5, 2.0, 3.0, 5.0)  # 10:30 量比下限（每分钟成交额 / 过去 5 日每分钟平均成交额）
 LB_MAX = (math.inf, 10.0)
 GAP = {"不限": (-1, 1), "低开": (-1, -0.005), "平开±2%": (-0.02, 0.02), "高开0–5%": (0.0, 0.05), "高开2–7%": (0.02, 0.07)}
 R1 = {"不限": (-1, 1), "第一小时涨": (0.0, 1), "第一小时跌": (-1, 0.0)}
@@ -132,6 +132,7 @@ def build_panel(kline, hour, basic):
     k = k[k["code"].str[:5].isin(config.BOARD_PREFIXES)].sort_values(["code", "date"])
     g = k.groupby("code", sort=False)
     k["vol5"] = g["volume"].transform(lambda s: s.shift(1).rolling(5, min_periods=5).mean())
+    k["amt5"] = g["amount"].transform(lambda s: s.shift(1).rolling(5, min_periods=5).mean())
     k["amt20"] = g["amount"].transform(lambda s: s.shift(1).rolling(20, min_periods=15).mean())
     k["ret5"] = k["preclose"] / g["close"].shift(5) - 1
     for c in ("open", "high", "low", "close", "date", "tradestatus"):
@@ -147,11 +148,13 @@ def build_panel(kline, hour, basic):
     pct = limit_pct(p["code"], p["date"], p["isST"])
     up_px = np.round(p["preclose"] * (1 + pct) + 1e-6, 2)
     ok = ((p["tradestatus"] == 1) & (p["isST"] == 0) & (listed >= config.MIN_LISTED_DAYS)
-          & (p["amt20"] >= config.MIN_AMOUNT_20D) & (p["h1_vol"] > 0) & (p["vol5"] > 0)
+          & (p["amt20"] >= config.MIN_AMOUNT_20D) & (p["h1_amount"] > 0) & (p["amt5"] > 0)
           & (p["preclose"] > 0) & (p["open"] > 0)
           & (p["h1_close"] < up_px - 0.005))  # 10:30 封涨停的买不到
     p = p[ok].copy()
-    p["lb"] = 4 * p["h1_vol"] / p["vol5"]  # 标准量比：(h1_vol/60) / (vol5/240)
+    # 量比：第一小时每分钟成交额 / 过去 5 日每分钟平均成交额 =(h1/60)/(amt5/240)。用成交额不用成交量，
+    # 因为腾讯实时行情的成交量单位各板块不一，成交额统一是万元，实盘和回测口径一致
+    p["lb"] = 4 * p["h1_amount"] / p["amt5"]
     p["gap"] = p["open"] / p["preclose"] - 1
     p["r1"] = p["h1_close"] / p["open"] - 1
     p["rp"] = p["h1_close"] / p["preclose"] - 1
@@ -411,5 +414,5 @@ def write(res):
     model = dict(rule={k: (None if v == math.inf else v) for k, v in b.items() if k in
                        ("lbmin", "lbmax", "gap", "r1", "pos", "gate", "sl", "tp")},
                  gap_range=GAP[b["gap"]], r1_range=R1[b["r1"]], pos_range=POS[b["pos"]], gate_range=GATE[b["gate"]],
-                 top_n=TOP_N, oos=page["rule_test"], oos_port=page["port_test"], fitted=page["generated"])
+                 rule_text=describe(b), top_n=TOP_N, oos=page["rule_test"], oos_port=page["port_test"], fitted=page["generated"])
     MODEL_FILE.write_text(json.dumps(model, ensure_ascii=False, indent=1, default=_json), encoding="utf-8")
