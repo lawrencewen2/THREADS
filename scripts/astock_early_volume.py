@@ -42,6 +42,9 @@ def main():
         codes = [c for c in early_volume.fetch_codes(basic) if c in set(kline["code"].unique())]
         hour, failed = early_volume.fetch_sina(codes)
         logging.info("sina: %d rows, %d codes, %d failed", len(hour), hour["code"].nunique(), len(failed))
+        # 成交稀少的股票 1023 根能回溯好几年；只用大多数股票都有数据的日子（约最近一年）
+        cnt = hour.groupby("date")["code"].size()
+        hour = hour[hour["date"].isin(cnt.index[cnt >= 0.5 * cnt.max()])]
         days = sorted(hour["date"].unique())
         # 前 5 个交易日给 5 日均量预热，剩下的对半分
         mid = pd.Timestamp(days[5 + (len(days) - 5) // 2])
