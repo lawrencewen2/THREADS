@@ -25,11 +25,11 @@ def main():
     if kline is None:
         raise SystemExit("no daily kline cache")
     hour = early_volume.load_hour()
-    fresh = hour is not None and hour["date"].max() >= kline["date"].max() - pd.Timedelta(days=4)
-    if a.no_fetch or fresh:
+    if a.no_fetch:
         logging.info("using cached hour bars (to %s)", None if hour is None else hour["date"].max().date())
     else:
-        hour, failed = early_volume.update_hour(data.stock_codes(basic))
+        # 已经拉到近几天的股票跳过；没拉完的（上次超时）接着拉
+        hour, failed = early_volume.update_hour(data.stock_codes(basic), fresh_since=kline["date"].max() - pd.Timedelta(days=4))
         logging.info("hour bars: %d rows, %d codes failed", len(hour), len(failed))
     panel = early_volume.build_panel(kline, hour, basic)
     logging.info("panel %d rows", len(panel))

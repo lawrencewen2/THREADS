@@ -45,6 +45,8 @@ jobs:
       - name: Check daily cache
         run: test -f data/astock/cache/kline.pkl.gz && ls -la data/astock/cache
       - name: Early-volume study
+        # 第一次全量拉 60 分钟线要几个小时；步骤超时后照样保存已拉到的缓存，再推一次就接着拉
+        timeout-minutes: 270
         run: python scripts/astock_early_volume.py
       - name: Save hourly cache
         if: always()

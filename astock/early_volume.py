@@ -87,8 +87,18 @@ def load_hour():
     return pd.read_pickle(HOUR_FILE) if HOUR_FILE.exists() else None
 
 
-def update_hour(codes, end=None, workers=config.FETCH_WORKERS):
-    """每只股票一次查询（整段历史），已有缓存的从末尾前 5 天续拉。每只股票只查一次，避免再被 baostock 拉黑。"""
+def _save_hour(old, parts):
+    out = pd.concat(([old] if old is not None else []) + parts, ignore_index=True)
+    out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
+    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    out.to_pickle(HOUR_FILE)
+    return out
+
+
+def update_hour(codes, end=None, workers=config.FETCH_WORKERS, fresh_since=None):
+    """每只股票一次查询（整段历史），已有缓存的从末尾前 5 天续拉。每只股票只查一次，避免再被 baostock 拉黑。
+
+    第一次全量约需几个小时：每拉完约 300 只落盘一次，任务超时中断后下次只拉还没拉到的（缓存末尾 ≥ fresh_since 的跳过）。"""
     from multiprocessing import Pool
 
     end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
@@ -98,9 +108,14 @@ def update_hour(codes, end=None, workers=config.FETCH_WORKERS):
     for code in codes:
         s = HOUR_START
         if code in last.index:
+            if fresh_since is not None and last[code] >= fresh_since:
+                continue
             s = (last[code] - pd.Timedelta(days=5)).strftime("%Y-%m-%d")
         items.append((code, s))
-    chunk = 150
+    log.info("hour bars: %d codes to fetch", len(items))
+    if not items:
+        return old, []
+    chunk = 50
     jobs = [(items[i:i + chunk], end) for i in range(0, len(items), chunk)]
     parts, failed = [], []
     with Pool(max(1, workers), initializer=data._init_worker) as pool:
@@ -108,11 +123,9 @@ def update_hour(codes, end=None, workers=config.FETCH_WORKERS):
             parts += got
             failed += bad
             log.info("hour chunks %d/%d", i, len(jobs))
-    out = pd.concat(([old] if old is not None else []) + parts, ignore_index=True)
-    out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
-    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    out.to_pickle(HOUR_FILE)
-    return out, failed
+            if len(parts) >= 300:
+                old, parts = _save_hour(old, parts), []
+    return _save_hour(old, parts), failed
 
 
 def limit_pct(code, date, st):
