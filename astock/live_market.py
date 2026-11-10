@@ -137,11 +137,14 @@ def build(ref, quotes, now_cn):
         return None
     mins = minutes_traded(now_cn)
     closed = now_cn.time() >= time(15, 0)
-    # 成交额按已交易分钟折算成全天，再和过去 20 天比；开盘 15 分钟内折算误差太大，先不折算
-    scale = 1.0 if closed or mins < 15 else SESSION_MINUTES / mins
+    # 成交额按已交易分钟折算成全天，再和过去 20 天比。集合竞价和开盘 15 分钟内折算误差太大，
+    # 这时先用昨天的成交额代替（量比按昨天算），免得温度被一个很小的成交额拉低
     hist = pd.DataFrame(ref["hist"])
+    early = not closed and mins < 15
+    scale = 1.0 if closed or early else SESSION_MINUTES / mins
+    full_amount = float(hist["amount"].iloc[-1]) if early and len(hist) else m["amount"] * scale
     today = {k: m[k] for k in ("up", "down", "limit_up", "limit_down", "above_ma20")}
-    today.update(amount=m["amount"] * scale, date=str(day))
+    today.update(amount=full_amount, date=str(day))
     df = temperature_from_metrics(pd.concat([hist, pd.DataFrame([today])], ignore_index=True))
     last, prev = df.iloc[-1], df.iloc[-2]
     temp = None if np.isnan(last["temperature"]) else round(float(last["temperature"]), 2)
@@ -158,7 +161,7 @@ def build(ref, quotes, now_cn):
         net_limit=m["limit_up"] - m["limit_down"],
         up_share=round(m["up"] / max(m["up"] + m["down"], 1), 4),
         amount=round(m["amount"], 1),
-        amount_full_day=round(m["amount"] * scale, 1),
+        amount_full_day=None if early else round(m["amount"] * scale, 1),
         amount_ratio=None if np.isnan(last["amount_ratio"]) else round(float(last["amount_ratio"]), 4),
         above_ma20=round(m["above_ma20"], 4),
         median_ret=round(m["median_ret"], 4),
