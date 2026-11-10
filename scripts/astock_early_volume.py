@@ -25,6 +25,7 @@ def main():
     ap.add_argument("--shards", type=int, default=1)
     ap.add_argument("--out", default="parts")
     ap.add_argument("--merge", help="合并这个目录里的 hour1_*.pkl.gz 再回测")
+    ap.add_argument("--sina", action="store_true", help="用新浪 60 分钟线（约一年）快速回测：前一半训练、后一半样本外，结果另存 *_sina")
     a = ap.parse_args()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
     basic = data.load_basic()
@@ -37,7 +38,21 @@ def main():
     kline = data.load_kline()
     if kline is None:
         raise SystemExit("no daily kline cache")
-    if a.merge:
+    if a.sina:
+        codes = [c for c in early_volume.fetch_codes(basic) if c in set(kline["code"].unique())]
+        hour, failed = early_volume.fetch_sina(codes)
+        logging.info("sina: %d rows, %d codes, %d failed", len(hour), hour["code"].nunique(), len(failed))
+        days = sorted(hour["date"].unique())
+        # 前 5 个交易日给 5 日均量预热，剩下的对半分
+        mid = pd.Timestamp(days[5 + (len(days) - 5) // 2])
+        early_volume.TRAIN_END = str((mid - pd.Timedelta(days=1)).date())
+        early_volume.TEST_START = str(mid.date())
+        early_volume.HOUR_START = str(pd.Timestamp(days[0]).date())
+        early_volume.MIN_TRADES = 150
+        for k in ("REPORT_FILE", "PAGE_FILE", "MODEL_FILE"):
+            f = getattr(early_volume, k)
+            setattr(early_volume, k, f.with_name(f.name.replace("early_volume", "early_volume_sina")))
+    elif a.merge:
         files = sorted(Path(a.merge).rglob("hour1_*.pkl.gz"))
         logging.info("merging %d parts", len(files))
         hour = early_volume.merge_parts(files)

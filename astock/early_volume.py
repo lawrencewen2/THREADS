@@ -95,6 +95,57 @@ def fetch_codes(basic):
     return sorted(b["code"])
 
 
+SINA_URL = "https://money.finance.sina.com.cn/quotes_service/api/json_v2.php/CN_MarketData.getKLineData"
+SINA_UA = {"User-Agent": "Mozilla/5.0", "Referer": "https://finance.sina.com.cn"}
+
+
+def _sina_one(code, session):
+    import time as _t
+
+    for i in range(4):
+        try:
+            r = session.get(SINA_URL, params=dict(symbol=code.replace(".", ""), scale=60, ma="no", datalen=1023),
+                            headers=SINA_UA, timeout=20)
+            if r.status_code == 200 and r.text.strip().startswith("["):
+                rows = json.loads(r.text)
+                break
+            if r.status_code == 200 and r.text.strip() in ("null", "[]", ""):
+                return None
+        except Exception:
+            pass
+        _t.sleep(2 * 2 ** i)
+    else:
+        return None
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return None
+    df = df[df["day"].str[11:16] == "10:30"]
+    out = pd.DataFrame({"date": pd.to_datetime(df["day"].str[:10]).values, "code": code})
+    for src, dst in (("open", "h1_open"), ("high", "h1_high"), ("low", "h1_low"), ("close", "h1_close"), ("volume", "h1_vol")):
+        out[dst] = pd.to_numeric(df[src].values, errors="coerce").astype("float32")
+    # 新浪没有成交额：用第一小时均价近似（量比只看相对大小，影响很小）
+    out["h1_amount"] = (out["h1_vol"] * (out["h1_open"] + out["h1_close"]) / 2).astype("float32")
+    return out
+
+
+def fetch_sina(codes, workers=6):
+    """新浪 60 分钟线：每只最多 1023 根，约一年。速度快（几分钟拉完全市场），但历史短。"""
+    import requests
+    from concurrent.futures import ThreadPoolExecutor
+
+    session = requests.Session()
+    parts, failed = [], []
+    with ThreadPoolExecutor(workers) as ex:
+        for i, (code, df) in enumerate(zip(codes, ex.map(lambda c: _sina_one(c, session), codes)), 1):
+            if df is None:
+                failed.append(code)
+            else:
+                parts.append(df)
+            if i % 500 == 0:
+                log.info("sina %d/%d", i, len(codes))
+    return pd.concat(parts, ignore_index=True), failed
+
+
 def merge_parts(files):
     parts = [pd.read_pickle(f) for f in files]
     old = load_hour()
@@ -381,7 +432,7 @@ def describe(r):
 def to_markdown(res):
     b = res["best"]
     L = [f"# 早盘放量选股回测（集合竞价 + 9:30–10:30 成交量）", "",
-         f"数据 {res['start']} 至 {res['end']}，{res['rows']:,} 个可交易的股票日。训练期 2021–2023 定规则，2024 年起是样本外。",
+         f"数据 {res['start']} 至 {res['end']}，{res['rows']:,} 个可交易的股票日。训练期到 {TRAIN_END} 定规则，{TEST_START} 起是样本外。",
          "10:30 按第一小时收盘价买入（加滑点和佣金），A股 T+1，第二天卖出。“当天收盘高于10:30”是用户关心的当天上涨，"
          "“胜率”是第二天卖出扣完成本后是否赚钱。集合竞价只用了开盘价（高开低开），竞价成交量没有历史数据。", "",
          "## 不挑股票的基准（所有股票 10:30 买、第二天收盘卖）", "",
