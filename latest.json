@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-10T04:28+00:00",
+  "as_of": "2026-11-10T04:29+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 11.4,
+      "score": 11.5,
       "band": "极度恐慌",
       "date": "2026-11-10",
       "official": 10.7,
       "official_date": "2026-11-09",
-      "change": 0.7,
+      "change": 0.8,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -113,13 +113,13 @@
   },
   "quotes": {
     "n225": {
-      "value": 60193.87,
-      "time": "2026-11-10T04:27+00:00",
+      "value": 60211.75,
+      "time": "2026-11-10T04:28+00:00",
       "date": "2026-11-10",
       "fresh": true
     },
     "gold": {
-      "value": 4122.842,
+      "value": 4122.42,
       "time": "2026-11-10T04:28+00:00",
       "date": "2026-11-10",
       "fresh": false
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.91971,
-      "time": "2026-11-10T04:28+00:00",
+      "value": 0.91972,
+      "time": "2026-11-10T04:29+00:00",
       "date": "2026-11-10",
       "fresh": false
     },
     "usdjpy": {
-      "value": 157.985001,
-      "time": "2026-11-10T04:28+00:00",
+      "value": 157.996002,
+      "time": "2026-11-10T04:29+00:00",
       "date": "2026-11-10",
       "fresh": true
     },
     "topix": {
-      "value": 408.100006,
-      "time": "2026-11-10T04:12+00:00",
+      "value": 408.5,
+      "time": "2026-11-10T04:14+00:00",
       "date": "2026-11-10",
       "fresh": true
     },
