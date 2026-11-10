@@ -1,11 +1,13 @@
 name: astock-volume
 
-# 早盘放量（集合竞价 + 9:30–10:30 成交量）研究，2026-11-10。只在本分支推送或手动触发时跑。
+# 早盘放量（集合竞价 + 9:30–10:30 成交量）选股回测，2026-11-10。只在本分支推送或手动触发时跑。
+# 60 分钟线每只股票只查一次 baostock（整段历史），存进单独的缓存 astock-hour-*，之后只续拉。
 on:
   workflow_dispatch:
   push:
     branches: [claude/project-thread-55jhv3]
-    paths: ["scripts/probe_minute.py", ".github/workflows/astock-volume.yml"]
+    paths: ["astock/early_volume.py", "scripts/astock_early_volume.py", "tests/test_astock_early_volume.py",
+            ".github/workflows/astock-volume.yml"]
 
 permissions:
   contents: write
@@ -15,9 +17,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  probe:
+  study:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 300
     steps:
       - uses: actions/checkout@v4
         with:
@@ -26,5 +28,38 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r astock/requirements.txt requests
-      - run: python scripts/probe_minute.py
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_early_volume.py
+      - name: Restore daily kline cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/astock/cache/kline.pkl.gz
+          key: astock-kline-${{ github.run_id }}
+          restore-keys: astock-kline-
+      - name: Restore hourly cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache/hour1.pkl.gz
+          key: astock-hour-${{ github.run_id }}
+          restore-keys: astock-hour-
+      - name: Early-volume study
+        run: python scripts/astock_early_volume.py
+      - name: Save hourly cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache/hour1.pkl.gz
+          key: astock-hour-${{ github.run_id }}
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/early_volume.md docs/astock/early_volume.json astock/early_volume_model.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: early-volume study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
