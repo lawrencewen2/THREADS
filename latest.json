@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-11T05:46+00:00",
+  "as_of": "2026-11-11T05:47+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 34.2,
+      "score": 34.0,
       "band": "恐慌",
       "date": "2026-11-11",
-      "official": 33.7,
+      "official": 33.6,
       "official_date": "2026-11-10",
-      "change": 0.5,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,10 +41,10 @@
     "eu": {
       "name": "欧洲",
       "fresh": false,
-      "score": 40.3,
+      "score": 40.0,
       "band": "中性",
       "date": "2026-11-10",
-      "official": 40.3,
+      "official": 40.0,
       "official_date": "2026-11-10",
       "change": 0.0,
       "signal": "normal",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 13.7,
+      "score": 13.5,
       "band": "极度恐慌",
       "date": "2026-11-11",
-      "official": 12.2,
+      "official": 11.9,
       "official_date": "2026-11-10",
-      "change": 1.5,
+      "change": 1.6,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 35.5,
+      "score": 35.6,
       "band": "恐慌",
       "date": "2026-11-11",
       "official": 33.5,
       "official_date": "2026-11-10",
-      "change": 2.0,
+      "change": 2.1,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 56.4,
+      "score": 55.7,
       "band": "中性",
       "date": "2026-11-11",
-      "official": 55.9,
+      "official": 55.5,
       "official_date": "2026-11-10",
-      "change": 0.5,
+      "change": 0.2,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "short_bottom",
@@ -113,38 +113,38 @@
   },
   "quotes": {
     "n225": {
-      "value": 61320.29,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 61337.23,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "gold": {
-      "value": 4068.877,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 4069.376,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
     "csi300": {
-      "value": 4082.2,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 4082.37,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "hsi": {
-      "value": 24405.31,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 24417.76,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "hstech": {
-      "value": 3.968,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 3.974,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "a_turnover": {
-      "value": 122686082.0,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 123207890.0,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.922,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 0.92156,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.781998,
-      "time": "2026-11-11T05:46+00:00",
+      "value": 158.787994,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "topix": {
       "value": 413.5,
-      "time": "2026-11-11T05:31+00:00",
+      "time": "2026-11-11T05:32+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
@@ -209,8 +209,8 @@
       "fresh": false
     },
     "qvix50": {
-      "value": 13.63,
-      "time": "2026-11-11T05:45+00:00",
+      "value": 13.55,
+      "time": "2026-11-11T05:47+00:00",
       "date": "2026-11-11",
       "fresh": true
     }
