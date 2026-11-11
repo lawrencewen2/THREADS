@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-11T13:32+00:00",
+  "as_of": "2026-11-11T13:33+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 34.5,
+      "score": 34.6,
       "band": "恐慌",
       "date": "2026-11-11",
       "official": 33.6,
       "official_date": "2026-11-10",
-      "change": 0.9,
+      "change": 1.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 43.3,
+      "score": 43.4,
       "band": "中性",
       "date": "2026-11-11",
       "official": 40.0,
       "official_date": "2026-11-10",
-      "change": 3.3,
+      "change": 3.4,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4045.14,
-      "time": "2026-11-11T13:32+00:00",
+      "value": 4044.602,
+      "time": "2026-11-11T13:33+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 18.4,
-      "time": "2026-11-11T13:17+00:00",
+      "value": 18.34,
+      "time": "2026-11-11T13:18+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6371.5,
-      "time": "2026-11-11T13:17+00:00",
+      "value": 6372.370117,
+      "time": "2026-11-11T13:18+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92323,
-      "time": "2026-11-11T13:32+00:00",
+      "value": 0.92328,
+      "time": "2026-11-11T13:33+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.365005,
-      "time": "2026-11-11T13:32+00:00",
+      "value": 159.356995,
+      "time": "2026-11-11T13:33+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
