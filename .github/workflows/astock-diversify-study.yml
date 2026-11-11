@@ -1,0 +1,27 @@
+name: astock-diversify-study
+
+# 选股 + ETF 分仓回测（读已导出的 data/research），并检查实盘 ETF 行情接口。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-9l9paz]
+    paths: ["astock/diversify.py", "astock/live_sleeve.py", "scripts/astock_diversify.py", "tests/test_astock_diversify.py",
+            ".github/workflows/astock-diversify-study.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  study:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_diversify.py tests/test_astock.py
+      - run: python scripts/astock_diversify.py --check-quotes
+      - run: python scripts/astock_diversify.py

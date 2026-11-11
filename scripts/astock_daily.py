@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import alt_study, data, live_slots, realtime, screen  # noqa: E402
+from astock import alt_study, data, live_sleeve, live_slots, realtime, screen  # noqa: E402
 
 
 def main():
@@ -83,6 +83,12 @@ def main():
             result, live = live_slots.screen(kline, basic, trade_date, sm, valuation=data.load_valuation(),
                                              forecast=forecast)
             live_slots.write(result, live)
+            if sm.get("sleeve"):
+                # 2026-11-10 起：其余资金和闲钱放 ETF 分仓（astock/live_sleeve.py）；出错不影响选股清单
+                try:
+                    live_sleeve.update(result, sm)
+                except Exception as exc:
+                    print("sleeve update failed:", exc)
         else:
             result, state = screen.screen_forecast(kline, basic, trade_date, fm, valuation=data.load_valuation(),
                                                    forecast=forecast)
