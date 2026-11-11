@@ -73,7 +73,7 @@ jobs:
           path: data/astock/cache
           key: astock-kline-diversify-fullfc
       - name: Live rule daily returns
-        run: python scripts/astock_diversify_dump.py --live
+        run: python scripts/astock_diversify_dump.py --live --alt
       - name: Commit results
         if: always()
         run: |

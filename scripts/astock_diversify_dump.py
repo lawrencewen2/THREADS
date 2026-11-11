@@ -73,6 +73,62 @@ def dump_live():
     pd.DataFrame(trades).to_csv(OUT / "live_trades.csv.gz", index=False, float_format="%.6g")
 
 
+ALT = {  # 第二个选股策略候选：和业绩预期选股低相关的风格
+    "lowvol_value": {"ep": 1, "bp": 1, "vol20": -1, "idiovol60": -1},
+    "small_rev": {"size": -1, "rev20": -1, "turn20": -1, "idiovol60": -1},
+    "momentum": {"mom60": 1, "high250": 1},
+    "value": {"ep": 1, "bp": 1, "sp": 1},
+}
+ALT_RULES = [(None, "atr3", 20), ("atr2", "atr3", 10), ("atr3", 0.08, 20)]
+
+
+def dump_alt():
+    """几种别的选股风格，同一套 20 只 + 止盈止损 + 净值均线空仓的模拟，存逐日收益。"""
+    import numpy as np
+    from astock import config, data, model
+    from astock.alt_study import emotion_regime
+    from astock.factors import Panel, eligible, iter_factors
+    from astock.slots import simulate
+    from astock.stability import overlay
+    from astock.winrate import adjusted_ohlc
+
+    basic = data.load_basic()
+    p = Panel(data.load_kline(), data.load_valuation())
+    elig = eligible(p, basic)
+    need = {k for w in ALT.values() for k in w}
+    ranks = {}
+    for k, v in iter_factors(p):
+        if k in need:
+            ranks[k] = model.xs_rank(v, elig)
+        del v
+    log.info("factors: %s", sorted(ranks))
+    gate_em = emotion_regime(p, elig)
+    gate_all = pd.Series(True, index=p.dates)
+    ohl = adjusted_ohlc(p)
+    end = str(p.dates[-1].date())
+    cols = {}
+    for name, w in ALT.items():
+        sc = model.score(ranks, w, elig)
+        for tp, sl, hold in ALT_RULES:
+            for gname, gate in (("em", gate_em), ("all", gate_all)):
+                key = f"{name}|{tp}-{sl}-{hold}|{gname}"
+                parts = []
+                for s, e in ((config.TRAIN_START, config.TRAIN_END), (config.TEST_START, end)):
+                    d, t = simulate(p, ohl, sc, gate, 20, tp, sl, hold, s, e)
+                    held = pd.Series(0, index=d.index)
+                    for x in t:
+                        held[(held.index >= x["entry"]) & (held.index < x["exit"])] += 1
+                    parts.append(pd.DataFrame({key + "|live": overlay(d, "trend20"), key + "|held": held}))
+                df = pd.concat(parts)
+                for c in df:
+                    cols[c] = df[c]
+                log.info("%s: train/test days %d", key, len(df))
+        del sc
+    out = pd.DataFrame(cols)
+    out.index.name = "date"
+    out.to_csv(OUT / "alt_daily.csv.gz", float_format="%.6g")
+
+
 # 代码、名称、类别。全部是普通股票账户能买的场内基金。
 ETFS = [
     ("sh510300", "沪深300ETF", "A股大盘"), ("sh510500", "中证500ETF", "A股中盘"), ("sh512100", "中证1000ETF", "A股小盘"),
@@ -173,6 +229,8 @@ def main():
         dump_etf()
     if "--live" in sys.argv:
         dump_live()
+    if "--alt" in sys.argv:
+        dump_alt()
 
 
 if __name__ == "__main__":
