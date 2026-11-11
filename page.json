@@ -4,12 +4,12 @@
   "name": "全球",
   "fresh": true,
   "date": "2026-11-11",
-  "score": 34.5,
-  "change": 0.9,
+  "score": 34.6,
+  "change": 1.0,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
   "session": "盘中",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  },
  {
   "key": "us",
@@ -21,31 +21,31 @@
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
   "session": "未开盘",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  },
  {
   "key": "eu",
   "name": "欧洲",
   "fresh": true,
   "date": "2026-11-11",
-  "score": 43.2,
-  "change": 3.2,
+  "score": 43.3,
+  "change": 3.3,
   "band": "中性",
   "signal": "正常",
   "session": "盘中",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  },
  {
   "key": "jp",
   "name": "日本",
   "fresh": true,
   "date": "2026-11-11",
-  "score": 13.8,
-  "change": 1.9,
+  "score": 13.9,
+  "change": 2.0,
   "band": "极度恐慌",
   "signal": "恐慌加深，减仓",
   "session": "已收盘",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  },
  {
   "key": "cn",
@@ -57,7 +57,7 @@
   "band": "恐慌",
   "signal": "正常",
   "session": "已收盘",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  },
  {
   "key": "hk",
@@ -69,6 +69,6 @@
   "band": "中性",
   "signal": "正常",
   "session": "已收盘",
-  "time": "11-11 22:25"
+  "time": "11-11 22:26"
  }
 ]
