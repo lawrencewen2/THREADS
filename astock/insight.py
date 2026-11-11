@@ -276,6 +276,18 @@ def contrarian_state(bt, fear):
     return dict(buy=ch["buy"], sell=ch["sell"], in_market=bool(np.asarray(reg)[-1]))
 
 
+def _gate_text(picks):
+    """今天为什么持有或空仓：情绪开关和净值 20 日均线是两道独立的闸门，分开说。"""
+    if picks.get("gate_open"):
+        return "今天两道开关都开，按清单持有"
+    ma = picks.get("equity_vs_ma20")
+    if picks.get("emotion_on") and ma is not None and ma < 0:
+        return f"今天情绪开关开，但组合净值比 20 日均线低 {abs(ma) * 100:.1f}%，空仓，回到均线上方再买"
+    if picks.get("emotion_on") is False:
+        return "今天情绪开关关，空仓"
+    return "今天空仓"
+
+
 def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
     """把各板块的结论压成几条“可以做 / 小心 / 不要做”。只是规则汇总，不是投资建议。"""
     items = []
@@ -310,7 +322,7 @@ def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
         v = live_bt["ann_return"]
         s = "中" if v > 0 else "差"
         d = (f"线上规则“{picks['strategy']}”样本外年化 {v * 100:.1f}%，最大回撤 {live_bt['max_drawdown'] * 100:.1f}%，"
-             f"每笔胜率 {live_bt['trade_win'] * 100:.0f}%；今天情绪开关{'开，按清单持有' if picks.get('gate_open') else '关，空仓'}")
+             f"每笔胜率 {live_bt['trade_win'] * 100:.0f}%；{_gate_text(picks)}")
         items.append(dict(item="线上规则回测", status=s, detail=d))
     elif test.get("avg_next_open_net") is not None:
         v = test["avg_next_open_net"]
