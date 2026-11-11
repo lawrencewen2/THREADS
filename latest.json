@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-11T10:45+00:00",
+  "as_of": "2026-11-11T10:46+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 34.5,
+      "score": 34.6,
       "band": "恐慌",
       "date": "2026-11-11",
       "official": 33.6,
       "official_date": "2026-11-10",
-      "change": 0.9,
+      "change": 1.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 43.4,
+      "score": 43.5,
       "band": "中性",
       "date": "2026-11-11",
       "official": 40.0,
       "official_date": "2026-11-10",
-      "change": 3.4,
+      "change": 3.5,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 4058.77,
-      "time": "2026-11-11T10:45+00:00",
+      "value": 4059.776,
+      "time": "2026-11-11T10:46+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 18.58,
-      "time": "2026-11-11T10:30+00:00",
+      "value": 18.57,
+      "time": "2026-11-11T10:31+00:00",
       "date": "2026-11-11",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6372.660156,
-      "time": "2026-11-11T10:30+00:00",
+      "value": 6375.049805,
+      "time": "2026-11-11T10:31+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92352,
-      "time": "2026-11-11T10:45+00:00",
+      "value": 0.92359,
+      "time": "2026-11-11T10:46+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
     "usdjpy": {
-      "value": 158.972,
-      "time": "2026-11-11T10:45+00:00",
+      "value": 158.975998,
+      "time": "2026-11-11T10:46+00:00",
       "date": "2026-11-11",
       "fresh": true
     },
