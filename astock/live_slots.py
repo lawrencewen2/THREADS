@@ -34,6 +34,18 @@ def _pct(sl_or_tp, a):
     return float(sl_or_tp[3:]) * a if isinstance(sl_or_tp, str) else float(sl_or_tp)
 
 
+def apply_blend(sc, p, forecast, elig, blend):
+    """2026-11-12 起：在业绩预期得分上再加 w × 新因子排名（如业绩加速 fc_accel，见 astock/factor_hunt.py）。"""
+    if not blend:
+        return sc
+    from .factor_hunt import NEW, forecast_extras  # factor_hunt 依赖本模块，放函数里避免循环导入
+    ex = forecast_extras(p, forecast)
+    out = sc.copy()
+    for k, w in blend.items():
+        out = out + w * (model.xs_rank(ex[k], elig) * NEW[k][1]).fillna(0)
+    return out.where(sc.notna())
+
+
 def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
     start = pd.Timestamp(sm["start"])
     recent = kline[kline["date"] >= min(kline["date"].max() - pd.Timedelta(days=PANEL_DAYS),
@@ -47,7 +59,7 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
     for k, v in iter_alt_factors(p, forecast):
         if k in weights:
             ranks[k] = model.xs_rank(v, elig)
-    sc = model.score(ranks, weights, elig)
+    sc = apply_blend(model.score(ranks, weights, elig), p, forecast, elig, sm.get("blend"))
     gate = emotion_regime(p, elig)
     ohl = adjusted_ohlc(p)
     o_adj, _, _, atr, _ = ohl
