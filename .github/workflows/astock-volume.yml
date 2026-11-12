@@ -1,0 +1,109 @@
+name: astock-volume
+
+# 早盘放量（集合竞价 + 9:30–10:30 成交量）选股回测，2026-11-10。只在本分支推送或手动触发时跑。
+# baostock 60 分钟线从境外 runner 拉每只约 10 秒，单机全市场要十几个小时：分 8 片并行拉（每只股票只查一次），
+# 最后一个任务合并、存缓存 astock-hour-*、回测。缓存已经齐全时手动触发选 fetch=false 直接回测。
+on:
+  workflow_dispatch:
+    inputs:
+      fetch:
+        description: "分片重拉 60 分钟线（false = 只用缓存回测）"
+        type: boolean
+        default: true
+  push:
+    branches: [claude/project-thread-55jhv3]
+    paths: ["astock/early_volume.py", "scripts/astock_early_volume.py", "tests/test_astock_early_volume.py",
+            ".github/workflows/astock-volume.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-volume
+  cancel-in-progress: false
+
+jobs:
+  fetch:
+    if: github.event_name == 'push' || inputs.fetch
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - name: Fetch 60-min bars (one shard)
+        timeout-minutes: 280
+        run: python scripts/astock_early_volume.py --shard ${{ matrix.shard }} --shards 8 --out parts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: hour1-${{ matrix.shard }}
+          path: parts/
+          if-no-files-found: warn
+          retention-days: 3
+
+  study:
+    needs: fetch
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_early_volume.py
+      - name: Restore daily kline cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-${{ github.run_id }}
+          restore-keys: astock-kline-
+      - name: Restore hourly cache
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache/hour1.pkl.gz
+          key: astock-hour-${{ github.run_id }}
+          restore-keys: astock-hour-
+      - uses: actions/download-artifact@v4
+        if: needs.fetch.result != 'skipped'
+        with:
+          pattern: hour1-*
+          path: parts
+      - name: Check daily cache
+        run: test -f data/astock/cache/kline.pkl.gz && ls -la data/astock/cache parts || true
+      - name: Early-volume study
+        run: |
+          if [ -d parts ]; then python scripts/astock_early_volume.py --merge parts
+          else python scripts/astock_early_volume.py --no-fetch; fi
+      - name: Save hourly cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache/hour1.pkl.gz
+          key: astock-hour-${{ github.run_id }}
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/early_volume.md docs/astock/early_volume.json reports/astock/early_volume_rule.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: early-volume study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
