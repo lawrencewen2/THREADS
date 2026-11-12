@@ -18,7 +18,7 @@ on:
         default: false
   push:
     # 决策辅助板块和主升浪研究的分支用自己的 workflow 检验，不在那里重跑全量回测
-    branches-ignore: [main, claude/project-thread-sfpfl5, claude/project-thread-ozu040, claude/project-thread-55jhv3]
+    branches-ignore: [main, claude/project-thread-sfpfl5, claude/project-thread-ozu040, claude/project-thread-9l9paz, claude/project-thread-55jhv3]
     paths: ["astock/**", "scripts/astock_*", "tests/test_astock.py", ".github/workflows/astock.yml"]
 
 permissions:
@@ -42,7 +42,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r astock/requirements.txt
-      - run: python -m pytest -q tests/test_astock.py tests/test_astock_insight.py tests/test_astock_alt_study.py
+      - run: python -m pytest -q tests/test_astock.py tests/test_astock_insight.py tests/test_astock_alt_study.py tests/test_astock_diversify.py
       - name: Restore price cache
         uses: actions/cache/restore@v4
         with:
