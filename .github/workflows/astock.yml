@@ -18,7 +18,7 @@ on:
         default: false
   push:
     # 决策辅助板块和主升浪研究的分支用自己的 workflow 检验，不在那里重跑全量回测
-    branches-ignore: [main, claude/project-thread-sfpfl5, claude/project-thread-ozu040, claude/project-thread-9l9paz, claude/project-thread-55jhv3]
+    branches-ignore: [main, claude/project-thread-sfpfl5, claude/project-thread-ozu040, claude/project-thread-9l9paz, claude/project-thread-55jhv3, claude/project-thread-pypcx9]
     paths: ["astock/**", "scripts/astock_*", "tests/test_astock.py", ".github/workflows/astock.yml"]
 
 permissions:
