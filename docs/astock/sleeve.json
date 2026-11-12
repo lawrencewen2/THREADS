@@ -1,0 +1,49 @@
+{
+ "trade_date": "2026-11-12",
+ "signal_date": "2026-11-11",
+ "capital_share": 0.65,
+ "stock_used": 0.0,
+ "sleeve_weight": 1.0,
+ "prev_weight": null,
+ "cash": 0.0,
+ "action": "开始：按目标比例买入 ETF 分仓",
+ "rebalance": true,
+ "days_since_rebalance": null,
+ "etfs": [
+  {
+   "code": "sh513100",
+   "name": "纳指ETF",
+   "weight": 0.3333,
+   "close": 2.233,
+   "close_date": "2026-11-11"
+  },
+  {
+   "code": "sh518880",
+   "name": "黄金ETF",
+   "weight": 0.3333,
+   "close": 8.289,
+   "close_date": "2026-11-11"
+  },
+  {
+   "code": "sh511010",
+   "name": "国债ETF",
+   "weight": 0.3333,
+   "close": 141.34,
+   "close_date": "2026-11-11"
+  }
+ ],
+ "note": "其余资金和选股闲着的钱等权放进这三只 ETF；要买股票时先卖 ETF 腾出现金（三只都能 T+0）；闲钱超过总资金 10% 才买回；每 20 个交易日调回等权",
+ "backtest": {
+  "test": {
+   "ann_return": 0.22652716953401963,
+   "max_drawdown": -0.12410484485754181,
+   "sharpe": 1.3793267183460955
+  },
+  "train": {
+   "ann_return": 0.2834414871410298,
+   "max_drawdown": -0.14510452608679714,
+   "sharpe": 1.6791602489802728
+  },
+  "updated": "2026-11-06"
+ }
+}
