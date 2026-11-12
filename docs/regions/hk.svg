@@ -16,7 +16,7 @@
 <text x="29" y="17.0" text-anchor="end" fill="#6b7280">100</text>
 <text x="38" y="190.4" fill="#b91c1c">恐慌</text>
 <text x="38" y="28.4" fill="#15803d">贪婪</text>
-<polyline fill="none" stroke="#7c3aed" stroke-width="2" points="34.0,90.5 63.5,95.9 93.0,91.4 122.5,89.2 152.0,94.5 181.5,101.1 211.0,116.8 240.5,121.1 270.0,125.4 299.5,129.6 329.0,129.4 358.5,131.2 388.0,129.9 417.5,124.3 447.0,117.3 476.5,108.7 506.0,100.0 535.5,97.5 565.0,96.1 594.5,93.4 624.0,94.1"/>
+<polyline fill="none" stroke="#7c3aed" stroke-width="2" points="34.0,90.5 63.5,95.9 93.0,91.4 122.5,89.2 152.0,94.5 181.5,101.1 211.0,116.8 240.5,121.1 270.0,125.4 299.5,129.6 329.0,129.4 358.5,131.2 388.0,129.9 417.5,124.3 447.0,117.3 476.5,108.7 506.0,100.0 535.5,97.5 565.0,96.1 594.5,93.4 624.0,94.6"/>
 <circle cx="34.0" cy="90.5" r="2.5" fill="#7c3aed"/>
 <text x="34.0" y="84.5" text-anchor="middle" fill="#374151">58</text>
 <text x="34.0" y="212" text-anchor="middle" fill="#6b7280">10/14</text>
@@ -61,7 +61,7 @@
 <text x="565.0" y="90.1" text-anchor="middle" fill="#374151">54</text>
 <circle cx="594.5" cy="93.4" r="2.5" fill="#7c3aed"/>
 <text x="594.5" y="87.4" text-anchor="middle" fill="#374151">56</text>
-<circle cx="624.0" cy="94.1" r="2.5" fill="#7c3aed"/>
-<text x="624.0" y="88.1" text-anchor="middle" fill="#374151">56</text>
+<circle cx="624.0" cy="94.6" r="2.5" fill="#7c3aed"/>
+<text x="624.0" y="88.6" text-anchor="middle" fill="#374151">55</text>
 <text x="624.0" y="212" text-anchor="middle" fill="#6b7280">11/11</text>
 </svg>
