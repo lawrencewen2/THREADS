@@ -14,22 +14,22 @@
    "code": "sh513100",
    "name": "纳指ETF",
    "weight": 0.3333,
-   "close": 2.233,
-   "close_date": "2026-11-11"
+   "close": 2.23,
+   "close_date": "2026-11-12"
   },
   {
    "code": "sh518880",
    "name": "黄金ETF",
    "weight": 0.3333,
-   "close": 8.289,
-   "close_date": "2026-11-11"
+   "close": 8.12,
+   "close_date": "2026-11-12"
   },
   {
    "code": "sh511010",
    "name": "国债ETF",
    "weight": 0.3333,
-   "close": 141.34,
-   "close_date": "2026-11-11"
+   "close": 141.32,
+   "close_date": "2026-11-12"
   }
  ],
  "note": "其余资金和选股闲着的钱等权放进这三只 ETF；要买股票时先卖 ETF 腾出现金（三只都能 T+0）；闲钱超过总资金 10% 才买回；每 20 个交易日调回等权",
