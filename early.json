@@ -3,7 +3,7 @@
  "auction": {},
  "picks": [],
  "frozen": false,
- "time": "11-12 14:12",
+ "time": "11-12 14:13",
  "phase": "已定名单",
  "breadth": 0.5,
  "stocks": 2,
@@ -14,7 +14,7 @@
    "price": 11.78,
    "pct": 0.6,
    "gap": -0.17,
-   "lb": 6.01,
+   "lb": 6.02,
    "r1": 0.77,
    "pos": 0.75,
    "auction_ratio": null
@@ -22,12 +22,12 @@
   {
    "code": "sz.000002",
    "name": "x",
-   "price": 3.15,
-   "pct": -1.56,
+   "price": 3.16,
+   "pct": -1.25,
    "gap": -0.31,
-   "lb": 2.76,
-   "r1": -1.25,
-   "pos": 0.12,
+   "lb": 2.75,
+   "r1": -0.94,
+   "pos": 0.25,
    "auction_ratio": null
   }
  ],
