@@ -199,7 +199,7 @@ def test_live_slots_screen(monkeypatch, tmp_path):
     fc = _forecast(codes[:10], "2016-03-01")
     dates = sorted(k["date"].unique())
     sm = dict(strategy="s", hold_note="h", weights=dict(eps_chg60=0.4, fc_chg=0.3, fc_sign=0.3), n=5,
-              take_profit="atr2", stop_loss="atr3", max_hold=10, capital_share=0.5, start=str(pd.Timestamp(dates[-40]).date()))
+              take_profit="atr2", stop_loss="atr3", max_hold=10, capital_share=0.5, blend={"fc_accel": 0.3}, start=str(pd.Timestamp(dates[-40]).date()))
     res, live = live_slots.screen(k, basic, dates[-1] + pd.Timedelta(days=1), sm, val, fc)
     live_slots.write(res, live)
     held = [r for r in res["picks"] + res["sells"] if "entry_price" in r]

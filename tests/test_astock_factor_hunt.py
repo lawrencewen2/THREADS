@@ -42,3 +42,23 @@ def test_industry_breadth():
     if codes[0] in a:
         assert abs(out["ind_breadth"].loc[d, a[0]] - 1 / 5) < 1e-6
     assert all(np.isnan(out["ind_breadth"].loc[d, c]) or out["ind_breadth"].loc[d, c] == 0 for c in codes[5:])
+
+
+def test_live_blend_matches_backtest_combo():
+    from astock import live_slots, model
+    from astock.factors import eligible
+
+    k, basic = synthetic_kline(n_codes=12, start="2015-01-01", end="2015-12-31", seed=3)
+    p = Panel(k)
+    codes = list(p.codes)
+    fc = _fc([(c, "2015-03-02", "2014-12-31", "预增", 40.0 + i, 20.0) for i, c in enumerate(codes)]
+             + [(c, "2015-04-10", "2015-03-31", "预增", 80.0 - 5 * i, 50.0) for i, c in enumerate(codes)])
+    elig = eligible(p, basic)
+    base = pd.DataFrame(np.random.default_rng(0).random(elig.shape), index=p.dates, columns=p.codes).where(elig)
+    live = live_slots.apply_blend(base, p, fc, elig, {"fc_accel": 0.3})
+    cand = {"fc_accel": model.xs_rank(factor_hunt.forecast_extras(p, fc)["fc_accel"], elig)}
+    bt = factor_hunt.combo_score(base, cand, factor_hunt.COMBOS["accel0.3"])
+    pd.testing.assert_frame_equal(live, bt)
+    assert live_slots.apply_blend(base, p, fc, elig, None) is base
+    d = p.dates[p.dates.searchsorted(pd.Timestamp("2015-04-20"))]
+    assert (live.loc[d] != base.loc[d]).any()
