@@ -111,7 +111,31 @@ def _summ(d_raw, trades):
     return {k: st.get(k) for k in ("ann_return", "max_drawdown", "sharpe", "trade_win", "trades", "avg_trade", "payoff")}
 
 
-def run(kline, basic, valuation=None, forecast=None, industry=None):
+# 第二轮：第一轮训练期最好的几个组合起来（2026-11-12，只按第一轮的训练期结果挑）
+COMBOS = {
+    "accel0.3": dict(blend={"fc_accel": 0.30}),
+    "accel0.45": dict(blend={"fc_accel": 0.45}),
+    "accel0.3+liq": dict(blend={"fc_accel": 0.30}, filt=["amount20"]),
+    "accel0.3+narrow": dict(blend={"fc_accel": 0.30}, filt=["fc_narrow"]),
+    "accel0.3+liq+narrow": dict(blend={"fc_accel": 0.30}, filt=["amount20", "fc_narrow"]),
+    "accel0.3+rev0.15": dict(blend={"fc_accel": 0.30, "fc_rev": 0.15}),
+    "accel0.3+rev0.15+liq": dict(blend={"fc_accel": 0.30, "fc_rev": 0.15}, filt=["amount20"]),
+    "liq+narrow": dict(filt=["amount20", "fc_narrow"]),
+}
+
+
+def combo_score(base, cand, spec):
+    sc = base.copy()
+    for k, w in spec.get("blend", {}).items():
+        sc = sc + w * cand[k].fillna(0)
+    sc = sc.where(base.notna())
+    for k in spec.get("filt", []):
+        r = cand[k]
+        sc = sc.where(~r.lt(r.quantile(FILTER_Q, axis=1), axis=0))
+    return sc
+
+
+def run(kline, basic, valuation=None, forecast=None, industry=None, combos=False, dump=None):
     kline = kline() if callable(kline) else kline
     valuation = valuation() if callable(valuation) else valuation
     forecast = forecast() if callable(forecast) else forecast
@@ -158,6 +182,29 @@ def run(kline, basic, valuation=None, forecast=None, industry=None):
 
     rows = [dict(name="线上规则（对照）", factor="live", mode="live", w=0.0, **sim(base))]
     log.info("live: %s", rows[0]["train"])
+    if combos:
+        cols = {}
+        for name, spec in dict(live={}, **COMBOS).items():
+            sc = base if name == "live" else combo_score(base, cand, spec)
+            if name != "live":
+                rows.append(dict(name=name, factor=name, mode="combo", w=0.0, **sim(sc)))
+                log.info("%s: train %s test %s", name, rows[-1]["train"], rows[-1]["test"])
+            if dump is not None:
+                parts = []
+                for k, (s, e) in periods.items():
+                    d, t = simulate(p, ohl, sc, gate, n, tp, sl, hold, s, e)
+                    held = pd.Series(0, index=d.index)
+                    for x in t:
+                        held[(held.index >= x["entry"]) & (held.index < x["exit"])] += 1
+                    parts.append(pd.DataFrame({name + "|raw": d, name + "|held": held}))
+                df = pd.concat(parts)
+                for c in df:
+                    cols[c] = df[c]
+        if dump is not None:
+            out = pd.DataFrame(cols)
+            out.index.name = "date"
+            out.to_csv(dump, float_format="%.6g")
+        return dict(updated=end, rows=rows, new=NEW, combos=COMBOS, filter_q=FILTER_Q)
     for k, r in cand.items():
         cov = float(r.notna().mean().mean())
         for w in WEIGHTS:
@@ -189,7 +236,7 @@ def to_markdown(res):
     live = rows[0]
     rnd = [r for r in rows if r["mode"] == "random"]
     rnd_tr = np.array([r["train"]["sharpe"] or 0 for r in rnd])
-    p90 = float(np.quantile(rnd_tr, 0.9)) if len(rnd_tr) else None
+    p90 = float(np.quantile(rnd_tr, 0.9)) if len(rnd_tr) else float("nan")
     L = [f"# 新因子挖掘（数据到 {res['updated']}）", "",
          "线上选股（业绩预期 + 情绪开关，20 只，止盈止损，净值均线空仓）上每次加一个新因子。"
          "训练期 2015–2020，样本外 2021 至今，100% 资金口径，已扣成本。", "",
@@ -209,8 +256,8 @@ def to_markdown(res):
     return "\n".join(L) + "\n"
 
 
-def write(res):
+def write(res, stem="factor_hunt"):
     config.REPORT_DIR.mkdir(parents=True, exist_ok=True)
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
-    (config.REPORT_DIR / "factor_hunt.md").write_text(to_markdown(res))
-    (config.PAGE_DIR / "factor_hunt.json").write_text(json.dumps(res, ensure_ascii=False, default=float))
+    (config.REPORT_DIR / f"{stem}.md").write_text(to_markdown(res))
+    (config.PAGE_DIR / f"{stem}.json").write_text(json.dumps(res, ensure_ascii=False, default=float))

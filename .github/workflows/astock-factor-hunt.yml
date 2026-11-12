@@ -40,12 +40,12 @@ jobs:
         timeout-minutes: 120
         run: python scripts/astock_factor_hunt.py --ensure-forecast
       - name: Factor hunt
-        run: python scripts/astock_factor_hunt.py
+        run: python scripts/astock_factor_hunt.py --combos
       - name: Commit results
         run: |
           git config user.name "astock-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports/astock/factor_hunt.md docs/astock/factor_hunt.json
+          git add reports/astock/factor_hunt.md docs/astock/factor_hunt.json reports/astock/factor_combos.md docs/astock/factor_combos.json data/research/combo_daily.csv.gz
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "astock: factor hunt $(date -u +%F) [skip ci]"
           for i in 1 2 3 4; do
