@@ -304,7 +304,16 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None):
                           + f"｜每笔风险 {risk:.1%}｜大盘 {mk}")
                     evaluate(nm, "jlaw", sig, f["markets"][mk], low=0.5, n=30, sizing=risk, stop=("support",),
                              target=None if R is None else ("R", R), weak=weak, hold=MAX_HOLD, support=f["support"])
-    jl = [r for r in rows if r["group"] == "jlaw"]
+    # 第二轮（公平起见）：回调买在均线附近，收盘稍破均线就卖太紧；改成跌破均线 3% 才卖，止损也试 3 倍 ATR
+    for K in META_K:
+        sig = f["rs"].where(base & (f["meta"] >= K))
+        for wk in ("ma10", "ma20"):
+            weak = f["adj"] < f[wk] * 0.97
+            for stop_name, stop in (("支撑下止损", ("support",)), ("3 倍 ATR 止损", ("atr", 3.0))):
+                nm = f"J Law 放宽：M.E.T.A.≥{K}｜跌破 {wk[2:]} 日线 3% 才卖｜{stop_name}｜每笔风险 0.5%｜大盘 idx200"
+                evaluate(nm, "jlaw2", sig, f["markets"]["idx200"], low=0.5, n=30, sizing=0.005, stop=stop,
+                         target=None, weak=weak, hold=MAX_HOLD, support=f["support"])
+    jl = [r for r in rows if r["group"] in ("jlaw", "jlaw2")]
     pick = max(jl, key=lambda r: r["train"].get("sharpe", -9))
     pick["chosen"] = True
 

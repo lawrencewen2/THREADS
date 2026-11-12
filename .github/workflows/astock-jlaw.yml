@@ -33,12 +33,18 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: data/astock/cache
-          key: astock-kline-diversify-fullfc
+          key: astock-kline-jlaw-fullfc
           restore-keys: astock-kline-
       - name: Make sure forecasts go back to 2014
-        if: steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-jlaw-fullfc'
         timeout-minutes: 120
         run: python scripts/astock_jlaw.py --ensure-forecast
+      - name: Save price cache with full forecasts
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-jlaw-fullfc'
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-jlaw-fullfc
       - name: J Law backtest
         run: python scripts/astock_jlaw.py
       - name: Commit results
