@@ -1,52 +1,52 @@
 {
-  "date": "2026-11-11",
+  "date": "2026-11-12",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
-      "score": 37.2,
+      "score": 38.7,
       "band": "恐慌",
-      "change_5d": -0.8,
+      "change_5d": 5.4,
       "risk_off": true,
       "signal": "risk_off"
     },
     "us": {
       "name": "美国",
-      "score": 33.1,
+      "score": 34.5,
       "band": "恐慌",
-      "change_5d": -9.1,
+      "change_5d": 5.7,
       "risk_off": true,
       "signal": "risk_off"
     },
     "eu": {
       "name": "欧洲",
-      "score": 43.8,
+      "score": 46.3,
       "band": "中性",
-      "change_5d": 7.9,
+      "change_5d": 9.0,
       "risk_off": false,
       "signal": "normal"
     },
     "jp": {
       "name": "日本",
-      "score": 13.5,
+      "score": 14.7,
       "band": "极度恐慌",
-      "change_5d": -5.5,
+      "change_5d": -3.6,
       "risk_off": true,
       "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
-      "score": 35.3,
+      "score": 36.2,
       "band": "恐慌",
-      "change_5d": 6.3,
+      "change_5d": 2.9,
       "risk_off": false,
       "signal": "normal"
     },
     "hk": {
       "name": "港股",
-      "score": 55.2,
+      "score": 52.3,
       "band": "中性",
-      "change_5d": 7.8,
+      "change_5d": 0.1,
       "risk_off": false,
       "signal": "normal"
     }
@@ -55,107 +55,107 @@
     "us_vix": {
       "name": "VIX",
       "region": "us",
-      "score": 51.8
+      "score": 42.2
     },
     "us_term": {
       "name": "VIX/VIX3M 期限结构",
       "region": "us",
-      "score": 38.2
+      "score": 27.5
     },
     "us_rvol": {
       "name": "标普500 20日实际波动率",
       "region": "us",
-      "score": 13.3
+      "score": 13.4
     },
     "us_dd": {
       "name": "标普500 距52周高点回撤",
       "region": "us",
-      "score": 46.8
+      "score": 43.4
     },
     "us_credit": {
       "name": "高收益债相对国债回撤（HYG/IEF）",
       "region": "us",
-      "score": 45.4
+      "score": 52.7
     },
     "us_crash": {
       "name": "标普500 10日急跌",
       "region": "us",
-      "score": 21.2
+      "score": 21.0
     },
     "eu_rvol": {
       "name": "欧洲斯托克50 20日实际波动率",
       "region": "eu",
-      "score": 33.3
+      "score": 34.2
     },
     "eu_dd": {
       "name": "欧洲斯托克50 回撤",
       "region": "eu",
-      "score": 60.7
+      "score": 61.5
     },
     "eu_ma": {
       "name": "欧洲斯托克50 低于125日均线幅度",
       "region": "eu",
-      "score": 47.1
+      "score": 47.4
     },
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 19.1
+      "score": 29.1
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
       "region": "eu",
-      "score": 86.1
+      "score": 81.7
     },
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 6.4
+      "score": 6.5
     },
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 3.3
+      "score": 2.6
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 3.6
+      "score": 3.1
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 40.8
+      "score": 57.5
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 16.6
+      "score": 8.7
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
       "region": "jp",
-      "score": 32.4
+      "score": 33.5
     },
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
       "region": "cn",
-      "score": 96.9
+      "score": 93.3
     },
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
       "region": "cn",
-      "score": 31.0
+      "score": 32.8
     },
     "cn_dd": {
       "name": "沪深300 回撤",
       "region": "cn",
-      "score": 18.0
+      "score": 16.3
     },
     "cn_turnover": {
       "name": "两市成交量萎缩",
       "region": "cn",
-      "score": 0.9
+      "score": 1.6
     },
     "cn_margin": {
       "name": "沪市融资余额下降",
@@ -165,52 +165,52 @@
     "cn_crash": {
       "name": "沪深300 10日急跌",
       "region": "cn",
-      "score": 53.2
+      "score": 56.1
     },
     "hk_rvol": {
       "name": "恒指 20日实际波动率",
       "region": "hk",
-      "score": 42.9
+      "score": 38.5
     },
     "hk_dd": {
       "name": "恒指 回撤",
       "region": "hk",
-      "score": 54.7
+      "score": 50.1
     },
     "hk_ma": {
       "name": "恒指 低于125日均线幅度",
       "region": "hk",
-      "score": 46.7
+      "score": 40.5
     },
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 25.8
+      "score": 15.3
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
       "region": "hk",
-      "score": 88.7
+      "score": 84.7
     },
     "gl_move": {
       "name": "MOVE 美债波动率",
       "region": "global",
-      "score": 64.5
+      "score": 55.4
     },
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 63.3
+      "score": 81.3
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
       "region": "global",
-      "score": 17.7
+      "score": 44.5
     }
   },
   "status": {
     "warnings": [
-      "sh_margin 已 6 天未更新（最后 2026-11-05）"
+      "sh_margin 已 7 天未更新（最后 2026-11-05）"
     ],
     "failures": [],
     "ok": true
