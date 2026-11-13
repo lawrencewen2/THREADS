@@ -6,7 +6,7 @@
  },
  "picks": [],
  "frozen": false,
- "time": "11-13 14:58",
+ "time": "11-13 14:59",
  "phase": "已定名单",
  "breadth": 0.159,
  "stocks": 3994,
@@ -17,7 +17,7 @@
    "price": 26.25,
    "pct": 2.3,
    "gap": 1.33,
-   "lb": 41.15,
+   "lb": 40.96,
    "r1": 0.96,
    "pos": 0.81,
    "auction_ratio": null
@@ -28,7 +28,7 @@
    "price": 3.88,
    "pct": 17.58,
    "gap": 8.79,
-   "lb": 9.64,
+   "lb": 9.59,
    "r1": 8.08,
    "pos": 0.78,
    "auction_ratio": null
@@ -39,7 +39,7 @@
    "price": 16.3,
    "pct": 8.67,
    "gap": 3.67,
-   "lb": 6.68,
+   "lb": 6.65,
    "r1": 4.82,
    "pos": 0.88,
    "auction_ratio": null
@@ -50,7 +50,7 @@
    "price": 14.98,
    "pct": 3.88,
    "gap": 9.99,
-   "lb": 5.8,
+   "lb": 5.77,
    "r1": -5.55,
    "pos": 0.34,
    "auction_ratio": null
@@ -61,7 +61,7 @@
    "price": 14.31,
    "pct": 5.61,
    "gap": 7.68,
-   "lb": 5.34,
+   "lb": 5.31,
    "r1": -1.92,
    "pos": 0.54,
    "auction_ratio": null
@@ -72,7 +72,7 @@
    "price": 13.9,
    "pct": 5.54,
    "gap": -3.04,
-   "lb": 5.02,
+   "lb": 4.99,
    "r1": 8.85,
    "pos": 0.87,
    "auction_ratio": null
@@ -83,7 +83,7 @@
    "price": 20.29,
    "pct": -1.27,
    "gap": 1.27,
-   "lb": 4.54,
+   "lb": 4.52,
    "r1": -2.5,
    "pos": 0.07,
    "auction_ratio": null
@@ -94,7 +94,7 @@
    "price": 12.92,
    "pct": 4.87,
    "gap": 0.0,
-   "lb": 4.44,
+   "lb": 4.42,
    "r1": 4.87,
    "pos": 0.51,
    "auction_ratio": null
@@ -105,7 +105,7 @@
    "price": 19.36,
    "pct": 5.45,
    "gap": 1.91,
-   "lb": 4.34,
+   "lb": 4.32,
    "r1": 3.47,
    "pos": 0.98,
    "auction_ratio": null
@@ -116,7 +116,7 @@
    "price": 12.38,
    "pct": -5.93,
    "gap": 10.03,
-   "lb": 4.27,
+   "lb": 4.25,
    "r1": -14.5,
    "pos": 0.04,
    "auction_ratio": null
@@ -127,7 +127,7 @@
    "price": 3.92,
    "pct": -9.89,
    "gap": 7.36,
-   "lb": 4.13,
+   "lb": 4.11,
    "r1": -16.06,
    "pos": 0.0,
    "auction_ratio": null
@@ -138,7 +138,7 @@
    "price": 21.82,
    "pct": 5.36,
    "gap": 2.61,
-   "lb": 4.07,
+   "lb": 4.05,
    "r1": 2.68,
    "pos": 0.64,
    "auction_ratio": null
@@ -149,7 +149,7 @@
    "price": 33.43,
    "pct": 3.53,
    "gap": 6.29,
-   "lb": 3.96,
+   "lb": 3.95,
    "r1": -2.59,
    "pos": 0.64,
    "auction_ratio": null
@@ -160,7 +160,7 @@
    "price": 31.69,
    "pct": 7.5,
    "gap": 2.85,
-   "lb": 3.96,
+   "lb": 3.94,
    "r1": 4.52,
    "pos": 0.7,
    "auction_ratio": null
@@ -171,7 +171,7 @@
    "price": 10.96,
    "pct": 5.08,
    "gap": 0.1,
-   "lb": 3.8,
+   "lb": 3.78,
    "r1": 4.98,
    "pos": 0.51,
    "auction_ratio": null
@@ -182,7 +182,7 @@
    "price": 34.6,
    "pct": 7.39,
    "gap": 1.33,
-   "lb": 3.71,
+   "lb": 3.7,
    "r1": 5.97,
    "pos": 0.74,
    "auction_ratio": null
@@ -193,7 +193,7 @@
    "price": 11.82,
    "pct": 2.07,
    "gap": 0.95,
-   "lb": 3.67,
+   "lb": 3.65,
    "r1": 1.11,
    "pos": 0.14,
    "auction_ratio": null
@@ -204,7 +204,7 @@
    "price": 17.55,
    "pct": -4.52,
    "gap": 0.92,
-   "lb": 3.5,
+   "lb": 3.49,
    "r1": -5.39,
    "pos": 0.16,
    "auction_ratio": null
@@ -215,7 +215,7 @@
    "price": 23.9,
    "pct": 4.64,
    "gap": 2.85,
-   "lb": 3.49,
+   "lb": 3.47,
    "r1": 1.75,
    "pos": 0.3,
    "auction_ratio": null
@@ -226,7 +226,7 @@
    "price": 4.21,
    "pct": 6.58,
    "gap": 0.0,
-   "lb": 3.46,
+   "lb": 3.45,
    "r1": 6.58,
    "pos": 0.66,
    "auction_ratio": null
@@ -237,7 +237,7 @@
    "price": 23.29,
    "pct": 3.37,
    "gap": 0.75,
-   "lb": 3.41,
+   "lb": 3.39,
    "r1": 2.6,
    "pos": 0.51,
    "auction_ratio": null
@@ -248,7 +248,7 @@
    "price": 66.01,
    "pct": 6.31,
    "gap": 3.69,
-   "lb": 3.39,
+   "lb": 3.38,
    "r1": 2.53,
    "pos": 0.21,
    "auction_ratio": null
@@ -259,7 +259,7 @@
    "price": 8.55,
    "pct": -2.06,
    "gap": -1.37,
-   "lb": 3.26,
+   "lb": 3.24,
    "r1": -0.7,
    "pos": 0.13,
    "auction_ratio": null
@@ -270,7 +270,7 @@
    "price": 4.98,
    "pct": 4.62,
    "gap": 0.0,
-   "lb": 3.25,
+   "lb": 3.23,
    "r1": 4.62,
    "pos": 0.62,
    "auction_ratio": null
@@ -281,7 +281,7 @@
    "price": 10.08,
    "pct": 2.75,
    "gap": -1.63,
-   "lb": 3.23,
+   "lb": 3.22,
    "r1": 4.46,
    "pos": 0.73,
    "auction_ratio": null
@@ -292,7 +292,7 @@
    "price": 13.36,
    "pct": 5.2,
    "gap": 3.07,
-   "lb": 3.22,
+   "lb": 3.2,
    "r1": 2.06,
    "pos": 0.45,
    "auction_ratio": null
@@ -303,7 +303,7 @@
    "price": 3.28,
    "pct": 2.82,
    "gap": -0.31,
-   "lb": 3.21,
+   "lb": 3.2,
    "r1": 3.14,
    "pos": 0.43,
    "auction_ratio": null
@@ -314,7 +314,7 @@
    "price": 8.94,
    "pct": 1.59,
    "gap": 7.95,
-   "lb": 3.17,
+   "lb": 3.15,
    "r1": -5.89,
    "pos": 0.18,
    "auction_ratio": null
@@ -325,7 +325,7 @@
    "price": 2.97,
    "pct": -5.11,
    "gap": 0.32,
-   "lb": 3.13,
+   "lb": 3.11,
    "r1": -5.41,
    "pos": 0.05,
    "auction_ratio": null
@@ -336,7 +336,7 @@
    "price": 15.13,
    "pct": -0.26,
    "gap": 2.11,
-   "lb": 3.1,
+   "lb": 3.08,
    "r1": -2.32,
    "pos": 0.04,
    "auction_ratio": null
