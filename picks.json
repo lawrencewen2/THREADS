@@ -9,12 +9,12 @@
   "stop": 33.18,
   "take": 46.22,
   "ref": false,
-  "price": 40.58,
-  "pct": 0.55,
-  "from_entry": -1.02,
-  "to_stop": -18.24,
-  "to_take": 13.9,
-  "time": "11-13 09:20",
+  "price": 40.76,
+  "pct": 0.99,
+  "from_entry": -0.59,
+  "to_stop": -18.6,
+  "to_take": 13.4,
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -27,12 +27,12 @@
   "stop": 213.25,
   "take": 291.17,
   "ref": false,
-  "price": 258.85,
-  "pct": 0.0,
-  "from_entry": -0.44,
-  "to_stop": -17.62,
-  "to_take": 12.49,
-  "time": "11-13 09:20",
+  "price": 259.05,
+  "pct": 0.08,
+  "from_entry": -0.37,
+  "to_stop": -17.68,
+  "to_take": 12.4,
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -50,7 +50,7 @@
   "from_entry": -1.76,
   "to_stop": -17.44,
   "to_take": 14.63,
-  "time": "11-13 09:19",
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -63,11 +63,11 @@
   "stop": 30.26,
   "take": 49.82,
   "ref": false,
-  "price": 45.36,
-  "pct": 0.0,
-  "from_entry": 8.0,
-  "to_stop": -33.29,
-  "to_take": 9.83,
+  "price": 45.38,
+  "pct": 0.04,
+  "from_entry": 8.05,
+  "to_stop": -33.32,
+  "to_take": 9.78,
   "time": "11-13 09:20",
   "status": "正常"
  },
@@ -86,7 +86,7 @@
   "from_entry": -2.89,
   "to_stop": -7.37,
   "to_take": 9.86,
-  "time": "11-13 09:19",
+  "time": "11-13 09:20",
   "status": "正常"
  },
  {
@@ -99,12 +99,12 @@
   "stop": 90.5,
   "take": 145.5,
   "ref": false,
-  "price": 133.9,
-  "pct": 2.82,
-  "from_entry": 8.42,
-  "to_stop": -32.41,
-  "to_take": 8.66,
-  "time": "11-13 09:20",
+  "price": 134.05,
+  "pct": 2.93,
+  "from_entry": 8.54,
+  "to_stop": -32.49,
+  "to_take": 8.54,
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -122,7 +122,7 @@
   "from_entry": 3.88,
   "to_stop": -18.69,
   "to_take": 6.23,
-  "time": "11-13 09:20",
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -135,12 +135,12 @@
   "stop": 57.78,
   "take": 98.15,
   "ref": false,
-  "price": 81.81,
-  "pct": -1.18,
-  "from_entry": -0.23,
-  "to_stop": -29.37,
-  "to_take": 19.97,
-  "time": "11-13 09:20",
+  "price": 81.88,
+  "pct": -1.1,
+  "from_entry": -0.15,
+  "to_stop": -29.43,
+  "to_take": 19.87,
+  "time": "11-13 09:21",
   "status": "正常"
  },
  {
@@ -153,12 +153,12 @@
   "stop": 42.81,
   "take": 64.63,
   "ref": false,
-  "price": 57.18,
-  "pct": 3.01,
-  "from_entry": 2.29,
-  "to_stop": -25.13,
-  "to_take": 13.03,
-  "time": "11-13 09:20",
+  "price": 57.0,
+  "pct": 2.68,
+  "from_entry": 1.97,
+  "to_stop": -24.89,
+  "to_take": 13.39,
+  "time": "11-13 09:21",
   "status": "正常"
  }
 ]
