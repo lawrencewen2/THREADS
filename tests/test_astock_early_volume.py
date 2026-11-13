@@ -50,7 +50,7 @@ def test_tp_sl_order():
     assert r == [-0.1, -0.05, 0.01, 0.15]
 
 
-def test_live_monitor(tmp_path):
+def test_live_monitor(tmp_path, monkeypatch):
     from datetime import datetime
     from zoneinfo import ZoneInfo
 
@@ -58,6 +58,9 @@ def test_live_monitor(tmp_path):
 
     tz = ZoneInfo("Asia/Shanghai")
     codes = [f"sz.00{i:04d}" for i in range(20)]
+    assert early_live.update(tmp_path / "small", dict(signal_date="2026-11-09", codes={}), pd.DataFrame(),
+                             datetime(2026, 11, 10, 10, 0, tzinfo=tz)) == []  # 参考数据太少就不记
+    monkeypatch.setattr(early_live, "MIN_REF_CODES", 10)
     ref = dict(signal_date="2026-11-09", codes={c: [2.4e8, 0.1, f"股{i}"] for i, c in enumerate(codes)})
     model = dict(rule=dict(lbmin=2.0, lbmax=None, sl=0.05, tp=0.08), gap_range=[-1, 1], r1_range=[0, 1],
                  pos_range=[-0.01, 1.01], gate_range=[-0.01, 1.01], top_n=3, rule_text="test")
@@ -95,8 +98,11 @@ def test_live_monitor(tmp_path):
     assert any("只观察" in x for x in early_live.issue_lines(st))
 
 
-def test_write_ref():
+def test_write_ref(monkeypatch, tmp_path):
     from astock import early_live
+
+    monkeypatch.setattr(early_live.config, "PAGE_DIR", tmp_path)
+    monkeypatch.setattr(early_live, "REF_FILE", tmp_path / "early_ref.json")
 
     kl, _, basic = _fake(n_codes=5, n_days=60)
     basic["code_name"] = "x"
