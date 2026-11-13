@@ -8,28 +8,28 @@
  "cash": 0.0,
  "action": "卖出部分 ETF，腾出现金买股票",
  "rebalance": true,
- "days_since_rebalance": 1,
+ "days_since_rebalance": 2,
  "etfs": [
   {
    "code": "sh513100",
    "name": "纳指ETF",
    "weight": 0.2358,
-   "close": 2.218,
-   "close_date": "2026-11-12"
+   "close": 2.23,
+   "close_date": "2026-11-13"
   },
   {
    "code": "sh518880",
    "name": "黄金ETF",
    "weight": 0.2358,
-   "close": 8.085,
-   "close_date": "2026-11-12"
+   "close": 8.0,
+   "close_date": "2026-11-13"
   },
   {
    "code": "sh511010",
    "name": "国债ETF",
    "weight": 0.2358,
-   "close": 141.363,
-   "close_date": "2026-11-12"
+   "close": 141.33,
+   "close_date": "2026-11-13"
   }
  ],
  "note": "其余资金和选股闲着的钱等权放进这三只 ETF；要买股票时先卖 ETF 腾出现金（三只都能 T+0）；闲钱超过总资金 10% 才买回；每 20 个交易日调回等权",
