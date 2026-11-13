@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-13T08:14+00:00",
+  "as_of": "2026-11-13T08:15+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 38.9,
+      "score": 39.2,
       "band": "恐慌",
       "date": "2026-11-13",
       "official": 38.7,
       "official_date": "2026-11-12",
-      "change": 0.2,
+      "change": 0.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -40,13 +40,13 @@
     },
     "eu": {
       "name": "欧洲",
-      "fresh": false,
-      "score": 46.4,
+      "fresh": true,
+      "score": 48.2,
       "band": "中性",
-      "date": "2026-11-12",
+      "date": "2026-11-13",
       "official": 46.4,
       "official_date": "2026-11-12",
-      "change": 0.0,
+      "change": 1.8,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3900.52,
-      "time": "2026-11-13T08:14+00:00",
+      "value": 3899.616,
+      "time": "2026-11-13T08:15+00:00",
       "date": "2026-11-13",
       "fresh": false
     },
@@ -132,7 +132,7 @@
     },
     "hsi": {
       "value": 23637.6,
-      "time": "2026-11-13T08:14+00:00",
+      "time": "2026-11-13T08:15+00:00",
       "date": "2026-11-13",
       "fresh": true
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6409.740234,
-      "time": "2026-11-12T16:25+00:00",
-      "date": "2026-11-12",
-      "fresh": false
+      "value": 6383.299805,
+      "time": "2026-11-13T08:00+00:00",
+      "date": "2026-11-13",
+      "fresh": true
     },
     "eurchf": {
       "value": 0.92441,
-      "time": "2026-11-13T08:14+00:00",
+      "time": "2026-11-13T08:15+00:00",
       "date": "2026-11-13",
-      "fresh": false
+      "fresh": true
     },
     "usdjpy": {
-      "value": 159.869995,
-      "time": "2026-11-13T08:14+00:00",
+      "value": 159.893005,
+      "time": "2026-11-13T08:15+00:00",
       "date": "2026-11-13",
       "fresh": true
     },
@@ -218,10 +218,12 @@
   "fresh": [
     "a_turnover",
     "csi300",
+    "eurchf",
     "hsi",
     "hstech",
     "n225",
     "qvix50",
+    "sx5e",
     "topix",
     "usdjpy"
   ],
