@@ -6,7 +6,7 @@
  },
  "picks": [],
  "frozen": false,
- "time": "11-13 13:20",
+ "time": "11-13 13:21",
  "phase": "已定名单",
  "breadth": 0.5,
  "stocks": 2,
@@ -28,7 +28,7 @@
    "price": 3.09,
    "pct": -1.59,
    "gap": 0.32,
-   "lb": 2.84,
+   "lb": 2.89,
    "r1": -1.9,
    "pos": 0.0,
    "auction_ratio": 1.69
