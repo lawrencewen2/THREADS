@@ -28,6 +28,7 @@ MODEL_FILE = Path(__file__).resolve().parent / "early_volume_model.json"
 FREEZE = time(10, 30)
 AUCTION_START, AUCTION_END = time(9, 25), time(9, 30)
 SHOW = 30  # 页面上列出量比最高的多少只
+MIN_REF_CODES = 500  # 正常有 3000 多只
 
 
 def write_ref(kline, basic):
@@ -118,6 +119,9 @@ def update(out, ref, quotes, now_cn, model=None):
     if old.get("date") != day:
         old = dict(date=day, auction={}, picks=[], frozen=False)
     if ref.get("signal_date", "") >= day or now_cn.time() < AUCTION_START:
+        return []
+    if len(ref.get("codes", {})) < MIN_REF_CODES:  # 参考数据不完整（比如测试数据误入），不记，免得污染日志
+        log.warning("early_ref has only %d codes, skipped", len(ref.get("codes", {})))
         return []
     q = features(ref, quotes, now_cn)
     if q.empty:

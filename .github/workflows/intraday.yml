@@ -62,7 +62,7 @@ jobs:
           start=$(date +%s)
           while :; do
             # 选股名单白天也会更新（收盘后），每轮取 main 上最新的一份
-            git fetch -q --depth 1 origin main && git checkout -q FETCH_HEAD -- docs/astock/picks.json && { git checkout -q FETCH_HEAD -- docs/astock/market_ref.json 2>/dev/null || true; } && { git checkout -q FETCH_HEAD -- docs/astock/early_ref.json astock/early_volume_model.json 2>/dev/null || true; } || echo "picks.json not refreshed"
+            git fetch -q --depth 1 origin main && git checkout -q FETCH_HEAD -- docs/astock/picks.json && { git checkout -q FETCH_HEAD -- docs/astock/market_ref.json 2>/dev/null || true; } && { git checkout -q FETCH_HEAD -- docs/astock/early_ref.json 2>/dev/null || true; } && { git checkout -q FETCH_HEAD -- astock/early_volume_model.json 2>/dev/null || true; } || echo "picks.json not refreshed"
             python scripts/run_intraday.py --out state || echo "::warning::run_intraday failed"
             (
               cd state
