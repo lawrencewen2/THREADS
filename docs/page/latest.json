@@ -21,9 +21,9 @@
   "key": "eu",
   "name": "欧洲",
   "date": "2026-11-12",
-  "score": 46.3,
+  "score": 46.4,
   "band": "中性",
-  "change_5d": 9.0,
+  "change_5d": 9.1,
   "signal": "正常"
  },
  {
@@ -48,9 +48,9 @@
   "key": "hk",
   "name": "港股",
   "date": "2026-11-12",
-  "score": 52.3,
+  "score": 53.3,
   "band": "中性",
-  "change_5d": 0.1,
+  "change_5d": 1.1,
   "signal": "正常"
  }
 ]

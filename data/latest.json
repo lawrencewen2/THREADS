@@ -20,9 +20,9 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 46.3,
+      "score": 46.4,
       "band": "中性",
-      "change_5d": 9.0,
+      "change_5d": 9.1,
       "risk_off": false,
       "signal": "normal"
     },
@@ -44,9 +44,9 @@
     },
     "hk": {
       "name": "港股",
-      "score": 52.3,
+      "score": 53.3,
       "band": "中性",
-      "change_5d": 0.1,
+      "change_5d": 1.1,
       "risk_off": false,
       "signal": "normal"
     }
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 29.1
+      "score": 30.0
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -115,22 +115,22 @@
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 2.6
+      "score": 2.7
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 3.1
+      "score": 3.2
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 57.5
+      "score": 56.4
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 8.7
+      "score": 8.8
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 15.3
+      "score": 32.5
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 81.3
+      "score": 77.6
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
