@@ -98,14 +98,14 @@ def fetch_yahoo(ticker, start):
 
 
 def _ak_index(provider, symbol, field):
-    import akshare as ak
+    from .akcompat import call
 
     if provider == "em":
-        df = ak.stock_zh_index_daily_em(symbol=symbol)
+        df = call("stock_zh_index_daily_em", symbol=symbol)
     elif provider == "tx":
-        df = ak.stock_zh_index_daily_tx(symbol=symbol)
+        df = call("stock_zh_index_daily_tx", symbol=symbol)
     elif provider == "sina":
-        df = ak.stock_zh_index_daily(symbol=symbol)
+        df = call("stock_zh_index_daily", symbol=symbol)
     else:
         raise KeyError(provider)
     return pd.to_numeric(df.set_index("date")[field], errors="coerce")
@@ -113,6 +113,8 @@ def _ak_index(provider, symbol, field):
 
 def fetch_akshare(spec, start):
     import akshare as ak
+
+    from . import akcompat
 
     def go():
         if ":" in spec:
@@ -125,7 +127,7 @@ def fetch_akshare(spec, start):
                 total = total + p
             return total.dropna()
         if spec == "sh_margin":
-            df = ak.macro_china_market_margin_sh()
+            df = akcompat.call("macro_china_market_margin_sh")
             date_col = df.columns[0]
             # 融资余额列名在不同版本里略有差异，按关键字匹配
             col = next(c for c in df.columns if "融资余额" in str(c))
