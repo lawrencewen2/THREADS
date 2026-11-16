@@ -51,3 +51,44 @@ def test_trades_once(tmp_path):
 
 def test_rule_version_changes_with_rules():
     assert ledger.rule_version(SM) != ledger.rule_version(dict(SM, capital_share=0.5))
+
+
+def _plan(tmp_path, days, w=0.7):
+    v = ledger.rule_version(SM)
+    for td in days:
+        ledger.log_plan(result(td, []), dict(stock_used=0.3, sleeve_weight=w), v, tmp_path)
+    return v
+
+
+def test_missing_etf_does_not_average_the_rest(tmp_path):
+    v = _plan(tmp_path, ["2026-11-17"])
+    live = dict(summary=dict(daily=[dict(trade_date="2026-11-17", net=0.0)]))
+    idx = pd.to_datetime(["2026-11-16", "2026-11-17"])
+    closes = {"x": pd.Series([1.0, 1.1], index=idx)}  # y 没拉到
+    assert ledger.log_nav(live, closes, v, tmp_path, codes=["x", "y"]) == 0
+
+
+def test_one_etf_gap_does_not_freeze_nav(tmp_path):
+    v = _plan(tmp_path, ["2026-11-17", "2026-11-18"])
+    live = dict(summary=dict(daily=[dict(trade_date="2026-11-17", net=0.0), dict(trade_date="2026-11-18", net=0.0)]))
+    closes = {"x": pd.Series([1.0, 1.1, 1.1], index=pd.to_datetime(["2026-11-16", "2026-11-17", "2026-11-18"])),
+              "y": pd.Series([1.0, 1.0], index=pd.to_datetime(["2026-11-16", "2026-11-18"]))}  # y 停牌一天
+    assert ledger.log_nav(live, closes, v, tmp_path, codes=["x", "y"]) == 2
+
+
+def test_failed_sleeve_not_logged_as_zero(tmp_path):
+    v = ledger.rule_version(SM)
+    assert ledger.log_plan(result("2026-11-17", []), None, v, tmp_path, need_sleeve=True) == 0
+    _plan(tmp_path, ["2026-11-16"], w=0.5)
+    live = dict(summary=dict(daily=[dict(trade_date="2026-11-17", net=0.0)]))
+    idx = pd.to_datetime(["2026-11-16", "2026-11-17"])
+    closes = {"x": pd.Series([1.0, 1.1], index=idx), "y": pd.Series([1.0, 1.1], index=idx)}
+    ledger.log_nav(live, closes, v, tmp_path, ts="2026-11-18T01:00:00Z", codes=["x", "y"])
+    r = ledger.read("nav", tmp_path)[-1]
+    assert float(r["sleeve_weight"]) == 0.5 and "沿用" in r["source"]
+
+
+def test_note_change_keeps_version():
+    a = dict(SM, sleeve={"codes": ["x", "y"], "note": "旧"})
+    b = dict(SM, sleeve={"codes": ["x", "y"], "note": "新"})
+    assert ledger.rule_version(a) == ledger.rule_version(b)

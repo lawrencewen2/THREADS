@@ -40,8 +40,11 @@ def now():
 
 def rule_version(sm):
     """规则版本 = slot_model.json 里决定交易的字段的短哈希，改了规则就会变。"""
-    keys = ("weights", "blend", "n", "take_profit", "stop_loss", "max_hold", "overlay", "capital_share", "sleeve")
-    blob = json.dumps({k: sm.get(k) for k in keys}, sort_keys=True, ensure_ascii=False)
+    keys = ("weights", "blend", "n", "take_profit", "stop_loss", "max_hold", "overlay", "capital_share")
+    d = {k: sm.get(k) for k in keys}
+    sl = sm.get("sleeve") or {}
+    d["sleeve"] = {k: sl.get(k) for k in ("codes", "rebalance", "park_band")} if sl else None  # 说明文字不算规则
+    blob = json.dumps(d, sort_keys=True, ensure_ascii=False)
     return hashlib.sha1(blob.encode()).hexdigest()[:8]
 
 
@@ -92,10 +95,12 @@ def log_signals(result, version, d=None, ts=None):
     return append("signals", rows, d)
 
 
-def log_plan(result, sleeve, version, d=None, ts=None):
+def log_plan(result, sleeve, version, d=None, ts=None, need_sleeve=False):
     td = result["trade_date"]
     if any(r["trade_date"] == td for r in read("plan", d)):
         return 0
+    if need_sleeve and not sleeve:
+        return 0  # ETF 分仓这次没算出来：不记 0 仓位，等同一天重跑或用上一天的比例（log_nav）
     row = dict(trade_date=td, invest=int(bool(result.get("invest", True))), gate_open=int(bool(result.get("gate_open"))),
                n_selected=result.get("n_selected", 0),
                stock_used=_r(sleeve.get("stock_used") if sleeve else None, 4),
@@ -104,36 +109,50 @@ def log_plan(result, sleeve, version, d=None, ts=None):
     return append("plan", [row], d)
 
 
-def sleeve_daily(closes):
-    """三只 ETF 收盘到收盘的等权收益：{日期字符串: 收益}。只用三只都有数的日子。"""
+def sleeve_daily(closes, codes=None):
+    """几只 ETF 收盘到收盘的等权收益：{日期字符串: 收益}。
+
+    codes 给出时，少任何一只就返回空（不拿剩下几只的平均冒充分仓收益）。某只 ETF 个别日子没数（停牌等）
+    按当天不涨不跌处理；只记到所有 ETF 都有数的最后一天为止，之后的日子等下次再记。"""
     import pandas as pd
-    if not closes:
+    if not closes or (codes and any(c not in closes or not len(closes[c]) for c in codes)):
         return {}
-    df = pd.DataFrame(closes).sort_index()
-    r = df.pct_change(fill_method=None).dropna(how="any")
+    df = pd.DataFrame({c: closes[c] for c in (codes or closes)}).sort_index()
+    last = min(s.index.max() for s in (closes[c] for c in (codes or closes)))
+    df = df[df.index <= last].ffill()
+    r = df.pct_change(fill_method=None).iloc[1:].fillna(0.0)
     return {str(k.date()): float(v) for k, v in r.mean(axis=1).items()}
 
 
-def log_nav(live, closes, version, d=None, ts=None):
+def log_nav(live, closes, version, d=None, ts=None, codes=None):
     """把 live.json 里新出现的日子记进 nav.csv。ETF 收益缺的日子先不记，下次再补（不写半截数）。"""
     have = read("nav", d)
     done = {r["date"] for r in have}
     nav = float(have[-1]["nav"]) if have else 1.0
-    weights = {r["trade_date"]: float(r["sleeve_weight"] or 0) for r in read("plan", d)}
-    srets = sleeve_daily(closes)
+    plans = sorted(read("plan", d), key=lambda r: r["trade_date"])
+    srets = sleeve_daily(closes, codes)
     rows, ts = [], ts or now()
+    today = ts[:10]
     for x in live.get("summary", {}).get("daily", []):
         day = x["trade_date"]
         if day in done or (have and day <= have[-1]["date"]):
             continue
-        w = weights.get(day, 0.0)
+        prior = [r for r in plans if r["trade_date"] <= day]
+        if not prior:
+            w, src = 0.0, "live"
+        elif prior[-1]["trade_date"] == day:
+            w, src = float(prior[-1]["sleeve_weight"] or 0), "live"
+        else:
+            w, src = float(prior[-1]["sleeve_weight"] or 0), "live(沿用前一天分仓比例)"
+        if (datetime.fromisoformat(today) - datetime.fromisoformat(day)).days > 4:
+            src = "catchup"  # 账本上线前的日子，第一次运行时补记
         if w > 0 and day not in srets:
             break  # 按日期顺序记，缺一天就停，保证净值连续
         sr = srets.get(day, 0.0)
         total = float(x["net"]) + w * sr
         nav *= 1 + total
         rows.append(dict(date=day, stock_net=_r(x["net"]), sleeve_weight=_r(w, 4), sleeve_ret=_r(sr),
-                         total_net=_r(total), nav=_r(nav), rule_version=version, source="live", logged_at=ts))
+                         total_net=_r(total), nav=_r(nav), rule_version=version, source=src, logged_at=ts))
     return append("nav", rows, d)
 
 
@@ -152,7 +171,9 @@ def update(result, live, sleeve, sm, closes=None, d=None):
     if closes is None and sm.get("sleeve"):
         from .live_sleeve import fetch_closes
         closes = fetch_closes(sm["sleeve"]["codes"])
-    n = dict(signals=log_signals(result, version, d, ts), plan=log_plan(result, sleeve, version, d, ts),
-             nav=log_nav(live, closes or {}, version, d, ts), trades=log_trades(live, d, ts))
+    codes = (sm.get("sleeve") or {}).get("codes")
+    n = dict(signals=log_signals(result, version, d, ts),
+             plan=log_plan(result, sleeve, version, d, ts, need_sleeve=bool(codes)),
+             nav=log_nav(live, closes or {}, version, d, ts, codes), trades=log_trades(live, d, ts))
     log.info("ledger appended %s", n)
     return n
