@@ -111,6 +111,31 @@ def _ak_index(provider, symbol, field):
     return pd.to_numeric(df.set_index("date")[field], errors="coerce")
 
 
+def _sse_margin_tail(s):
+    """金十的上交所融资余额有时停更多日（2026-11 停在 11-05），用上交所官网最近 60 天的数据补上缺的日子。
+
+    两边都是元为单位的同一指标（核查里两者比值约为 1），只补金十最后一天之后的日期，不改已有历史。
+    """
+    from . import akcompat
+
+    try:
+        end = pd.Timestamp.today()
+        df = akcompat.call("stock_margin_sse", start_date=f"{end - pd.Timedelta(days=60):%Y%m%d}",
+                           end_date=f"{end:%Y%m%d}")
+        sse = pd.to_numeric(df["融资余额"], errors="coerce")
+        sse.index = pd.to_datetime(df["信用交易日期"].astype(str))
+        sse = sse.dropna().sort_index()
+    except Exception as exc:
+        log.warning("sh_margin: SSE official fill failed: %s", str(exc)[:120])
+        return s
+    last = pd.to_datetime(s.dropna().index).max()
+    tail = sse[sse.index > last]
+    if len(tail):
+        log.info("sh_margin: jin10 ends %s, filled %d days from SSE official", last.date(), len(tail))
+        s = pd.concat([s, tail])
+    return s
+
+
 def fetch_akshare(spec, start):
     import akshare as ak
 
@@ -131,7 +156,9 @@ def fetch_akshare(spec, start):
             date_col = df.columns[0]
             # 融资余额列名在不同版本里略有差异，按关键字匹配
             col = next(c for c in df.columns if "融资余额" in str(c))
-            return df.set_index(date_col)[col]
+            s = df.set_index(date_col)[col]
+            s.index = pd.to_datetime(s.index)
+            return _sse_margin_tail(s)
         if spec == "qvix50":
             df = ak.index_option_50etf_qvix()
             return df.set_index("date")["close"]
