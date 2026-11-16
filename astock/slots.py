@@ -72,8 +72,12 @@ def levels(entry, atr, tp, sl):
     return target, stop
 
 
-def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end, state=None):
-    """state 给一个 dict 时，跑到最后一个交易日（含当天的卖出和买入），并把收盘后的持仓写进 state["held"]。"""
+def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end, state=None, same_day_refill=False):
+    """state 给一个 dict 时，跑到最后一个交易日（含当天的卖出和买入），并把收盘后的持仓写进 state["held"]。
+
+    2026-11-16 修正（量化小组红队发现）：盘中碰到止盈/止损卖出的仓位，当天开盘时还没腾出来，
+    只能第二天开盘再买；当天卖掉的股票当天也不买回。到期在开盘卖出的仓位当天开盘可以换新股。
+    same_day_refill=True 是修正前的旧口径（只用来对照）。"""
     o, h, l, atr, locked = ohl
     up, _ = p.limit_prices()
     up_v, raw_open, traded = up.to_numpy(), p.open.to_numpy(), p.traded.to_numpy()
@@ -90,29 +94,39 @@ def simulate(p, ohl, sc, gate, n, tp, sl, hold, start, end, state=None):
         stamp = config.STAMP_DUTY_NEW if dates[T] >= stamp_change else config.STAMP_DUTY_OLD
         sell_cost = config.SLIPPAGE + config.COMMISSION + stamp
         r = 0.0
+        intraday_freed, sold_today = 0, set()
         for j in list(held):
             entry, target, stop, d0 = held[j]
             px = None
+            at_open = False
             if not locked[T, j] and np.isfinite(o[T, j]):
                 if T - d0 >= hold:
-                    px = o[T, j]
+                    px, at_open = o[T, j], True
                 elif l[T, j] <= stop:
                     px = min(o[T, j], stop)
+                    at_open = o[T, j] <= stop  # 开盘就跌破止损：开盘卖出
                 elif h[T, j] >= target:
                     px = max(o[T, j], target)
+                    at_open = o[T, j] >= target
             if px is None:
                 continue
+            if not at_open:
+                intraday_freed += 1
+            sold_today.add(j)
             r += (px / o[T, j] - 1 - sell_cost) / n  # 当天开盘到卖出价
             trades.append(dict(entry=dates[d0], exit=dates[T], code=p.codes[j],
                                net=px * (1 - sell_cost) / (entry * (1 + buy_cost)) - 1))
             del held[j]
-        if gate_v[T - 1] and len(held) < n:
+        cap = n if same_day_refill else n - intraday_freed
+        if gate_v[T - 1] and len(held) < cap:
             row = sc_v[T - 1]
             ok = ~np.isnan(row)
             for j in np.argsort(-np.where(ok, row, -np.inf))[:n * 3]:
-                if len(held) >= n or not ok[j]:
+                if len(held) >= cap or not ok[j]:
                     break
                 if j in held or not traded[T, j] or raw_open[T, j] >= up_v[T, j] - 0.005:
+                    continue
+                if j in sold_today and not same_day_refill:
                     continue
                 a = atr[T - 1, j]
                 if not np.isfinite(a) or not np.isfinite(o[T, j]):

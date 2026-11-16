@@ -31,16 +31,19 @@ OUT_JSON = config.ROOT / "docs" / "astock" / "redline.json"
 OUT_MD = config.ROOT / "reports" / "astock" / "redline.md"
 
 
-def load_part(col="accel0.3", path=dv.RESEARCH_DIR / "combo_daily.csv.gz", n=20):
-    c = pd.read_csv(path, parse_dates=["date"], index_col="date")
-    period = pd.read_csv(dv.RESEARCH_DIR / "live_daily.csv", parse_dates=["date"], index_col="date")["period"]
+def load_part(col="accel0.3", path=dv.RESEARCH_DIR / "combo_daily.csv.gz", n=20, frame=None):
+    c = pd.read_csv(path, parse_dates=["date"], index_col="date") if frame is None else frame
     out = {}
     for p in ("train", "test"):
-        idx = period.index[period == p].intersection(c.index)
+        if p == "train":
+            idx = c.index[(c.index >= pd.Timestamp(config.TRAIN_START)) & (c.index <= pd.Timestamp(config.TRAIN_END))]
+        else:
+            idx = c.index[c.index >= pd.Timestamp(config.TEST_START)]
         x = pd.DataFrame({"raw": c.loc[idx, f"{col}|raw"], "held": c.loc[idx, f"{col}|held"]})
         eq = (1 + x["raw"]).cumprod()
         pos = (eq >= eq.rolling(20, min_periods=10).mean()).astype(float).shift(2).fillna(1.0)
-        x["live"] = x["raw"] * pos - pos.diff().abs().fillna(0) * SWITCH_COST / 2
+        # 空仓开关每切换一次扣单边成本（2026-11-16 红队：之前多除了一个 2，少扣一半）
+        x["live"] = x["raw"] * pos - pos.diff().abs().fillna(0) * SWITCH_COST
         x["expo"] = (pos * x["held"].shift(1).fillna(0) / n).clip(0, 1)
         out[p] = x
     return out
