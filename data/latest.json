@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 39.9,
-      "band": "恐慌",
-      "change_5d": 9.7,
+      "score": 40.0,
+      "band": "中性",
+      "change_5d": 9.8,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -36,9 +36,9 @@
     },
     "cn": {
       "name": "A股",
-      "score": 40.2,
+      "score": 40.9,
       "band": "中性",
-      "change_5d": 9.1,
+      "change_5d": 9.8,
       "risk_off": false,
       "signal": "normal"
     },
@@ -145,17 +145,17 @@
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
       "region": "cn",
-      "score": 32.8
+      "score": 32.2
     },
     "cn_dd": {
       "name": "沪深300 回撤",
       "region": "cn",
-      "score": 16.3
+      "score": 13.9
     },
     "cn_turnover": {
       "name": "两市成交量萎缩",
       "region": "cn",
-      "score": 1.6
+      "score": 1.9
     },
     "cn_margin": {
       "name": "沪市融资余额下降",
@@ -165,7 +165,7 @@
     "cn_crash": {
       "name": "沪深300 10日急跌",
       "region": "cn",
-      "score": 56.1
+      "score": 64.6
     },
     "hk_rvol": {
       "name": "恒指 20日实际波动率",
@@ -210,11 +210,6 @@
   },
   "status": {
     "warnings": [
-      "csi300 拉取失败，沿用缓存（akshare:tx_close:sh000300 AttributeError: stock_zh_index_daily_tx 已在 1.20.44 更名为）",
-      "a_turnover 拉取失败，沿用缓存（akshare:tx_amount:sh000001+sz399001 AttributeError: stock_zh_index_daily_tx 已在 1）",
-      "sh_margin 拉取失败，沿用缓存（akshare:sh_margin AttributeError: macro_china_market_margin_sh 已在 1.20.48 更名为 st）",
-      "csi1000 拉取失败，沿用缓存（akshare:tx_close:sh000852 AttributeError: stock_zh_index_daily_tx 已在 1.20.44 更名为）",
-      "csi500 拉取失败，沿用缓存（akshare:tx_close:sh000905 AttributeError: stock_zh_index_daily_tx 已在 1.20.44 更名为）",
       "sh_margin 已 8 天未更新（最后 2026-11-05）"
     ],
     "failures": [],
