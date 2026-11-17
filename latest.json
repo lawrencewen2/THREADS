@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-17T05:46+00:00",
+  "as_of": "2026-11-17T05:47+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 35.9,
+      "score": 36.2,
       "band": "恐慌",
       "date": "2026-11-17",
-      "official": 36.5,
+      "official": 36.7,
       "official_date": "2026-11-16",
-      "change": -0.6,
+      "change": -0.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,10 +41,10 @@
     "eu": {
       "name": "欧洲",
       "fresh": false,
-      "score": 47.8,
+      "score": 48.3,
       "band": "中性",
       "date": "2026-11-16",
-      "official": 47.8,
+      "official": 48.3,
       "official_date": "2026-11-16",
       "change": 0.0,
       "signal": "normal",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 13.1,
+      "score": 13.2,
       "band": "极度恐慌",
       "date": "2026-11-17",
-      "official": 15.2,
+      "official": 15.4,
       "official_date": "2026-11-16",
-      "change": -2.1,
+      "change": -2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 34.5,
+      "score": 34.6,
       "band": "恐慌",
       "date": "2026-11-17",
-      "official": 35.6,
+      "official": 35.5,
       "official_date": "2026-11-16",
-      "change": -1.1,
+      "change": -0.9,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -95,10 +95,10 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 42.4,
+      "score": 42.7,
       "band": "中性",
       "date": "2026-11-17",
-      "official": 44.9,
+      "official": 45.2,
       "official_date": "2026-11-16",
       "change": -2.5,
       "signal": "normal",
@@ -113,38 +113,38 @@
   },
   "quotes": {
     "n225": {
-      "value": 59056.63,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 59104.68,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "gold": {
-      "value": 3887.08,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 3887.484,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "csi300": {
-      "value": 3976.82,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 3978.01,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hsi": {
-      "value": 23606.92,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 23611.38,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hstech": {
-      "value": 3.712,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 3.714,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "a_turnover": {
-      "value": 108499409.0,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 108695544.0,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92374,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 0.92378,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "usdjpy": {
-      "value": 159.126007,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 159.121002,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "topix": {
-      "value": 405.0,
-      "time": "2026-11-17T05:31+00:00",
+      "value": 404.899994,
+      "time": "2026-11-17T05:32+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
@@ -209,8 +209,8 @@
       "fresh": false
     },
     "qvix50": {
-      "value": 14.36,
-      "time": "2026-11-17T05:46+00:00",
+      "value": 14.28,
+      "time": "2026-11-17T05:47+00:00",
       "date": "2026-11-17",
       "fresh": true
     }
