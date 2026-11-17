@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 36.5,
+      "score": 36.6,
       "band": "恐慌",
-      "change_5d": 5.0,
+      "change_5d": 5.1,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -20,33 +20,33 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 47.8,
+      "score": 48.3,
       "band": "中性",
-      "change_5d": 10.2,
+      "change_5d": 10.7,
       "risk_off": false,
       "signal": "normal"
     },
     "jp": {
       "name": "日本",
-      "score": 15.2,
+      "score": 15.4,
       "band": "极度恐慌",
-      "change_5d": 4.3,
+      "change_5d": 4.5,
       "risk_off": true,
       "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
-      "score": 35.6,
+      "score": 35.5,
       "band": "恐慌",
-      "change_5d": 5.0,
+      "change_5d": 4.9,
       "risk_off": false,
       "signal": "normal"
     },
     "hk": {
       "name": "港股",
-      "score": 44.9,
+      "score": 45.2,
       "band": "中性",
-      "change_5d": -9.5,
+      "change_5d": -9.2,
       "risk_off": false,
       "signal": "normal"
     }
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 46.7
+      "score": 54.0
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -115,7 +115,7 @@
     "jp_dd": {
       "name": "日经225 回撤",
       "region": "jp",
-      "score": 1.8
+      "score": 1.7
     },
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
@@ -125,12 +125,12 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 54.4
+      "score": 59.4
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 6.3
+      "score": 6.2
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 3.6
+      "score": 2.9
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 9.7
+      "score": 15.7
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 74.5
+      "score": 72.9
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
