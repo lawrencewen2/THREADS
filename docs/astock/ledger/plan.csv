@@ -11,3 +11,4 @@ trade_date,invest,gate_open,n_selected,stock_used,sleeve_weight,rule_version,sou
 2026-11-12,0,0,0,0.0,1.0,f1626694,backfill(git),2026-11-12T01:06:11Z
 2026-11-13,1,0,9,0.2925,0.7075,97f7539d,backfill(git),2026-11-13T01:00:20Z
 2026-11-16,1,1,20,0.65,0.35,97f7539d,backfill(git),2026-11-16T00:53:51Z
+2026-11-17,0,0,0,0.0,1.0,ac356adc,live,2026-11-17T00:25:39Z

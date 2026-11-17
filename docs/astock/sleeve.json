@@ -1,34 +1,34 @@
 {
- "trade_date": "2026-11-16",
- "signal_date": "2026-11-13",
- "capital_share": 0.65,
- "stock_used": 0.65,
- "sleeve_weight": 0.35,
- "prev_weight": 0.7075,
+ "trade_date": "2026-11-17",
+ "signal_date": "2026-11-16",
+ "capital_share": 0.35,
+ "stock_used": 0.0,
+ "sleeve_weight": 1.0,
+ "prev_weight": 0.35,
  "cash": 0.0,
- "action": "卖出部分 ETF，腾出现金买股票",
+ "action": "闲钱超过总资金 10%，买回 ETF",
  "rebalance": true,
- "days_since_rebalance": 2,
+ "days_since_rebalance": 1,
  "etfs": [
   {
    "code": "sh513100",
    "name": "纳指ETF",
-   "weight": 0.1167,
-   "close": 2.2,
+   "weight": 0.3333,
+   "close": 2.189,
    "close_date": "2026-11-16"
   },
   {
    "code": "sh518880",
    "name": "黄金ETF",
-   "weight": 0.1167,
-   "close": 7.91,
+   "weight": 0.3333,
+   "close": 7.852,
    "close_date": "2026-11-16"
   },
   {
    "code": "sh511010",
    "name": "国债ETF",
-   "weight": 0.1167,
-   "close": 141.23,
+   "weight": 0.3333,
+   "close": 141.2,
    "close_date": "2026-11-16"
   }
  ],

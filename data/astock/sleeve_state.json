@@ -1,7 +1,7 @@
 {
- "trade_date": "2026-11-16",
- "weight": 0.35,
- "prev_weight": 0.7075,
- "rebalanced": "2026-11-16",
- "prev_rebalanced": "2026-11-13"
+ "trade_date": "2026-11-17",
+ "weight": 1.0,
+ "prev_weight": 0.35,
+ "rebalanced": "2026-11-17",
+ "prev_rebalanced": "2026-11-16"
 }
