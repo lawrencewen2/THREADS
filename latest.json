@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-17T05:29+00:00",
+  "as_of": "2026-11-17T05:30+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 12.8,
+      "score": 12.9,
       "band": "极度恐慌",
       "date": "2026-11-17",
       "official": 15.2,
       "official_date": "2026-11-16",
-      "change": -2.4,
+      "change": -2.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 34.5,
+      "score": 34.7,
       "band": "恐慌",
       "date": "2026-11-17",
       "official": 35.6,
       "official_date": "2026-11-16",
-      "change": -1.1,
+      "change": -0.9,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -113,38 +113,38 @@
   },
   "quotes": {
     "n225": {
-      "value": 59090.6,
-      "time": "2026-11-17T05:28+00:00",
+      "value": 59120.93,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "gold": {
-      "value": 3885.445,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 3887.012,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "csi300": {
-      "value": 3974.39,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 3976.02,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hsi": {
-      "value": 23598.12,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 23600.78,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hstech": {
       "value": 3.712,
-      "time": "2026-11-17T05:28+00:00",
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "a_turnover": {
-      "value": 102793527.0,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 103145724.0,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92396,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 0.92394,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "usdjpy": {
-      "value": 159.179001,
-      "time": "2026-11-17T05:29+00:00",
+      "value": 159.184998,
+      "time": "2026-11-17T05:30+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "topix": {
       "value": 403.700012,
-      "time": "2026-11-17T05:14+00:00",
+      "time": "2026-11-17T05:15+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
@@ -207,12 +207,6 @@
       "time": "2026-11-16T19:59+00:00",
       "date": "2026-11-16",
       "fresh": false
-    },
-    "qvix50": {
-      "value": 14.31,
-      "time": "2026-11-17T05:28+00:00",
-      "date": "2026-11-17",
-      "fresh": true
     }
   },
   "fresh": [
@@ -221,9 +215,10 @@
     "hsi",
     "hstech",
     "n225",
-    "qvix50",
     "topix",
     "usdjpy"
   ],
-  "errors": {}
+  "errors": {
+    "qvix50": "qvix: HTTPError: 404 Client Error: Not Found for url: http://1.optbbs.com/d/csv/d/vix50.csv"
+  }
 }
