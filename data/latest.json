@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 36.6,
+      "score": 36.7,
       "band": "恐慌",
-      "change_5d": 5.1,
+      "change_5d": 5.2,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 72.9
+      "score": 75.3
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
