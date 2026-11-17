@@ -1,6 +1,6 @@
 {
  "date": "2026-11-17",
- "time": "11-17 09:28",
+ "time": "11-17 09:29",
  "session": "盘中",
  "temperature": 10.9,
  "label": "冰点",
@@ -19,6 +19,6 @@
  "above_ma20": 0.1901,
  "median_ret": -0.0061,
  "stocks": 5151,
- "last_quote": "09:28:01",
+ "last_quote": "09:29:17",
  "signal_date": "2026-11-16"
 }
