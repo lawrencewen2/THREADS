@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-17T02:00+00:00",
+  "as_of": "2026-11-17T02:01+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 32.9,
+      "score": 32.8,
       "band": "恐慌",
       "date": "2026-11-17",
       "official": 35.6,
       "official_date": "2026-11-16",
-      "change": -2.7,
+      "change": -2.8,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 40.5,
+      "score": 40.8,
       "band": "中性",
       "date": "2026-11-17",
       "official": 44.9,
       "official_date": "2026-11-16",
-      "change": -4.4,
+      "change": -4.1,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -113,38 +113,38 @@
   },
   "quotes": {
     "n225": {
-      "value": 58918.72,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 59013.34,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "gold": {
-      "value": 3867.613,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 3866.992,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "csi300": {
-      "value": 3954.16,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 3952.9,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hsi": {
-      "value": 23405.12,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 23430.2,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hstech": {
-      "value": 3.658,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 3.662,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "a_turnover": {
-      "value": 44212213.0,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 45204313.0,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
@@ -209,8 +209,8 @@
       "fresh": false
     },
     "qvix50": {
-      "value": 15.19,
-      "time": "2026-11-17T02:00+00:00",
+      "value": 15.21,
+      "time": "2026-11-17T02:01+00:00",
       "date": "2026-11-17",
       "fresh": true
     }
