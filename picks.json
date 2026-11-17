@@ -10,12 +10,12 @@
   "take": 43.64,
   "ref": true,
   "price": 35.21,
-  "pct": -11.6,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -35.9,
   "to_take": 23.94,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sh.600345",
@@ -28,12 +28,12 @@
   "take": 41.16,
   "ref": true,
   "price": 36.32,
-  "pct": -6.42,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -19.96,
   "to_take": 13.33,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sh.688331",
@@ -46,12 +46,12 @@
   "take": 100.23,
   "ref": true,
   "price": 88.91,
-  "pct": -7.28,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -19.1,
   "to_take": 12.73,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sh.603618",
@@ -64,12 +64,12 @@
   "take": 24.21,
   "ref": true,
   "price": 21.03,
-  "pct": -6.78,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -22.63,
   "to_take": 15.12,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sz.300107",
@@ -82,12 +82,12 @@
   "take": 7.28,
   "ref": true,
   "price": 6.69,
-  "pct": -1.76,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -13.3,
   "to_take": 8.82,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sz.002636",
@@ -100,12 +100,12 @@
   "take": 65.72,
   "ref": true,
   "price": 54.68,
-  "pct": -8.5,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -30.3,
   "to_take": 20.19,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sz.300199",
@@ -118,12 +118,12 @@
   "take": 24.38,
   "ref": true,
   "price": 22.03,
-  "pct": -3.33,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -15.98,
   "to_take": 10.67,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:00",
+  "status": "正常"
  },
  {
   "code": "sz.002115",
@@ -136,12 +136,12 @@
   "take": 9.81,
   "ref": true,
   "price": 8.96,
-  "pct": -3.76,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -14.17,
   "to_take": 9.49,
-  "time": "11-16 16:15",
-  "status": "未开盘"
+  "time": "11-17 09:00",
+  "status": "正常"
  },
  {
   "code": "sh.603986",
@@ -154,12 +154,12 @@
   "take": 254.8,
   "ref": true,
   "price": 223.22,
-  "pct": -9.27,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -21.23,
   "to_take": 14.15,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  },
  {
   "code": "sz.300613",
@@ -172,11 +172,11 @@
   "take": 90.17,
   "ref": true,
   "price": 76.3,
-  "pct": -4.0,
+  "pct": 0.0,
   "from_entry": null,
   "to_stop": -27.27,
   "to_take": 18.18,
-  "time": "11-16 16:14",
-  "status": "未开盘"
+  "time": "11-17 09:10",
+  "status": "正常"
  }
 ]
