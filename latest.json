@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-17T01:59+00:00",
+  "as_of": "2026-11-17T02:00+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 32.7,
+      "score": 32.9,
       "band": "恐慌",
       "date": "2026-11-17",
       "official": 35.6,
       "official_date": "2026-11-16",
-      "change": -2.9,
+      "change": -2.7,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 40.4,
+      "score": 40.5,
       "band": "中性",
       "date": "2026-11-17",
       "official": 44.9,
       "official_date": "2026-11-16",
-      "change": -4.5,
+      "change": -4.4,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -113,40 +113,40 @@
   },
   "quotes": {
     "n225": {
-      "value": 58964.66,
-      "time": "2026-11-17T01:59+00:00",
+      "value": 58918.72,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "gold": {
-      "value": 3869.393,
-      "time": "2026-11-17T01:59+00:00",
+      "value": 3867.613,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": false
     },
     "csi300": {
-      "value": 3953.97,
-      "time": "2026-11-17T01:59+00:00",
+      "value": 3954.16,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hsi": {
-      "value": 23388.82,
-      "time": "2026-11-17T01:59+00:00",
+      "value": 23405.12,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "hstech": {
       "value": 3.658,
-      "time": "2026-11-17T01:59+00:00",
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": true
     },
     "a_turnover": {
-      "value": 43084275.0,
-      "time": "2026-11-17T01:59+00:00",
+      "value": 44212213.0,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
-      "fresh": false
+      "fresh": true
     },
     "spx": {
       "value": 7420.189941,
@@ -209,13 +209,14 @@
       "fresh": false
     },
     "qvix50": {
-      "value": 15.15,
-      "time": "2026-11-17T01:58+00:00",
+      "value": 15.19,
+      "time": "2026-11-17T02:00+00:00",
       "date": "2026-11-17",
       "fresh": true
     }
   },
   "fresh": [
+    "a_turnover",
     "csi300",
     "hsi",
     "hstech",
