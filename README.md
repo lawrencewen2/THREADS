@@ -130,6 +130,7 @@
 - `docs/index.html`：交互式仪表盘；`docs/chart.svg`：近两年走势图
 - `reports/backtest.md`：回测报告
 - `reports/verification.md`：每日数据核查（重算分数、核对发布文件、与第二数据源比对）
+- `reports/sentiment/日期.md`：每日情绪解读（Claude 根据当天数据自动生成，`scripts/sentiment_commentary.py`；需在仓库 Secrets 设 `ANTHROPIC_API_KEY`）；`docs/page/commentary.json`：最新一期
 
 ## 运行
 
