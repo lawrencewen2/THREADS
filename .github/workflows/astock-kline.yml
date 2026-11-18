@@ -1,0 +1,56 @@
+name: astock-kline
+
+# 纯 K 线（量价）选股研究（2026-11-18 用户：选股按业绩预期不大行，还是得以纯 K 线图说话）。只做研究，不改线上规则。
+# 要用研究分支 9l9paz 上已有的完整业绩预告缓存（不再访问 baostock）。缓存只对它所在的分支可见，
+# 所以用“合并到 9l9paz 的 PR”来触发：PR 的运行能读到目标分支的缓存。代码和结果都在本分支（PR 的源分支）。
+on:
+  pull_request:
+    branches: [claude/project-thread-9l9paz]
+    paths: ["astock/kline_study.py", "scripts/astock_kline_study.py", "tests/test_astock_kline_study.py", ".github/workflows/astock-kline.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-kline
+  cancel-in-progress: true
+
+jobs:
+  kline:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt pytest
+      - run: python -m pytest -q tests/test_astock_kline_study.py
+      - name: Restore price cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-diversify-fullfc
+          restore-keys: astock-kline-
+      - name: Stop if the full-forecast cache is gone (never refetch here)
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        run: exit 1
+      - name: K-line study
+        run: python scripts/astock_kline_study.py
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/kline_study.md docs/astock/kline_study.json data/research/kline_daily.csv.gz
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: kline study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
