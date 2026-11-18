@@ -430,6 +430,8 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
                     cols[key + "|total"] = pd.concat([tot_r["train"], tot_r["test"]])
         elif tot_r is not None:
             del series[key]
+            if dump is not None and group in ("random_all", "random_fc"):  # 画随机带用
+                cols[key + "|total"] = pd.concat([tot_r["train"], tot_r["test"]])
         log.info("%s: train %.2f/%s test %.2f/%s", key, row["train"]["sharpe"] or 0, row["train"]["ann_return"],
                  row["test"]["sharpe"] or 0, row["test"]["ann_return"])
         return row

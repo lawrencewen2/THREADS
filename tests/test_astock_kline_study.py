@@ -104,7 +104,7 @@ def test_run_smoke(tmp_path, monkeypatch):
     md = ks.to_markdown(res)
     assert "纯 K 线" in md and "单因子检验" in md and "业绩预喜公告" in md
     out = pd.read_csv(tmp_path / "d.csv.gz", index_col="date")
-    assert "live|total" in out and "k_lit|raw" in out and "rnd_all1|raw" not in out
+    assert "live|total" in out and "k_lit|raw" in out and "rnd_all1|raw" not in out and "rnd_all1|total" in out
     json.dumps(res, ensure_ascii=False, default=float)
 
 
