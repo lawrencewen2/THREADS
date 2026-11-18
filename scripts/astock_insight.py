@@ -17,7 +17,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import config, data, insight, news, themes  # noqa: E402
+from astock import config, data, early_live, insight, news, themes  # noqa: E402
 from astock.factors import Panel  # noqa: E402
 
 
@@ -84,6 +84,10 @@ def main():
     bt = json.loads(bt_file.read_text()) if bt_file.exists() else None
     out = insight.build(kline, data.load_basic(), data.load_valuation(), insight.load_industry(), ranking, picks, bt)
     insight.write(out)
+    try:  # 早盘放量实时监测的参考数据（astock/early_live.py）
+        early_live.write_ref(kline, data.load_basic())
+    except Exception as exc:
+        logging.warning("early_ref: %s: %s", type(exc).__name__, exc)
     if not args.offline and not args.no_news:
         update_news(out)
     update_themes(kline, data.load_basic(), args.offline)

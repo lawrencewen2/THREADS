@@ -192,9 +192,9 @@ def _treasury10y():
 
 
 def _ak(fn, *args, date_col="date", value_col="close", **kw):
-    import akshare as ak
+    from .akcompat import call
 
-    return _series(getattr(ak, fn)(*args, **kw), date_col, value_col)
+    return _series(call(fn, *args, **kw), date_col, value_col)
 
 
 def _ak_sum(fn, symbols, value_col):

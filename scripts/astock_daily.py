@@ -16,7 +16,7 @@ import pandas as pd
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from astock import alt_study, data, live_sleeve, live_slots, realtime, screen  # noqa: E402
+from astock import alt_study, data, guards, ledger, live_sleeve, live_slots, realtime, screen  # noqa: E402
 
 
 def main():
@@ -82,13 +82,29 @@ def main():
             # 2026-10-30 起：最多 20 只，止盈止损 + 均线空仓（astock/slot_model.json）
             result, live = live_slots.screen(kline, basic, trade_date, sm, valuation=data.load_valuation(),
                                              forecast=forecast)
+            # 2026-11-16 起：数据过期或 −15% 红线时不买新股（astock/guards.py）
+            guards.apply(result, kline, forecast)
+            now_bj = pd.Timestamp.now(tz="Asia/Shanghai").tz_localize(None)
+            if not args.offline and guards.frozen(trade_date, now_bj):
+                # 09:15 以后同一天已有清单：不覆盖，只留一份备查
+                late = {k: v for k, v in result.items() if k != "ranking"}
+                guards.LATE_FILE.write_text(json.dumps(late, ensure_ascii=False, indent=1, default=float))
+                print("picks for", trade_date.date(), "already published before 09:15; wrote picks_late.json only")
+                return
             live_slots.write(result, live)
+            sleeve = None
             if sm.get("sleeve"):
                 # 2026-11-10 起：其余资金和闲钱放 ETF 分仓（astock/live_sleeve.py）；出错不影响选股清单
                 try:
-                    live_sleeve.update(result, sm)
+                    sleeve = live_sleeve.update(result, sm)
                 except Exception as exc:
                     print("sleeve update failed:", exc)
+            if not args.offline:
+                # 2026-11-16 起：只追加的留痕账本 docs/astock/ledger（astock/ledger.py）；出错不影响选股清单
+                try:
+                    ledger.update(result, live, sleeve, sm)
+                except Exception as exc:
+                    print("ledger update failed:", exc)
         else:
             result, state = screen.screen_forecast(kline, basic, trade_date, fm, valuation=data.load_valuation(),
                                                    forecast=forecast)
