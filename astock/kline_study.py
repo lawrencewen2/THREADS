@@ -37,6 +37,9 @@ BLEND_W = (0.15, 0.30, 1.0)
 CONS_SLIPPAGE = 0.002
 IC_HOLD = 10  # 单因子 IC 的标签：T 开盘买、T+10 开盘卖的扣费收益（和线上最长持有 10 天一致）
 LONG_EXIT = (None, "atr3", 20)  # 敏感性：不设止盈、止损 3 倍 ATR、最长 20 天（趋势类因子需要更长的持有期）
+# 低换手类因子的出场规则敏感性（第一次跑完后加：它在“不止盈、最长 20 天”下样本外接近线上，要看是不是只有这一种出场才行）
+EXIT_GRID = {"不止盈、最长 10 天": (None, "atr3", 10), "止盈 2 倍 ATR、最长 20 天": ("atr2", "atr3", 20),
+             "止盈 4 倍 ATR、最长 20 天": ("atr4", "atr3", 20), "不止盈、最长 30 天": (None, "atr3", 30)}
 
 # 因子：家族、事先定的方向（+1 = 数值越大越好）、说明、出处
 LIB = {
@@ -260,6 +263,37 @@ def event_study(p, elig, ohl, events, high250, rev20, react):
     return out
 
 
+def eps_update_timing(p):
+    """线上权重最大的因子“近 60 日盈利变化”用的是 每股收益 TTM = 股价 / 市盈率TTM。量化小组红队担心它有前视：
+    如果数据源在报告期末（3/31、6/30、9/30、12/31）就换成新一期盈利，而不是等到财报公告日，回测就提前知道了业绩。
+    这里统计每股收益 TTM 发生变动的日子落在哪：真实公告集中在 4 月底、8 月底、10 月底（法定披露截止日前）；
+    如果集中在 1/4/7/10 月的头几个交易日，就是前视。除权日不算。"""
+    pe = p.valuation.get("peTTM")
+    if pe is None:
+        return None
+    eps = p.close / pe.where(pe.abs() > 1e-6)
+    no_split = (p.preclose / p.close.shift(1) - 1).abs() < 1e-3
+    chg = ((eps / eps.shift(1) - 1).abs() > 0.02) & no_split & p.traded & p.traded.shift(1, fill_value=False)
+    per_day = chg.sum(axis=1).astype(float)
+    total = float(per_day.sum())
+    if total <= 0:
+        return None
+    idx = per_day.index
+    ym = idx.to_period("M")
+    k = pd.Series(1, index=idx).groupby(ym).cumsum()  # 当月第几个交易日
+    left = pd.Series(1, index=idx)[::-1].groupby(ym[::-1]).cumsum()[::-1]  # 当月倒数第几个交易日
+    out = dict(events=int(total), by_month={str(m): float(per_day[idx.month == m].sum() / total) for m in range(1, 13)},
+               quarter_start5=float(per_day[idx.month.isin([1, 4, 7, 10]) & (k.to_numpy() <= 5)].sum() / total),
+               deadline5=float(per_day[idx.month.isin([4, 8, 10]) & (left.to_numpy() <= 5)].sum() / total),
+               jan_jul_start5=float(per_day[idx.month.isin([1, 7]) & (k.to_numpy() <= 5)].sum() / total))
+    for per, (s_, e_) in dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, None)).items():
+        x = per_day.loc[s_:e_]
+        kk, ix = k.loc[s_:e_].to_numpy(), x.index
+        out[per] = dict(quarter_start5=float(x[ix.month.isin([1, 4, 7, 10]) & (kk <= 5)].sum() / max(x.sum(), 1)),
+                        deadline5=float(x[ix.month.isin([4, 8, 10]) & (left.loc[s_:e_].to_numpy() <= 5)].sum() / max(x.sum(), 1)))
+    return out
+
+
 def total_returns(frame, name, sleeve, share):
     """线上总组合口径的逐日收益：选股 share + ETF 分仓闲钱停泊（redline.simulate，不加红线）。"""
     old = redline.SHARE
@@ -294,7 +328,11 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
             lr[k] = model.xs_rank(v, elig)
         del v
     base = apply_blend(model.score(lr, weights, elig), p, forecast, elig, sm.get("blend"))
+    fc_only = {k: v for k, v in weights.items() if k != "eps_chg60" and k in lr}
+    base_fc = model.score(lr, fc_only, elig) if fc_only else None
+    base_eps = lr["eps_chg60"].where(elig) if "eps_chg60" in lr else None
     del lr
+    eps_timing = eps_update_timing(p)
     _, sgn, _ = forecast_frames(p, forecast)
     # 纯 K 线因子
     ranks = all_ranks(p, elig, industry)
@@ -400,6 +438,12 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
         return (r["total"]["train"] if "total" in r else r["train"])["sharpe"] or -9
 
     add("线上规则：业绩预期（对照）", "live", base, "live")
+    # —— 线上规则拆开看：业绩预告（公告日明确）和盈利变化（由市盈率倒推，前视风险待查）各自的贡献 ——
+    if base_fc is not None:
+        add("线上得分去掉“近 60 日盈利变化”，只用业绩预告三项", "live_parts", base_fc, "live_fc")
+    if base_eps is not None:
+        add("只用“近 60 日盈利变化”", "live_parts", base_eps, "live_eps")
+    add("线上规则｜不止盈、最长 20 天", "live_parts", base, "live_h20", exits=LONG_EXIT)
     # —— 纯 K 线 ——
     for key, (name, sc) in pure.items():
         add(name, "pure", sc, "k_" + key)
@@ -410,6 +454,8 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
     for r in sorted(pure_rows, key=tkey, reverse=True)[:3]:
         nm, _, sc, exits, _ = specs[r["key"]]
         add(nm + "｜不用情绪开关", "pure_nogate", sc, r["key"] + "_nogate", exits=exits, g=gate_on)
+    for nm, ex in EXIT_GRID.items():
+        add(f"换手流动性类因子等权｜{nm}", "pure_exit", fam["换手流动性"], f"k_turn_{ex[0]}_{ex[2]}", exits=ex)
     best_key = best_pure["key"]
     kbest = specs[best_key][2]
     kbest_rank = model.xs_rank(kbest, elig)
@@ -457,7 +503,7 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
     slip0 = config.SLIPPAGE
     config.SLIPPAGE = CONS_SLIPPAGE
     try:
-        for key in dict.fromkeys(["live", best_key, "k_lit", best_hyb["key"]]):
+        for key in dict.fromkeys(["live", best_key, "k_lit", "k_fam_换手流动性_h20", best_hyb["key"]]):
             nm, group, sc, exits, g = specs[key]
             res, _, _ = sim(key + "_cons", sc, exits, g)
             cons.append(dict(name=nm, group=group, key=key, **res))
@@ -471,7 +517,7 @@ def run(kline, basic, valuation=None, forecast=None, industry=None, dump=None, e
     factors = [dict(key=k, family=LIB[k][0], direction=LIB[k][1], desc=LIB[k][2], source=LIB[k][3], **ics[k])
                for k in LIB if k in ics]
     return dict(updated=end, capital_share=share, rows=rows, cons=cons, factors=factors, events=ev,
-                best_pure=best_key, best_hybrid=best_hyb["key"], ic_weights={k: v for k, v in w_ic.items() if v},
+                best_pure=best_key, best_hybrid=best_hyb["key"], eps_timing=eps_timing, ic_weights={k: v for k, v in w_ic.items() if v},
                 top8={k: float(np.sign(sig[k])) for k in top8})
 
 
@@ -483,7 +529,7 @@ def _f(x, d=2):
     return "—" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x:.{d}f}"
 
 
-GROUPS = {"live": "对照", "pure": "纯 K 线", "pure_long": "纯 K 线（不止盈、最长 20 天）", "pure_nogate": "纯 K 线（不用情绪开关）",
+GROUPS = {"live": "对照", "live_parts": "线上规则拆开看", "pure_exit": "纯 K 线（低换手，换出场规则）", "pure": "纯 K 线", "pure_long": "纯 K 线（不止盈、最长 20 天）", "pure_nogate": "纯 K 线（不用情绪开关）",
           "hyb_filter": "业绩预期 + 价格过滤", "hyb_blend": "业绩预期 + K 线加分", "k_main": "K 线为主、业绩预告为辅"}
 
 
@@ -562,6 +608,16 @@ def to_markdown(res):
     for x in res["events"]:
         L.append(f"| {'训练' if x['period'] == 'train' else '样本外'} | {x['group']} | {x['n']} | {_p(x['excess10'], 2)} | "
                  f"{_p(x['win'])} | {_f(x['t'], 1)} |")
+    et = res.get("eps_timing")
+    if et:
+        L += ["", "## “近 60 日盈利变化”有没有前视：每股收益 TTM 变动的日子落在哪", "",
+              f"共 {et['events']} 次变动（除权日不算）。按月份占比：" +
+              "，".join(f"{m} 月 {v * 100:.1f}%" for m, v in et["by_month"].items()) + "。", "",
+              f"- 落在 4/8/10 月最后 5 个交易日（法定披露截止日前，真实公告的高峰）：{_p(et['deadline5'])}"
+              f"（训练期 {_p(et['train']['deadline5'])}，样本外 {_p(et['test']['deadline5'])}）",
+              f"- 落在 1/4/7/10 月头 5 个交易日（报告期刚结束，若占比高就是前视）：{_p(et['quarter_start5'])}"
+              f"（训练期 {_p(et['train']['quarter_start5'])}，样本外 {_p(et['test']['quarter_start5'])}）",
+              f"- 其中 1 月、7 月头 5 个交易日（这时几乎没有公司出财报）：{_p(et['jan_jul_start5'])}"]
     L += ["", "训练期 IC 加权用到的因子和权重（正 = 和文献方向一致）：" +
           "，".join(f"{LIB[k][2]} {v:+.2f}" for k, v in sorted(res["ic_weights"].items(), key=lambda kv: -abs(kv[1]))), "",
           "训练期最显著的 8 个：" + "，".join(f"{LIB[k][2]}（{'同' if v > 0 else '反'}文献方向）" for k, v in res["top8"].items())]

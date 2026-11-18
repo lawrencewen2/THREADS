@@ -97,7 +97,8 @@ def test_run_smoke(tmp_path, monkeypatch):
     res = ks.run(k, basic, None, fc, ind, dump=tmp_path / "d.csv.gz")
     keys = {r["key"] for r in res["rows"]}
     assert res["rows"][0]["key"] == "live" and "total" in res["rows"][0]
-    assert {"k_lit", "k_all6", "k_chase", "k_lit_h20", "h_notfall", "h_nothigh", "b_lit_0.3", "m_lit_veto", "rnd_all2"} <= keys
+    assert {"k_lit", "k_all6", "k_chase", "k_lit_h20", "h_notfall", "h_nothigh", "b_lit_0.3", "m_lit_veto", "rnd_all2",
+            "live_fc", "live_h20", "k_turn_None_30", "k_turn_atr2_20"} <= keys
     assert res["best_pure"] in keys and res["best_hybrid"] in keys
     assert len(res["factors"]) == len(ks.LIB) and len(res["events"]) == 22
     md = ks.to_markdown(res)
@@ -105,3 +106,16 @@ def test_run_smoke(tmp_path, monkeypatch):
     out = pd.read_csv(tmp_path / "d.csv.gz", index_col="date")
     assert "live|total" in out and "k_lit|raw" in out and "rnd_all1|raw" not in out
     json.dumps(res, ensure_ascii=False, default=float)
+
+
+def test_eps_update_timing_counts_report_days_not_splits():
+    k, basic = synthetic_kline(n_codes=3, start="2015-01-01", end="2015-12-31", seed=7)
+    dates = sorted(k["date"].unique())
+    val = k[["date", "code", "close"]].copy()
+    eps = np.where(val["date"] >= pd.Timestamp("2015-04-28"), 1.2, 1.0)  # 4 月底出财报，每股收益 1.0 -> 1.2
+    val["peTTM"], val["pbMRQ"], val["psTTM"] = val["close"] / eps, 2.0, 3.0
+    p = Panel(k, val)
+    et = ks.eps_update_timing(p)
+    assert et["events"] == 3
+    assert abs(et["by_month"]["4"] - 1.0) < 1e-9 and et["deadline5"] == 1.0 and et["quarter_start5"] == 0.0
+    assert ks.eps_update_timing(Panel(k)) is None
