@@ -80,10 +80,59 @@ def features(p, elig):
             f["post5"] = brk.astype("float32").rolling(5, min_periods=1).max().astype(bool) & (adj > ma20)
             f["r_near"] = model.xs_rank(near.where(plat), elig).fillna(-0.5)  # 不在平台里的排最后
             f["r_post"] = f["post5"].astype("float32") - 0.5
+            # —— 真假突破的鉴别（2026-11-18 用户补充：突破也需要鉴别是真突破还是假突破）——
+            rng_ = (hi - lo).where(hi > lo)
+            pos = ((adj - lo) / rng_).fillna(0.5)  # 收盘在当天振幅里的位置，1 = 收在最高
+            f["brk40_strong"] = f["brk40_vol"] & (pos >= 0.7) & (adj >= 1.01 * h_prev)  # 放量 + 收在高位 + 收盘超出 1%
+            f["brk40_weak"] = brk & ~f["brk40_strong"]
+            lvl3 = h_prev.shift(3)
+            f["confirm3"] = brk.shift(3, fill_value=False) & (adj.rolling(3, min_periods=3).min() > lvl3)  # 站稳 3 天
+            lvl = h_prev.where(brk).shift(1).ffill(limit=9)  # 前 10 天内最近一次突破的平台高点
+            f["retest"] = lvl.notna() & (lo <= 1.03 * lvl) & (adj >= lvl) & (adj > adj.shift(1))  # 回踩平台不破、当天收涨
+            failed = lvl.notna() & (adj < lvl)  # 突破后收盘跌回平台 = 假突破
+            f["failed10"] = failed.astype("float32").rolling(10, min_periods=1).max().astype(bool)
+            f["held10"] = lvl.notna() & ~f["failed10"]  # 突破后 10 天内一直没跌回平台
+            # —— 突破后回踩（2026-11-18 用户补充：突破后回踩的模式也加上）——
+            lvl20 = h_prev.where(brk).shift(1).ffill(limit=19)  # 前 20 天内最近一次突破的平台高点
+            never_lost = ~(lvl20.notna() & (adj < 0.97 * lvl20)).astype("float32").rolling(20, min_periods=1).max().astype(bool)
+            f["retest20"] = (lvl20.notna() & never_lost & (lo <= 1.03 * lvl20) & (adj >= lvl20)
+                             & (adj > adj.shift(1)))  # 20 天内回踩平台上沿（3% 以内）、没有有效跌破、当天收涨
+            f["retest_ma"] = (lvl20.notna() & never_lost & (lo <= 1.02 * ma20) & (adj > ma20) & (adj >= lvl20)
+                              & (adj > adj.shift(1)))  # 突破后回踩 20 日线企稳
+            f["retest_dry"] = f["retest20"] & (volx < 1.0)  # 回踩时缩量
+            del lvl20, never_lost
+            f["level40"] = h_prev.where(brk).astype("float32")  # 突破日的平台高点（复权口径，统计用）
+            f["adj"] = adj
+            del rng_, pos, lvl3, lvl, failed
         del h_prev, l_prev, h_now, l_now, near
     f["r_trend"] = trend.astype("float32") - 0.5
     f["r_volbrk"] = model.xs_rank(volx.where(f["brk40_vol"]), elig)  # 纯形态：放量倍数
     return f
+
+
+def breakout_stats(p, f, elig, gate, ohl):
+    """描述统计（不是交易规则）：全市场可买股票里 40 日平台突破之后，
+    5 天后还站在平台高点上方的比例（真突破）、次日开盘买入持有 10 天的平均收益，按鉴别条件分组。"""
+    o = pd.DataFrame(ohl[0], index=p.dates, columns=p.codes)
+    fwd = (o.shift(-11) / o.shift(-1) - 1).where(elig)
+    true5 = f["adj"].shift(-5) >= f["level40"].ffill(limit=20)  # 回踩日用最近一次突破的平台高点
+    brk = f["brk40"] & elig & f["adj"].shift(-5).notna()
+    g = gate.reindex(p.dates).fillna(False).to_numpy(dtype=bool)[:, None]
+    groups = {"全部突破": brk, "放量（≥1.5 倍）": brk & f["brk40_vol"], "不放量": brk & ~f["brk40_vol"],
+              "放量 + 收在高位 + 超出 1%": brk & f["brk40_strong"], "其余（弱突破）": brk & f["brk40_weak"],
+              "严格版（放量 + 平台前涨过 25%）": brk & f["brk40_strict"],
+              "突破后回踩平台企稳日（20 天内）": f["retest20"] & elig & f["adj"].shift(-5).notna(),
+              "情绪开关打开时": brk & g, "情绪开关关闭时": brk & ~g}
+    out = []
+    for per, (s, e) in dict(train=(config.TRAIN_START, config.TRAIN_END), test=(config.TEST_START, None)).items():
+        base = float(np.nanmean(fwd.loc[s:e].to_numpy()))
+        for name, m in groups.items():
+            mm = m.loc[s:e].to_numpy()
+            n_ = int(mm.sum())
+            out.append(dict(period=per, group=name, n=n_,
+                            true5=float(true5.loc[s:e].to_numpy()[mm].mean()) if n_ else None,
+                            fwd10=float(np.nanmean(fwd.loc[s:e].to_numpy()[mm])) if n_ else None, market10=base))
+    return out
 
 
 def simulate_stop(p, ohl, sc, setup, pivot_px, gate, n, tp, sl, hold, start, end):
@@ -259,6 +308,19 @@ def run(kline, basic, valuation=None, forecast=None, dump=None, etf=True):
     reg("只在放量突破 40 日平台那天买", "entry", base.where(f["brk40_vol"]), "e_brk40_vol")
     reg("只在放量突破 40 日平台、且平台前涨过 25% 那天买（严格版）", "entry", base.where(f["brk40_strict"]),
         "e_brk40_strict")
+    # 真假突破鉴别
+    reg("真突破①：放量 + 收在当天高位 + 收盘超出平台 1% 才买", "true", base.where(f["brk40_strong"]), "t_strong")
+    reg("真突破②：突破后站稳 3 天（3 天收盘都在平台上方）再买", "true", base.where(f["confirm3"]), "t_confirm3")
+    reg("真突破③：突破后 10 天内回踩平台不破、当天收涨时买", "true", base.where(f["retest"]), "t_retest")
+    reg("回踩①：突破后 20 天内回踩平台上沿 3% 以内、没有效跌破、当天收涨时买", "retest", base.where(f["retest20"]), "r_retest20")
+    reg("回踩②：同上，且回踩当天缩量", "retest", base.where(f["retest_dry"]), "r_retest_dry")
+    reg("回踩③：突破后 20 天内回踩 20 日线企稳、仍在平台上方时买", "retest", base.where(f["retest_ma"]), "r_retest_ma")
+    reg("纯形态：全市场突破后回踩平台企稳，按缩量程度排", "pure", (-f["volx"]).where(f["retest20"] & elig), "p_retest")
+    reg("真突破④：突破后 10 天内一直没跌回平台的才买", "true", base.where(f["held10"]), "t_held10")
+    reg("对照：只买弱突破（不放量或收得不高）", "true", base.where(f["brk40_weak"]), "t_weak")
+    reg("避开假突破：10 天内突破后又跌回平台的不买", "true", base.where(~f["failed10"]), "t_notfailed")
+    reg("纯形态 + 鉴别：全市场强突破，按放量倍数排", "pure", f["volx"].where(f["brk40_strong"] & elig), "p_strong")
+    reg("纯形态 + 鉴别：全市场突破后站稳 3 天，按放量倍数排", "pure", f["volx"].where(f["confirm3"] & elig), "p_confirm3")
     # 入场触发（平台高点挂突破买单）
     for w in WINDOWS:
         reg(f"{w} 日平台里的候选，在平台高点挂突破买单", "entry_stop", base, f"s_plat{w}",
@@ -292,18 +354,19 @@ def run(kline, basic, valuation=None, forecast=None, dump=None, etf=True):
         config.SLIPPAGE = slip0
     share_of = {k: float(v.where(elig).sum().sum() / max(elig.sum().sum(), 1)) for k, v in f.items()
                 if v.dtypes.iloc[0] == bool}
+    bstats = breakout_stats(p, f, elig, gate, ohl)
     if dump is not None:
         out = pd.DataFrame(cols)
         out.index.name = "date"
         out.to_csv(dump, float_format="%.6g")
-    return dict(updated=end, capital_share=share, rows=rows, cons=cons, share=share_of)
+    return dict(updated=end, capital_share=share, rows=rows, cons=cons, share=share_of, stats=bstats)
 
 
 def _p(x, d=1):
     return "—" if x is None or (isinstance(x, float) and np.isnan(x)) else f"{x * 100:.{d}f}%"
 
 
-GROUPS = {"live": "对照", "filter": "过滤", "blend": "加分", "entry": "入场触发（次日开盘买）",
+GROUPS = {"live": "对照", "true": "真假突破鉴别", "retest": "突破后回踩", "filter": "过滤", "blend": "加分", "entry": "入场触发（次日开盘买）",
           "entry_stop": "入场触发（平台高点突破买单）", "pure": "纯形态"}
 
 
@@ -351,6 +414,11 @@ def to_markdown(res):
     for r in res.get("cons", []):
         L.append(f"| {r['name']} | {_p(r['train']['ann_return'])} | {_p(r['test']['ann_return'])} | "
                  f"{_p(r['test']['max_drawdown'])} | {_tot_cells(r)} |")
+    L += ["", "## 真假突破统计（全市场 40 日平台突破，描述统计，不是交易规则）", "",
+          "| 时期 | 分组 | 次数 | 5 天后仍在平台上方 | 次日开盘买、持有 10 天平均收益 | 同期全市场 10 天平均 |", "|---|---|---|---|---|---|"]
+    for x in res.get("stats", []):
+        L.append(f"| {'训练' if x['period'] == 'train' else '样本外'} | {x['group']} | {x['n']} | {_p(x['true5'])} | "
+                 f"{_p(x['fwd10'], 2)} | {_p(x['market10'], 2)} |")
     L += ["", "可买股票里满足各条件的比例：" + "，".join(f"{k} {v * 100:.2f}%" for k, v in res["share"].items()), "",
           "随机参照（选股层）：", ""]
     for r in rows:

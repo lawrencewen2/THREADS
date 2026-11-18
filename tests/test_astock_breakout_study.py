@@ -46,6 +46,13 @@ def test_breakout_closes_above_prior_platform_high():
     assert (adj.where(b) > h_prev.where(b)).to_numpy()[b.to_numpy()].all()
     assert not (f["brk40_vol"] & ~b).to_numpy().any()
     assert not (f["setup40"] & ~f["plat40"]).to_numpy().any()
+    assert not (f["brk40_strong"] & f["brk40_weak"]).to_numpy().any()
+    assert not (f["held10"] & f["failed10"]).to_numpy().any()
+    # 站稳 3 天：3 天前突破，之后 3 天收盘都高于当时的平台高点
+    c = f["confirm3"].to_numpy()
+    lvl = h_prev.shift(3).to_numpy()
+    for s in (0, 1, 2):
+        assert (adj.shift(s).to_numpy()[c] > lvl[c]).all()
 
 
 def test_stop_entry_matches_open_entry_when_pivot_below_open(monkeypatch):
@@ -90,6 +97,7 @@ def test_run_smoke(tmp_path, monkeypatch):
     assert res["rows"][0]["key"] == "live" and "total" in res["rows"][0]
     assert len(res["cons"]) == 4
     md = bs.to_markdown(res)
-    assert "平台突破" in md
+    assert "平台突破" in md and "真假突破统计" in md
+    assert {"t_confirm3", "r_retest20"} <= {r["key"] for r in res["rows"]} and len(res["stats"]) == 18
     out = pd.read_csv(tmp_path / "d.csv.gz", index_col="date")
     assert "live|raw" in out and "s_plat40|held" in out
