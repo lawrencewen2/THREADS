@@ -34,6 +34,17 @@ def _pct(sl_or_tp, a):
     return float(sl_or_tp[3:]) * a if isinstance(sl_or_tp, str) else float(sl_or_tp)
 
 
+def held_action(expired, invest, was_out):
+    """影子组合里还持有的一只股票，今天清单上该写什么。
+    was_out：上一个交易日已经空仓（股票在开关触发那天开盘就卖掉了）。这时不能每天再列一遍“卖出”：
+    还在空仓或已到期的只留作影子记录（已空仓）；开关今天重新打开的买回来，和回测口径（净值 × 开关）一致。"""
+    if was_out:
+        return "买回" if invest and not expired else "已空仓"
+    if expired:
+        return "到期卖出"
+    return "继续持有" if invest else "空仓卖出"
+
+
 def apply_blend(sc, p, forecast, elig, blend):
     """2026-11-12 起：在业绩预期得分上再加 w × 新因子排名（如业绩加速 fc_accel，见 astock/factor_hunt.py）。"""
     if not blend:
@@ -71,6 +82,8 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
     eq = (1 + full).cumprod()
     ma = eq.rolling(20, min_periods=10).mean()
     invest = bool(eq.iloc[-1] >= ma.iloc[-1]) if len(eq) else True
+    # 上一个交易日是不是已经空仓：是的话影子组合里还“持有”的股票其实早就卖掉了，不能每天再列一遍卖出
+    was_out = bool(eq.iloc[-2] < ma.iloc[-2]) if len(eq) > 1 else False
 
     # 实际照做的影子组合：从 START 起
     st = {}
@@ -90,7 +103,7 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
         return dict(code=c, name=names.get(c, ""), rank=None if c not in rank.index else int(rank[c]),
                     score=None if np.isnan(score_t[j]) else round(float(score_t[j]), 4), close=round(float(close_t[j]), 2))
 
-    picks, sells = [], []
+    picks, sells, shadow = [], [], []
     for j, (entry, target, stop, d0) in sorted(held.items(), key=lambda kv: kv[1][3]):
         row = base(j)
         k = raw_open[d0, j] / o_adj[d0, j]  # 复权价换回买入那天的实际价格（之后除权的话要按比例调）
@@ -98,15 +111,9 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
                    stop_price=round(float(stop * k), 2),
                    take_profit_price=None if not np.isfinite(target) else round(float(target * k), 2),
                    days_held=int(T_idx - d0), weight=weight)
-        if T_idx - d0 >= hold:
-            row.update(action="到期卖出", selected=False)
-            sells.append(row)
-        elif not invest:
-            row.update(action="空仓卖出", selected=False)
-            sells.append(row)
-        else:
-            row.update(action="继续持有", selected=True)
-            picks.append(row)
+        act = held_action(T_idx - d0 >= hold, invest, was_out)
+        row.update(action=act, selected=act in ("继续持有", "买回"))
+        (shadow if act == "已空仓" else picks if row["selected"] else sells).append(row)
 
     buys_open = invest and bool(gate.iloc[-1])
     # 空仓或情绪开关关时不买，但仍列出排名靠前的几只作“观察”，方便看
@@ -141,7 +148,7 @@ def screen(kline, basic, trade_date, sm, valuation=None, forecast=None):
         equity_20d=None if len(eq) < 21 else round(float(eq.iloc[-1] / eq.iloc[-21] - 1), 4),
         gate="情绪开关（近 5 日平均涨停家数高于近 20 日平均）开才买新的；组合净值跌破 20 日均线时空仓",
         top_n=n, capital_share=sm.get("capital_share", 1.0), per_name_weight=weight,
-        universe_size=int(elig.iloc[-1].sum()), picks=picks, sells=sells, n_selected=len(sel),
+        universe_size=int(elig.iloc[-1].sum()), picks=picks, sells=sells, shadow_held=shadow, n_selected=len(sel),
         backtest=sm.get("backtest"),
         ranking=pd.DataFrame(dict(rank=rank.sort_values().astype(int).values, code=rank.sort_values().index,
                                   name=[names.get(c, "") for c in rank.sort_values().index],

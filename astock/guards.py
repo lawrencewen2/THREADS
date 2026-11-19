@@ -78,11 +78,11 @@ def redline(nav_rows=None, state_file=REDLINE_FILE):
 
 
 def block_buys(result, why):
-    """不买新股：买入/候补改成观察，继续持有和卖出不变。"""
+    """不买新股：买入/候补/买回改成观察，继续持有和卖出不变。"""
     result["gate_open"] = False
     result.setdefault("blocked", []).append(why)
     for r in result.get("picks", []):
-        if r.get("action") in ("买入", "候补"):
+        if r.get("action") in ("买入", "候补", "买回"):
             r["action"], r["selected"] = "观察", False
     result["n_selected"] = sum(1 for r in result.get("picks", []) if r.get("selected"))
 

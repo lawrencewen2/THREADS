@@ -84,7 +84,7 @@ def log_signals(result, version, d=None, ts=None):
     ts = ts or now()
     rows = []
     for r in result.get("picks", []) + result.get("sells", []):
-        if r.get("action") not in ("买入", "继续持有", "到期卖出", "空仓卖出"):
+        if r.get("action") not in ("买入", "买回", "继续持有", "到期卖出", "空仓卖出"):
             continue
         rows.append(dict(trade_date=td, code=r["code"], name=r.get("name", ""), action=r["action"],
                          weight=_r(r.get("weight"), 4), entry_price=_r(r.get("entry_price"), 3),
