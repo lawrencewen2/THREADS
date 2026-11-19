@@ -28,25 +28,25 @@
     },
     "jp": {
       "name": "日本",
-      "score": 12.1,
+      "score": 12.2,
       "band": "极度恐慌",
-      "change_5d": -1.4,
+      "change_5d": -1.3,
       "risk_off": true,
       "signal": "risk_off"
     },
     "cn": {
       "name": "A股",
-      "score": 31.2,
+      "score": 30.8,
       "band": "恐慌",
-      "change_5d": -4.2,
+      "change_5d": -4.6,
       "risk_off": false,
       "signal": "normal"
     },
     "hk": {
       "name": "港股",
-      "score": 36.6,
+      "score": 36.4,
       "band": "恐慌",
-      "change_5d": -18.9,
+      "change_5d": -19.1,
       "risk_off": false,
       "signal": "normal"
     }
@@ -110,7 +110,7 @@
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 9.4
+      "score": 9.7
     },
     "jp_dd": {
       "name": "日经225 回撤",
@@ -120,17 +120,17 @@
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 1.9
+      "score": 1.6
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 46.9
+      "score": 49.7
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 9.1
+      "score": 8.2
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -140,7 +140,7 @@
     "cn_qvix": {
       "name": "50ETF 期权波动率 QVIX",
       "region": "cn",
-      "score": 91.5
+      "score": 87.8
     },
     "cn_rvol": {
       "name": "沪深300 20日实际波动率",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 2.6
+      "score": 2.4
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 12.5
+      "score": 9.4
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
@@ -200,7 +200,7 @@
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 79.4
+      "score": 81.3
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
