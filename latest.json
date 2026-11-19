@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-19T12:09+00:00",
+  "as_of": "2026-11-19T12:10+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 34.5,
+      "score": 34.4,
       "band": "恐慌",
       "date": "2026-11-19",
       "official": 34.8,
       "official_date": "2026-11-18",
-      "change": -0.3,
+      "change": -0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 12.7,
+      "score": 12.8,
       "band": "极度恐慌",
       "date": "2026-11-19",
       "official": 12.2,
       "official_date": "2026-11-18",
-      "change": 0.5,
+      "change": 0.6,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3718.71,
-      "time": "2026-11-19T12:09+00:00",
+      "value": 3718.788,
+      "time": "2026-11-19T12:10+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
@@ -156,7 +156,7 @@
     },
     "vix": {
       "value": 21.969999,
-      "time": "2026-11-19T11:54+00:00",
+      "time": "2026-11-19T11:55+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6190.700195,
-      "time": "2026-11-19T11:54+00:00",
+      "value": 6189.029785,
+      "time": "2026-11-19T11:55+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92613,
-      "time": "2026-11-19T12:09+00:00",
+      "value": 0.92607,
+      "time": "2026-11-19T12:10+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.944,
-      "time": "2026-11-19T12:09+00:00",
+      "value": 159.951004,
+      "time": "2026-11-19T12:10+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
