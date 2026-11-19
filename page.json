@@ -2,73 +2,73 @@
  {
   "key": "global",
   "name": "全球",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
-  "score": 27.1,
-  "change": -1.9,
+  "score": 27.2,
+  "change": 0.0,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
-  "session": "已收盘",
-  "time": "11-20 06:25"
+  "session": "未开盘",
+  "time": "11-20 06:38"
  },
  {
   "key": "us",
   "name": "美国",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
   "score": 18.5,
-  "change": -3.0,
+  "change": 0.0,
   "band": "极度恐慌",
   "signal": "恐慌加深，减仓",
   "session": "已收盘",
-  "time": "11-20 06:25"
+  "time": "11-20 06:38"
  },
  {
   "key": "eu",
   "name": "欧洲",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
-  "score": 32.2,
-  "change": -2.6,
+  "score": 32.0,
+  "change": 0.0,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
   "session": "已收盘",
-  "time": "11-20 06:25"
+  "time": "11-20 06:38"
  },
  {
   "key": "jp",
   "name": "日本",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
-  "score": 12.5,
-  "change": 0.3,
+  "score": 12.6,
+  "change": 0.0,
   "band": "极度恐慌",
   "signal": "恐慌加深，减仓",
-  "session": "已收盘",
-  "time": "11-20 06:25"
+  "session": "未开盘",
+  "time": "11-20 06:38"
  },
  {
   "key": "cn",
   "name": "A股",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
   "score": 29.2,
-  "change": -1.6,
+  "change": 0.0,
   "band": "恐慌",
   "signal": "正常",
-  "session": "已收盘",
-  "time": "11-20 06:25"
+  "session": "未开盘",
+  "time": "11-20 06:38"
  },
  {
   "key": "hk",
   "name": "港股",
-  "fresh": true,
+  "fresh": false,
   "date": "2026-11-19",
-  "score": 32.0,
-  "change": -4.4,
+  "score": 32.9,
+  "change": 0.0,
   "band": "恐慌",
   "signal": "恐慌加深，减仓",
-  "session": "已收盘",
-  "time": "11-20 06:25"
+  "session": "未开盘",
+  "time": "11-20 06:38"
  }
 ]
