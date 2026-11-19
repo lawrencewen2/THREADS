@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-19T14:29+00:00",
+  "as_of": "2026-11-19T14:30+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 28.3,
+      "score": 29.7,
       "band": "恐慌",
       "date": "2026-11-19",
       "official": 29.0,
       "official_date": "2026-11-18",
-      "change": -0.7,
+      "change": 0.7,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -22,13 +22,13 @@
     },
     "us": {
       "name": "美国",
-      "fresh": false,
-      "score": 21.5,
+      "fresh": true,
+      "score": 23.7,
       "band": "恐慌",
-      "date": "2026-11-18",
+      "date": "2026-11-19",
       "official": 21.5,
       "official_date": "2026-11-18",
-      "change": 0.0,
+      "change": 2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -36,7 +36,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "盘中"
     },
     "eu": {
       "name": "欧洲",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 12.7,
+      "score": 12.6,
       "band": "极度恐慌",
       "date": "2026-11-19",
       "official": 12.2,
       "official_date": "2026-11-18",
-      "change": 0.5,
+      "change": 0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,10 +119,10 @@
       "fresh": true
     },
     "gold": {
-      "value": 3709.864,
-      "time": "2026-11-19T14:29+00:00",
+      "value": 3713.4,
+      "time": "2026-11-19T14:30+00:00",
       "date": "2026-11-19",
-      "fresh": false
+      "fresh": true
     },
     "csi300": {
       "value": 3984.84,
@@ -149,50 +149,50 @@
       "fresh": true
     },
     "spx": {
-      "value": 7322.279785,
-      "time": "2026-11-18T20:59+00:00",
-      "date": "2026-11-18",
-      "fresh": false
+      "value": 7394.560059,
+      "time": "2026-11-19T14:30+00:00",
+      "date": "2026-11-19",
+      "fresh": true
     },
     "vix": {
-      "value": 22.42,
-      "time": "2026-11-19T14:14+00:00",
+      "value": 22.440001,
+      "time": "2026-11-19T14:15+00:00",
       "date": "2026-11-19",
-      "fresh": false
+      "fresh": true
     },
     "vix3m": {
       "value": 24.24,
-      "time": "2026-11-18T20:59+00:00",
+      "time": "2026-11-18T20:55+00:00",
       "date": "2026-11-18",
       "fresh": false
     },
     "hyg": {
-      "value": 76.660004,
-      "time": "2026-11-18T20:59+00:00",
-      "date": "2026-11-18",
-      "fresh": false
+      "value": 76.775002,
+      "time": "2026-11-19T14:30+00:00",
+      "date": "2026-11-19",
+      "fresh": true
     },
     "ief": {
-      "value": 90.675003,
-      "time": "2026-11-18T20:59+00:00",
-      "date": "2026-11-18",
-      "fresh": false
+      "value": 90.550003,
+      "time": "2026-11-19T14:30+00:00",
+      "date": "2026-11-19",
+      "fresh": true
     },
     "sx5e": {
-      "value": 6168.850098,
-      "time": "2026-11-19T14:14+00:00",
+      "value": 6168.560059,
+      "time": "2026-11-19T14:15+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92675,
-      "time": "2026-11-19T14:29+00:00",
+      "value": 0.92664,
+      "time": "2026-11-19T14:30+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.841995,
-      "time": "2026-11-19T14:29+00:00",
+      "value": 159.820007,
+      "time": "2026-11-19T14:30+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
@@ -204,9 +204,9 @@
     },
     "us10y": {
       "value": 5.093,
-      "time": "2026-11-19T14:14+00:00",
+      "time": "2026-11-19T14:15+00:00",
       "date": "2026-11-19",
-      "fresh": false
+      "fresh": true
     },
     "qvix50": {
       "value": 14.75,
@@ -219,13 +219,19 @@
     "a_turnover",
     "csi300",
     "eurchf",
+    "gold",
     "hsi",
     "hstech",
+    "hyg",
+    "ief",
     "n225",
     "qvix50",
+    "spx",
     "sx5e",
     "topix",
-    "usdjpy"
+    "us10y",
+    "usdjpy",
+    "vix"
   ],
   "errors": {}
 }
