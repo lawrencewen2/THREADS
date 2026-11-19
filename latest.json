@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-19T08:15+00:00",
+  "as_of": "2026-11-19T08:16+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -40,15 +40,15 @@
     },
     "eu": {
       "name": "欧洲",
-      "fresh": false,
-      "score": 34.8,
+      "fresh": true,
+      "score": 34.4,
       "band": "恐慌",
-      "date": "2026-11-18",
+      "date": "2026-11-19",
       "official": 34.8,
       "official_date": "2026-11-18",
-      "change": 0.0,
-      "signal": "normal",
-      "signal_text": "正常",
+      "change": -0.4,
+      "signal": "risk_off",
+      "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
       "new_event": {
         "short_bottom": false,
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3743.57,
-      "time": "2026-11-19T08:14+00:00",
+      "value": 3743.035,
+      "time": "2026-11-19T08:16+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
@@ -132,7 +132,7 @@
     },
     "hsi": {
       "value": 22841.62,
-      "time": "2026-11-19T08:14+00:00",
+      "time": "2026-11-19T08:16+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6157.660156,
-      "time": "2026-11-18T16:25+00:00",
-      "date": "2026-11-18",
-      "fresh": false
+      "value": 6190.490234,
+      "time": "2026-11-19T08:00+00:00",
+      "date": "2026-11-19",
+      "fresh": true
     },
     "eurchf": {
-      "value": 0.92586,
-      "time": "2026-11-19T08:14+00:00",
+      "value": 0.92594,
+      "time": "2026-11-19T08:16+00:00",
       "date": "2026-11-19",
-      "fresh": false
+      "fresh": true
     },
     "usdjpy": {
-      "value": 159.785004,
-      "time": "2026-11-19T08:14+00:00",
+      "value": 159.783005,
+      "time": "2026-11-19T08:16+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
@@ -218,10 +218,12 @@
   "fresh": [
     "a_turnover",
     "csi300",
+    "eurchf",
     "hsi",
     "hstech",
     "n225",
     "qvix50",
+    "sx5e",
     "topix",
     "usdjpy"
   ],
