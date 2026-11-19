@@ -4,3 +4,4 @@ yfinance>=0.2.50
 akshare>=1.15
 requests>=2.31
 pytest>=8
+anthropic>=2.9

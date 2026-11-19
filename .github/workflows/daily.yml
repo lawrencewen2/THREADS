@@ -42,6 +42,14 @@ jobs:
           git fetch --depth 1 origin intraday && git --work-tree=/tmp/intraday checkout FETCH_HEAD -- log && git reset -q || true
           python scripts/verify_data.py --intraday-log /tmp/intraday/log
         continue-on-error: true
+      - name: Market sentiment commentary
+        # 用上面产出的数据调用 Claude 写中文情绪解读（reports/sentiment/、docs/page/commentary.json、README）。
+        # 密钥放在仓库 Secrets 的 ANTHROPIC_API_KEY；没设置就跳过。当天已生成过（07:20 备用那次）也跳过，不重复花钱。
+        run: python scripts/sentiment_commentary.py
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        timeout-minutes: 10
+        continue-on-error: true
       - name: Commit results
         run: |
           git config user.name "fear-index-bot"
