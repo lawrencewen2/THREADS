@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-19T01:34+00:00",
+  "as_of": "2026-11-19T01:35+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 28.2,
+      "score": 28.5,
       "band": "恐慌",
       "date": "2026-11-19",
       "official": 29.0,
       "official_date": "2026-11-18",
-      "change": -0.8,
+      "change": -0.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 11.9,
+      "score": 11.8,
       "band": "极度恐慌",
       "date": "2026-11-19",
       "official": 12.1,
       "official_date": "2026-11-18",
-      "change": -0.2,
+      "change": -0.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 27.1,
+      "score": 29.0,
       "band": "恐慌",
       "date": "2026-11-19",
       "official": 31.2,
       "official_date": "2026-11-18",
-      "change": -4.1,
+      "change": -2.2,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 34.3,
+      "score": 34.2,
       "band": "恐慌",
       "date": "2026-11-19",
       "official": 36.6,
       "official_date": "2026-11-18",
-      "change": -2.3,
+      "change": -2.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "normal",
@@ -113,38 +113,38 @@
   },
   "quotes": {
     "n225": {
-      "value": 58790.21,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 58803.15,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "gold": {
-      "value": 3740.27,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 3737.39,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
     "csi300": {
-      "value": 3950.49,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 3951.57,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "hsi": {
-      "value": 22972.35,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 22978.88,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "hstech": {
-      "value": 3.6,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 3.596,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "a_turnover": {
-      "value": 13366982.0,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 15349405.0,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92451,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 0.92458,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": false
     },
     "usdjpy": {
-      "value": 159.298004,
-      "time": "2026-11-19T01:34+00:00",
+      "value": 159.283997,
+      "time": "2026-11-19T01:35+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
     "topix": {
-      "value": 401.399994,
-      "time": "2026-11-19T01:19+00:00",
+      "value": 401.0,
+      "time": "2026-11-19T01:20+00:00",
       "date": "2026-11-19",
       "fresh": true
     },
@@ -207,12 +207,6 @@
       "time": "2026-11-18T19:59+00:00",
       "date": "2026-11-18",
       "fresh": false
-    },
-    "qvix50": {
-      "value": 16.0,
-      "time": "2026-11-19T01:33+00:00",
-      "date": "2026-11-19",
-      "fresh": true
     }
   },
   "fresh": [
@@ -220,9 +214,10 @@
     "hsi",
     "hstech",
     "n225",
-    "qvix50",
     "topix",
     "usdjpy"
   ],
-  "errors": {}
+  "errors": {
+    "qvix50": "qvix: HTTPError: 404 Client Error: Not Found for url: http://1.optbbs.com/d/csv/d/vix50.csv"
+  }
 }
