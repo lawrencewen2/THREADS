@@ -195,12 +195,12 @@
     "gl_move": {
       "name": "MOVE 美债波动率",
       "region": "global",
-      "score": 55.7
+      "score": 55.8
     },
     "gl_gold": {
       "name": "黄金跑赢股票",
       "region": "global",
-      "score": 81.3
+      "score": 79.7
     },
     "gl_bond": {
       "name": "美债收益率急跌（避险买盘）",
