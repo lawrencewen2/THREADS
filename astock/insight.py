@@ -133,9 +133,12 @@ def sector_strength(p, industry, ranking):
 # ---------- 个股体检 ----------
 
 def checkups(p, industry, ranking, names):
-    """每只可选股票：行业、估值（市盈率、市净率）、估值在自身近 3 年和行业内的分位、近期走势与风险提示。"""
+    """全部 A 股：行业、估值（市盈率、市净率）、估值在自身近 3 年和行业内的分位、近期走势与风险提示。
+    有业绩预期得分的排在前面（带 rank、score_pct），其余当天有交易的股票也列上，得分留空。"""
     t = p.dates[-1]
-    codes = list(ranking["code"]) if ranking is not None else list(p.codes[p.traded.loc[t]])
+    codes = list(ranking["code"]) if ranking is not None else []
+    seen = set(codes)
+    codes += [c for c in p.codes[p.traded.loc[t]] if c not in seen]
     codes = [c for c in codes if c in p.codes]
     ret = (p.close / p.preclose - 1).where(p.traded).fillna(0)
     adj = (1 + ret).cumprod()
@@ -181,6 +184,38 @@ def checkups(p, industry, ranking, names):
     df["name"] = [names.get(c, "") for c in codes]
     df["flags"] = [";".join(risk_flags(row)) for _, row in df.iterrows()]
     return df
+
+
+OVERSOLD_SCORE = 0.9   # 业绩预期得分前 10%
+OVERSOLD_DROP = -0.15  # 近 20 个交易日跌超 15%
+OVERSOLD_MIN_AMOUNT = 1.0  # 近 20 日日均成交额至少 1 亿元
+OVERSOLD_N = 5
+
+
+def oversold(checks, n=OVERSOLD_N):
+    """错杀候选：业绩预期得分前 10%、近 20 日跌超 15%、盈利（市盈率为正）、非 ST、近 3 天跌停不到 2 次、
+    日均成交至少 1 亿。按近 20 日跌幅从大到小，取前 n 只。这是观察名单，不是买入信号。"""
+    if "score_pct" not in checks:
+        return dict(count=0, rule="", items=[])
+    c = checks
+    m = ((c["score_pct"] >= OVERSOLD_SCORE) & (c["ret20"] <= OVERSOLD_DROP) & (c["pe"] > 0)
+         & ~c["st"].astype(bool) & (c["limit_down3"] < 2) & (c["amount20"] >= OVERSOLD_MIN_AMOUNT))
+    sel = c[m.fillna(False)].sort_values("ret20")
+    items = []
+    for code, r in sel.head(n).iterrows():
+        why = [f"业绩预期得分前 {max(1, round((1 - r['score_pct']) * 100))}%",
+               f"近20日跌 {abs(r['ret20']) * 100:.0f}%"]
+        if pd.notna(r["from_high"]):
+            why.append(f"离一年高点 {r['from_high'] * 100:.0f}%")
+        if pd.notna(r.get("pe_self_pct")):
+            why.append(f"市盈率在自身近3年 {r['pe_self_pct'] * 100:.0f}% 分位")
+        items.append(dict(code=code, name=r["name"], industry=r["industry"], ret20=_clean(r["ret20"]),
+                          from_high=_clean(r["from_high"]), pe=_clean(r["pe"]),
+                          pe_self_pct=_clean(r.get("pe_self_pct")), score_pct=_clean(r["score_pct"]),
+                          reason="，".join(why)))
+    rule = (f"业绩预期得分前 {round((1 - OVERSOLD_SCORE) * 100)}%、近20日跌超 {abs(OVERSOLD_DROP) * 100:.0f}%、"
+            f"盈利、非ST、近3天跌停不到2次、日均成交≥{OVERSOLD_MIN_AMOUNT:g}亿，按跌幅排")
+    return dict(count=int(len(sel)), rule=rule, items=items)
 
 
 def risk_flags(r):
@@ -395,6 +430,7 @@ def build(kline, basic, valuation, industry, ranking, picks, bt):
         sectors=sector_rows,
         confidence=conf,
         checkups=check_rows,
+        oversold=oversold(checks),
         live_ref=live_ref(p, temp),
     )
 
