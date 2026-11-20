@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-20T01:09+00:00",
+  "as_of": "2026-11-20T01:10+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 27.1,
+      "score": 27.3,
       "band": "恐慌",
       "date": "2026-11-20",
       "official": 27.2,
       "official_date": "2026-11-19",
-      "change": -0.1,
+      "change": 0.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 13.3,
+      "score": 13.2,
       "band": "极度恐慌",
       "date": "2026-11-20",
       "official": 12.6,
       "official_date": "2026-11-19",
-      "change": 0.7,
+      "change": 0.6,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -76,13 +76,13 @@
     },
     "cn": {
       "name": "A股",
-      "fresh": false,
-      "score": 29.2,
+      "fresh": true,
+      "score": 30.8,
       "band": "恐慌",
-      "date": "2026-11-19",
+      "date": "2026-11-20",
       "official": 29.2,
       "official_date": "2026-11-19",
-      "change": 0.0,
+      "change": 1.6,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -90,17 +90,17 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     },
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 30.8,
+      "score": 30.7,
       "band": "恐慌",
       "date": "2026-11-20",
       "official": 32.9,
       "official_date": "2026-11-19",
-      "change": -2.1,
+      "change": -2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -113,39 +113,39 @@
   },
   "quotes": {
     "n225": {
-      "value": 57336.36,
-      "time": "2026-11-20T01:09+00:00",
+      "value": 57244.2,
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": true
     },
     "gold": {
-      "value": 3603.48,
-      "time": "2026-11-20T01:09+00:00",
+      "value": 3600.845,
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": false
     },
     "csi300": {
-      "value": 3984.84,
-      "time": "2026-11-19T08:14+00:00",
-      "date": "2026-11-19",
-      "fresh": false
+      "value": 3984.59,
+      "time": "2026-11-20T01:10+00:00",
+      "date": "2026-11-20",
+      "fresh": true
     },
     "hsi": {
       "value": 22841.62,
-      "time": "2026-11-20T01:09+00:00",
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": true
     },
     "hstech": {
-      "value": 3.566,
-      "time": "2026-11-20T01:09+00:00",
+      "value": 3.55,
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": true
     },
     "a_turnover": {
-      "value": 130514727.0,
-      "time": "2026-11-19T08:14+00:00",
-      "date": "2026-11-19",
+      "value": 0.0,
+      "time": "2026-11-20T01:10+00:00",
+      "date": "2026-11-20",
       "fresh": false
     },
     "spx": {
@@ -185,20 +185,20 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92497,
-      "time": "2026-11-20T01:09+00:00",
+      "value": 0.92492,
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": false
     },
     "usdjpy": {
-      "value": 159.376007,
-      "time": "2026-11-20T01:09+00:00",
+      "value": 159.335999,
+      "time": "2026-11-20T01:10+00:00",
       "date": "2026-11-20",
       "fresh": true
     },
     "topix": {
-      "value": 391.299988,
-      "time": "2026-11-20T00:54+00:00",
+      "value": 391.600006,
+      "time": "2026-11-20T00:55+00:00",
       "date": "2026-11-20",
       "fresh": true
     },
@@ -212,13 +212,15 @@
       "value": 14.75,
       "time": "2026-11-19T07:00+00:00",
       "date": "2026-11-19",
-      "fresh": false
+      "fresh": true
     }
   },
   "fresh": [
+    "csi300",
     "hsi",
     "hstech",
     "n225",
+    "qvix50",
     "topix",
     "usdjpy"
   ],
