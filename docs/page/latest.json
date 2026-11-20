@@ -30,9 +30,9 @@
   "key": "jp",
   "name": "日本",
   "date": "2026-11-19",
-  "score": 12.6,
+  "score": 12.4,
   "band": "极度恐慌",
-  "change_5d": -2.1,
+  "change_5d": -2.3,
   "signal": "恐慌加深，减仓"
  },
  {
@@ -48,9 +48,9 @@
   "key": "hk",
   "name": "港股",
   "date": "2026-11-19",
-  "score": 32.9,
+  "score": 32.2,
   "band": "恐慌",
-  "change_5d": -19.4,
+  "change_5d": -20.1,
   "signal": "恐慌加深，减仓"
  }
 ]
