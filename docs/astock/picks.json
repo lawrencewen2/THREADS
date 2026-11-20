@@ -429,8 +429,8 @@
  "stale": [],
  "redline": {
   "halted": false,
-  "drawdown": -0.0232,
-  "as_of": "2026-11-17"
+  "drawdown": -0.031,
+  "as_of": "2026-11-18"
  },
  "sleeve": {
   "sleeve_weight": 1.0,
