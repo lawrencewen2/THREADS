@@ -68,6 +68,7 @@ def test_build_and_json(tmp_path, monkeypatch):
     s = json.dumps(out, ensure_ascii=False, default=insight._clean)
     assert "NaN" not in s
     assert out["sectors"] and out["checkups"] and out["confidence"]
+    assert set(out["oversold"]) == {"count", "rule", "items"}
     first = next(r for r in out["checkups"] if r["code"] == k["code"].iloc[0])
     assert "亏损" in first["flags"]
     items = {i["item"]: i for i in out["checklist"]}
@@ -75,6 +76,35 @@ def test_build_and_json(tmp_path, monkeypatch):
     assert items["隔夜选股能否赚钱"]["status"] == "差"
     c = next(c for c in out["confidence"] if c["strategy"].startswith("恐慌买贪婪卖（选股）"))
     assert c["p_positive"] > 0.9 and c["p_beat_hold"] > 0.9
+
+
+def test_checkups_cover_unscored_stocks():
+    k, basic, val, industry, ranking = _setup()
+    part = ranking.iloc[:-3]
+    p = Panel(k, val)
+    names = basic.set_index("code")["code_name"]
+    c = insight.checkups(p, industry, part, names)
+    traded = set(p.codes[p.traded.loc[p.dates[-1]]])
+    assert traded <= set(c.index)
+    assert list(c.index[:len(part)]) == list(part["code"])
+    assert c.loc[ranking["code"].iloc[-1], "rank"] != c.loc[ranking["code"].iloc[-1], "rank"]  # NaN：没有得分
+
+
+def test_oversold_rule():
+    c = pd.DataFrame({
+        "score_pct": [0.95, 0.99, 0.95, 0.5, 0.95, 0.95, 0.95],
+        "ret20": [-0.30, -0.20, -0.40, -0.50, -0.10, -0.35, -0.45],
+        "pe": [20, 15, -3, 10, 12, 30, 25],
+        "st": [False] * 7,
+        "limit_down3": [0, 0, 0, 0, 0, 0, 2],
+        "amount20": [3.0, 5.0, 3.0, 3.0, 3.0, 0.5, 3.0],
+        "from_high": [-0.4] * 7, "pe_self_pct": [0.2] * 7,
+        "name": list("ABCDEFG"), "industry": [""] * 7,
+    }, index=pd.Index([f"sh.60000{i}" for i in range(7)], name="code"))
+    o = insight.oversold(c)
+    # 只有 A、B 合格：C 亏损、D 得分低、E 跌得不够、F 成交太少、G 连续跌停
+    assert o["count"] == 2 and [i["name"] for i in o["items"]] == ["A", "B"]
+    assert "近20日跌 30%" in o["items"][0]["reason"]
 
 
 def test_bootstrap_interval_contains_actual():
@@ -93,7 +123,15 @@ def test_news_helpers():
     assert news.short_industry("计算机、通信和其他电子设备制造业") == "计算机"
     assert news.short_industry("汽车制造业") == "汽车"
     rows = news.tag_market([dict(title="众兴菌业公告", body="汽车板块走强")], ["众兴菌业", "鑫磊股份"], ["汽车"])
-    assert rows[0]["related"] == "众兴菌业、汽车"
+    assert rows[0]["related"].startswith("众兴菌业、汽车")
+    # 没提到候选股的快讯也给相关股：新浪点名（只认标题里出现的）+ 题材龙头；都没有时留空
+    rows = news.tag_market([dict(title="宁德时代发布新电池", body="", stocks=[("sz.300750", "宁德时代")]),
+                            dict(title="国际金价再创新高", body="现货黄金涨1%"),
+                            dict(title="今日天气晴", body="")], [], [])
+    assert rows[0]["related"].startswith("宁德时代") and rows[0]["targets"][0]["why"] == "快讯点名"
+    assert "紫金矿业" in rows[1]["related"]
+    assert rows[2]["related"] == "" and rows[2]["targets"] == []
+    assert all("stocks" not in r for r in rows)
 
 
 def test_news_build_survives_failures(monkeypatch):
