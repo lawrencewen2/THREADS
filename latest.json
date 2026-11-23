@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T01:08+00:00",
+  "as_of": "2026-11-23T01:09+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -95,12 +95,12 @@
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 25.9,
+      "score": 26.0,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 28.0,
       "official_date": "2026-11-20",
-      "change": -2.1,
+      "change": -2.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3597.632,
-      "time": "2026-11-23T01:08+00:00",
+      "value": 3604.28,
+      "time": "2026-11-23T01:09+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
@@ -132,13 +132,13 @@
     },
     "hsi": {
       "value": 22410.8,
-      "time": "2026-11-23T01:08+00:00",
+      "time": "2026-11-23T01:09+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "hstech": {
-      "value": 3.42,
-      "time": "2026-11-23T01:07+00:00",
+      "value": 3.428,
+      "time": "2026-11-23T01:08+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92255,
-      "time": "2026-11-23T01:08+00:00",
+      "value": 0.92258,
+      "time": "2026-11-23T01:09+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.847,
-      "time": "2026-11-23T01:08+00:00",
+      "value": 158.843002,
+      "time": "2026-11-23T01:09+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
