@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-23T01:24+00:00",
+  "as_of": "2026-11-23T01:25+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 22.9,
+      "score": 22.7,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 23.1,
       "official_date": "2026-11-20",
-      "change": -0.2,
+      "change": -0.4,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 29.4,
+      "score": 28.6,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 29.4,
       "official_date": "2026-11-20",
-      "change": 0.0,
+      "change": -0.8,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,20 +119,20 @@
       "fresh": true
     },
     "gold": {
-      "value": 3612.779,
-      "time": "2026-11-23T01:24+00:00",
+      "value": 3617.588,
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "csi300": {
-      "value": 3954.47,
-      "time": "2026-11-23T01:24+00:00",
+      "value": 3931.47,
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "hsi": {
       "value": 22168.19,
-      "time": "2026-11-23T01:24+00:00",
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -143,8 +143,8 @@
       "fresh": true
     },
     "a_turnover": {
-      "value": 0.0,
-      "time": "2026-11-23T01:24+00:00",
+      "value": 1539734.0,
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92216,
-      "time": "2026-11-23T01:24+00:00",
+      "value": 0.92217,
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.841995,
-      "time": "2026-11-23T01:24+00:00",
+      "value": 158.852005,
+      "time": "2026-11-23T01:25+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
