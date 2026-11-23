@@ -4,6 +4,7 @@
 盘中读数不写回 data/raw，也不改动每日版的历史和回测。
 """
 
+import hashlib
 import logging
 import math
 import re
@@ -169,7 +170,25 @@ def _qvix_quote():
     t = now.replace(hour=hh, minute=mm, second=0, microsecond=0)
     if t > now:  # 零点后拿到的是上一交易日的最后一笔
         t -= pd.Timedelta(days=1)
-    return dict(value=float(last.iloc[-1]), time=t.astimezone(timezone.utc), date=pd.Timestamp(t.date()))
+    # 文件里只有时刻没有日期：留一个内容指纹，供 unfreeze_qvix 判断是不是前几天的旧文件
+    sig = hashlib.sha1(df.to_csv(index=False).encode()).hexdigest()[:12]
+    return dict(value=float(last.iloc[-1]), time=t.astimezone(timezone.utc), date=pd.Timestamp(t.date()), sig=sig)
+
+
+def unfreeze_qvix(quote, seen):
+    """纠正停更的 QVIX 分钟行情的日期。返回 (quote, 新的 seen 记录)。
+
+    optbbs 的分钟文件只有时刻，_qvix_quote 只能按“今天”标日期；它停更时（2026-11-19 收盘后至今）
+    旧文件会被当成当天的新行情。seen 记下每份文件内容第一次出现的日期：内容和记录的一样，就沿用当时的日期。
+    """
+    if not quote or not quote.get("sig"):
+        return quote, seen
+    if seen and seen.get("sig") == quote["sig"]:
+        first = pd.Timestamp(seen["date"])
+        if first < quote["date"]:
+            quote = dict(quote, date=first, time=quote["time"] - (quote["date"] - first))
+        return quote, seen
+    return quote, dict(sig=quote["sig"], date=str(quote["date"].date()))
 
 
 def market_session(region, now=None):

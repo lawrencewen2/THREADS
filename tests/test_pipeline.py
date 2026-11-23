@@ -364,3 +364,24 @@ def test_sanitize_fixes_short_price_glitch():
     # 成交额不在名单里：2016-01-07 熔断日那样的真实骤降保留
     amt = pd.Series([7.0e11, 1.9e11, 7.6e11, 7.2e11], index=pd.bdate_range("2016-01-06", periods=4))
     assert fetch.sanitize("a_turnover", amt).min() == 1.9e11
+
+
+def test_intraday_unfreeze_qvix():
+    """QVIX 分钟文件停更时，内容和以前见过的一样，日期沿用第一次见到的那天，不当成今天的新行情。"""
+    from datetime import datetime, timezone
+
+    from fearindex import intraday
+
+    t = datetime(2026, 11, 19, 7, 0, tzinfo=timezone.utc)
+    q = dict(value=14.75, time=t, date=pd.Timestamp("2026-11-19"), sig="abc")
+    out, seen = intraday.unfreeze_qvix(q, None)
+    assert out is q and seen == dict(sig="abc", date="2026-11-19")
+    # 第二天收盘后文件没变：日期和时间退回 11-19
+    stale = dict(q, time=t.replace(day=20), date=pd.Timestamp("2026-11-20"))
+    out, seen2 = intraday.unfreeze_qvix(stale, seen)
+    assert out["date"] == pd.Timestamp("2026-11-19") and out["time"] == t and seen2 == seen
+    # 文件更新了：按新日期记
+    fresh = dict(stale, sig="def", value=16.2)
+    out, seen3 = intraday.unfreeze_qvix(fresh, seen)
+    assert out is fresh and seen3 == dict(sig="def", date="2026-11-20")
+    assert intraday.unfreeze_qvix(None, seen) == (None, seen)

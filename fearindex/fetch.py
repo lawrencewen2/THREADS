@@ -170,8 +170,9 @@ def _sse_margin_tail(s):
 
 
 SSE_IV_KEY = "_sse_iv50"   # 上交所口径的 50ETF 30 天平值隐含波动率，只用来给 qvix50 补尾，不是指数成分
-SSE_IV_OVERLAP = 60        # 用最近多少个重叠交易日对齐两者的水平
+SSE_IV_OVERLAP = 40        # 用最近多少个重叠交易日对齐两者的水平
 SSE_IV_MIN_OVERLAP = 20
+SSE_IV_BUDGET = 150        # 每次运行最多花多少秒请求上交所（首次要回补约两个月，一次补不完下次接着补）
 
 
 def _option_expiry(yymm):
@@ -220,29 +221,33 @@ def atm_iv_30d(df, date, underlying="510050"):
 
 
 def _sse_iv_series(start, end):
-    """[start, end] 之间每个交易日的上交所口径隐含波动率，带本地缓存，只请求还没有的日期。"""
+    """[start, end] 之间每个交易日的上交所口径隐含波动率，带本地缓存，只请求还没有的日期（从最近的日子往前补）。"""
     from . import akcompat
 
     cached = load_cached(SSE_IV_KEY)
     cached = cached.dropna() if cached is not None else pd.Series(dtype=float)
     want = [d for d in pd.bdate_range(start, end) if d not in cached.index]
-    if len(cached) and len(cached[cached.index >= start]) >= SSE_IV_MIN_OVERLAP:
-        want = [d for d in want if d > cached.index[-1]]  # 缓存够用时不反复请求节假日
-    got, misses = {}, 0
-    for d in want:
+    if len(cached[cached.index >= start]) >= SSE_IV_MIN_OVERLAP:
+        # 缓存够用时只看最近一周，不反复请求更早的节假日
+        want = [d for d in want if d > cached.index[-1] - pd.Timedelta(days=7)]
+    got, misses, t0 = {}, 0, time.monotonic()
+    for d in reversed(want):
+        if time.monotonic() - t0 > SSE_IV_BUDGET:
+            log.info("sse iv: time budget used up at %s, the rest next run", d.date())
+            break
         try:
-            df = _retry(lambda: akcompat.call("option_risk_indicator_sse", date=f"{d:%Y%m%d}"), attempts=2, base_delay=1.0)
-            value = atm_iv_30d(df, d)
-            misses = 0
-        except Exception as exc:  # 节假日返回空表（KeyError）；连不上时连续失败几次就停
+            df = akcompat.call("option_risk_indicator_sse", date=f"{d:%Y%m%d}")
+            value, misses = atm_iv_30d(df, d), 0
+        except KeyError:  # 节假日或当天还没公布：返回空表
+            value = None
+        except Exception as exc:
             value, misses = None, misses + 1
-            log.debug("sse iv %s: %s", d.date(), str(exc)[:80])
-            if misses >= 8:
-                log.warning("sse iv: %d consecutive failures, stop at %s", misses, d.date())
+            log.warning("sse iv %s: %s: %s", d.date(), type(exc).__name__, str(exc)[:80])
+            if misses >= 3:
                 break
         if value:
             got[d] = round(value, 4)
-        time.sleep(0.3)
+        time.sleep(0.2)
     if got:
         cached = pd.concat([cached, pd.Series(got)]).sort_index()
         cached = cached[~cached.index.duplicated(keep="last")]
@@ -257,26 +262,26 @@ def _sse_iv_tail(s):
     再乘以最近 SSE_IV_OVERLAP 个重叠交易日里 QVIX 与它的比值中位数，对齐到 QVIX 的水平。
     只补 QVIX 最后一天之后的日期，不改已有历史；optbbs 恢复后，它的数据会覆盖补上的值。
     """
-    s = s.dropna()
-    last = pd.to_datetime(s.index).max()
-    today = pd.Timestamp.now(tz="Asia/Shanghai").tz_localize(None).normalize()
+    s = _clean(s)
+    s = s[s.index.notna()]
     try:
+        last = s.index[-1]
+        today = pd.Timestamp.now(tz="Asia/Shanghai").tz_localize(None).normalize()
         iv = _sse_iv_series(last - pd.Timedelta(days=int(SSE_IV_OVERLAP * 1.6)), today)
+        both = pd.concat([s, iv], axis=1, keys=["q", "iv"]).dropna().tail(SSE_IV_OVERLAP)
+        tail = iv[iv.index > last]
+        if tail.empty:
+            return s
+        if len(both) < SSE_IV_MIN_OVERLAP:
+            log.warning("qvix50: only %d overlap days with SSE official IV, not filling", len(both))
+            return s
+        ratio = float((both["q"] / both["iv"]).median())
+        err = float((both["iv"] * ratio / both["q"] - 1).abs().median())
+        if not 0.6 < ratio < 1.6:
+            log.warning("qvix50: SSE official IV ratio %.2f out of range, not filling", ratio)
+            return s
     except Exception as exc:
-        log.warning("qvix50: SSE official fill failed: %s", str(exc)[:120])
-        return s
-    q = pd.Series(s.to_numpy(dtype=float), index=pd.to_datetime(s.index))
-    both = pd.concat([q, iv], axis=1, keys=["q", "iv"]).dropna().tail(SSE_IV_OVERLAP)
-    tail = iv[iv.index > last]
-    if tail.empty:
-        return s
-    if len(both) < SSE_IV_MIN_OVERLAP:
-        log.warning("qvix50: only %d overlap days with SSE official IV, not filling", len(both))
-        return s
-    ratio = float((both["q"] / both["iv"]).median())
-    err = float((both["iv"] * ratio / both["q"] - 1).abs().median())
-    if not 0.6 < ratio < 1.6:
-        log.warning("qvix50: SSE official IV ratio %.2f out of range, not filling", ratio)
+        log.warning("qvix50: SSE official fill failed: %s: %s", type(exc).__name__, str(exc)[:120])
         return s
     log.info("qvix50: optbbs ends %s, filled %d days from SSE official IV (ratio %.3f over %d days, median abs error %.1f%%)",
              last.date(), len(tail), ratio, len(both), err * 100)
@@ -310,7 +315,6 @@ def fetch_akshare(spec, start):
             try:
                 df = ak.index_option_50etf_qvix()
                 s = df.set_index("date")["close"]
-                s.index = pd.to_datetime(s.index)
             except Exception as exc:
                 # optbbs 整个连不上时沿用缓存（里面可能已有之前补上的日子），再接着往后补
                 s = load_cached("qvix50")
