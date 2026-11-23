@@ -14,7 +14,7 @@
   "from_entry": null,
   "to_stop": -18.31,
   "to_take": 12.22,
-  "time": "11-23 09:18",
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -27,12 +27,12 @@
   "stop": 27.87,
   "take": 44.9,
   "ref": true,
-  "price": 35.2,
-  "pct": -7.59,
+  "price": 35.84,
+  "pct": -5.91,
   "from_entry": null,
-  "to_stop": -20.82,
-  "to_take": 27.56,
-  "time": "11-23 09:19",
+  "to_stop": -22.24,
+  "to_take": 25.28,
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -45,12 +45,12 @@
   "stop": 2.81,
   "take": 4.01,
   "ref": true,
-  "price": 3.3,
-  "pct": -6.52,
+  "price": 3.31,
+  "pct": -6.23,
   "from_entry": null,
-  "to_stop": -14.85,
-  "to_take": 21.52,
-  "time": "11-23 09:19",
+  "to_stop": -15.11,
+  "to_take": 21.15,
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -68,7 +68,7 @@
   "from_entry": null,
   "to_stop": -12.96,
   "to_take": 10.53,
-  "time": "11-23 09:19",
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -86,7 +86,7 @@
   "from_entry": null,
   "to_stop": -26.61,
   "to_take": 34.53,
-  "time": "11-23 09:19",
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -99,12 +99,12 @@
   "stop": 25.6,
   "take": 36.1,
   "ref": true,
-  "price": 31.9,
-  "pct": 0.0,
+  "price": 31.15,
+  "pct": -2.35,
   "from_entry": null,
-  "to_stop": -19.75,
-  "to_take": 13.17,
-  "time": "11-23 09:19",
+  "to_stop": -17.82,
+  "to_take": 15.89,
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -122,7 +122,7 @@
   "from_entry": null,
   "to_stop": -18.79,
   "to_take": 12.41,
-  "time": "11-23 09:19",
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -140,7 +140,7 @@
   "from_entry": null,
   "to_stop": -16.46,
   "to_take": 17.99,
-  "time": "11-23 09:19",
+  "time": "11-23 09:20",
   "status": "正常"
  },
  {
@@ -171,12 +171,12 @@
   "stop": 36.39,
   "take": 60.54,
   "ref": true,
-  "price": 48.4,
-  "pct": -4.87,
+  "price": 48.43,
+  "pct": -4.82,
   "from_entry": null,
-  "to_stop": -24.81,
-  "to_take": 25.08,
-  "time": "11-23 09:19",
+  "to_stop": -24.86,
+  "to_take": 25.01,
+  "time": "11-23 09:20",
   "status": "正常"
  }
 ]
