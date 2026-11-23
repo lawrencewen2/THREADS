@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T01:09+00:00",
+  "as_of": "2026-11-23T01:10+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -76,10 +76,10 @@
     },
     "cn": {
       "name": "A股",
-      "fresh": false,
+      "fresh": true,
       "score": 29.4,
       "band": "恐慌",
-      "date": "2026-11-20",
+      "date": "2026-11-23",
       "official": 29.4,
       "official_date": "2026-11-20",
       "change": 0.0,
@@ -90,17 +90,17 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     },
     "hk": {
       "name": "港股",
       "fresh": true,
-      "score": 26.0,
+      "score": 25.8,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 28.0,
       "official_date": "2026-11-20",
-      "change": -2.0,
+      "change": -2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,33 +119,33 @@
       "fresh": true
     },
     "gold": {
-      "value": 3604.28,
-      "time": "2026-11-23T01:09+00:00",
+      "value": 3602.39,
+      "time": "2026-11-23T01:10+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "csi300": {
-      "value": 3954.57,
-      "time": "2026-11-20T08:14+00:00",
-      "date": "2026-11-20",
-      "fresh": false
+      "value": 3954.47,
+      "time": "2026-11-23T01:10+00:00",
+      "date": "2026-11-23",
+      "fresh": true
     },
     "hsi": {
       "value": 22410.8,
-      "time": "2026-11-23T01:09+00:00",
+      "time": "2026-11-23T01:10+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "hstech": {
-      "value": 3.428,
-      "time": "2026-11-23T01:08+00:00",
+      "value": 3.4,
+      "time": "2026-11-23T01:10+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "a_turnover": {
-      "value": 142220042.0,
-      "time": "2026-11-20T08:14+00:00",
-      "date": "2026-11-20",
+      "value": 0.0,
+      "time": "2026-11-23T01:10+00:00",
+      "date": "2026-11-23",
       "fresh": false
     },
     "spx": {
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92258,
-      "time": "2026-11-23T01:09+00:00",
+      "value": 0.92252,
+      "time": "2026-11-23T01:10+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.843002,
-      "time": "2026-11-23T01:09+00:00",
+      "value": 158.832993,
+      "time": "2026-11-23T01:10+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -216,6 +216,7 @@
     }
   },
   "fresh": [
+    "csi300",
     "hsi",
     "hstech",
     "n225",
