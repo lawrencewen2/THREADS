@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T04:58+00:00",
+  "as_of": "2026-11-23T05:00+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -90,7 +90,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "午休"
+      "session": "盘中"
     },
     "hk": {
       "name": "港股",
@@ -108,7 +108,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "午休"
+      "session": "盘中"
     }
   },
   "quotes": {
@@ -119,14 +119,14 @@
       "fresh": false
     },
     "gold": {
-      "value": 3610.91,
-      "time": "2026-11-23T04:58+00:00",
+      "value": 3609.307,
+      "time": "2026-11-23T04:59+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "csi300": {
       "value": 3930.08,
-      "time": "2026-11-23T04:58+00:00",
+      "time": "2026-11-23T04:59+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -144,7 +144,7 @@
     },
     "a_turnover": {
       "value": 91637116.0,
-      "time": "2026-11-23T04:58+00:00",
+      "time": "2026-11-23T04:59+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92222,
-      "time": "2026-11-23T04:58+00:00",
+      "value": 0.92219,
+      "time": "2026-11-23T04:59+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.992996,
-      "time": "2026-11-23T04:58+00:00",
+      "value": 158.983994,
+      "time": "2026-11-23T04:59+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
