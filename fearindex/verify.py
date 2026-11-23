@@ -255,7 +255,7 @@ CROSS_CHECKS = [
 ]
 
 NO_SECOND_SOURCE = {
-    "qvix50": "50ETF 期权波动率只有期权论坛（optbbs）一家免费发布",
+    "qvix50": "50ETF 期权波动率只有期权论坛（optbbs）一家免费发布；它停更的日子用上交所官网期权隐含波动率按比值补上",
     "move": "MOVE 指数为 ICE 专有数据，免费渠道只有 Yahoo",
 }
 

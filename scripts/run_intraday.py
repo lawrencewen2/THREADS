@@ -179,6 +179,10 @@ def main():
     quotes, errors = intraday.fetch_quotes()
     for k, v in errors.items():
         logging.warning("%s", v)
+    state_path = out / "state.json"
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    if "qvix50" in quotes:
+        quotes["qvix50"], state["qvix_seen"] = intraday.unfreeze_qvix(quotes["qvix50"], state.get("qvix_seen"))
     est = intraday.estimate(series, quotes)
     est["errors"] = errors
     (out / "latest.json").write_text(json.dumps(est, ensure_ascii=False, indent=2))
@@ -209,8 +213,6 @@ def main():
     df.to_csv(log_path, mode="a", header=not log_path.exists(), index=False)
     write_today(out, now_cn)
 
-    state_path = out / "state.json"
-    state = json.loads(state_path.read_text()) if state_path.exists() else {}
     sent = state.setdefault("sent", {})
     new = []
     for key, kind, text in intraday.alerts(est):
