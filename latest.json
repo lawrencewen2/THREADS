@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T10:52+00:00",
+  "as_of": "2026-11-23T10:53+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 24.1,
+      "score": 24.2,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 28.1,
       "official_date": "2026-11-20",
-      "change": -4.0,
+      "change": -3.9,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": false
     },
     "gold": {
-      "value": 3626.59,
-      "time": "2026-11-23T10:52+00:00",
+      "value": 3626.845,
+      "time": "2026-11-23T10:53+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 30.120001,
-      "time": "2026-11-23T10:37+00:00",
+      "value": 30.1,
+      "time": "2026-11-23T10:38+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 5992.97998,
-      "time": "2026-11-23T10:37+00:00",
+      "value": 5995.359863,
+      "time": "2026-11-23T10:38+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.92,
-      "time": "2026-11-23T10:52+00:00",
+      "value": 0.92012,
+      "time": "2026-11-23T10:53+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.095001,
-      "time": "2026-11-23T10:52+00:00",
+      "value": 159.110001,
+      "time": "2026-11-23T10:53+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
