@@ -117,6 +117,14 @@ START_DATE = "2000-01-01"
 # 单日坏点过滤：当天偏离前后两天均值超过阈值、而前后两天彼此接近（差距小于阈值一半）时剔除。
 # 只用于外汇：Yahoo 2008 年的 USDJPY/EURCHF 有日月颠倒的报价。股指和波动率指数的单日暴跌暴涨是真实行情，不过滤。
 SPIKE_FILTER = {"usdjpy": 0.04, "eurchf": 0.04}
+# 价格类序列的短暂量级错误（例如 Yahoo 在 ETF 拆分日前后把价格多除一次 10，2026-03-30/31 的 1306.T 就是这样）：
+# 连续不超过 GLITCH_MAX_RUN 天的值比前一天低于 1/GLITCH_RATIO 或高于 GLITCH_RATIO 倍、之后又回到原水平，视为坏点。
+# 乘以 10 的整数次幂后能回到前后水平的就修正，否则删除。真实行情不会出现三倍来回；成交额、波动率这类序列不在此列
+# （例如 2016-01-07 熔断日成交额只有平日的四分之一，是真实数据）。
+GLITCH_KEYS = ["spx", "rsp", "iwm", "hyg", "ief", "sx5e", "n225", "topix", "csi300", "csi500", "csi1000",
+               "hsi", "hstech", "hscomp", "gold"]
+GLITCH_RATIO = 3.0
+GLITCH_MAX_RUN = 3
 
 # 仓位信号：分数 ≤ RISK_OFF_LEVEL 且低于 RISK_OFF_LOOKBACK 个交易日前（恐慌在加深）→ 建议仓位减半。
 # 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
@@ -168,7 +176,8 @@ def fingerprint():
 
     params = dict(series=SERIES, components=COMPONENTS, region_weights=REGION_WEIGHTS, common=COMMON_WEIGHT,
                   window=RANK_WINDOW, min_periods=RANK_MIN_PERIODS, coverage=MIN_REGION_COVERAGE,
-                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER, risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM),
+                  ffill=FFILL_LIMIT, smooth=SMOOTH_SPAN, spike=SPIKE_FILTER,
+                  glitch=(GLITCH_KEYS, GLITCH_RATIO, GLITCH_MAX_RUN), risk_off=(RISK_OFF_LEVEL, RISK_OFF_LOOKBACK, RISK_OFF_CONFIRM),
                   extremes=(BOTTOM_LEVEL, BOTTOM_EXIT, TOP_LEVEL, TOP_EXIT, EXTREME_MEMORY, EXTREME_SHOW, EXTREME_GAP),
                   short=(SHORT_WINDOW, SHORT_DROP, SHORT_REBOUND, SHORT_LEVEL))
     return hashlib.sha1(json.dumps(params, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:12]

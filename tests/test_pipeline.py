@@ -340,3 +340,27 @@ def test_intraday_pick_rows(monkeypatch):
     assert st == {"sz.002772": "触及止损", "sh.603334": "触及止盈", "sz.301317": "正常", "sz.000001": "无行情"}
     assert rows[0]["from_entry"] == -5.88 and rows[2]["ref"] is True and rows[0]["ref"] is False
     assert [k for _, k, _ in notes] == ["触及止损", "触及止盈"]  # 观察的股票不提醒
+
+
+def test_sanitize_fixes_short_price_glitch():
+    """价格序列连续一两天被多除了 10（Yahoo 拆分日错位）要修回来；成交额这类序列的真实骤降不能动。"""
+    from fearindex import fetch
+
+    idx = pd.bdate_range("2026-03-24", periods=9)
+    px = pd.Series([374.3, 383.6, 382.6, 382.7, 37.64, 37.14, 389.2, 383.0, 386.6], index=idx)
+    out = fetch.sanitize("topix", px)
+    assert len(out) == 9
+    assert out.loc["2026-03-30"] == pytest.approx(376.4)
+    assert out.loc["2026-03-31"] == pytest.approx(371.4)
+    # 换算不回来的坏点直接删掉
+    odd = px.copy()
+    odd.loc["2026-03-30"] = 55.0
+    out = fetch.sanitize("topix", odd)
+    assert pd.Timestamp("2026-03-30") not in out.index and out.loc["2026-03-31"] == pytest.approx(371.4)
+    # 跌到十分之一后没有回来（真实拆分或还没走完）：不动
+    stay = pd.Series([380.0, 382.0, 38.0, 38.2, 38.1, 38.3, 38.0, 38.4, 38.2], index=idx)
+    kept = fetch.sanitize("topix", stay)
+    assert len(kept) == 9 and list(kept) == list(stay)
+    # 成交额不在名单里：2016-01-07 熔断日那样的真实骤降保留
+    amt = pd.Series([7.0e11, 1.9e11, 7.6e11, 7.2e11], index=pd.bdate_range("2016-01-06", periods=4))
+    assert fetch.sanitize("a_turnover", amt).min() == 1.9e11
