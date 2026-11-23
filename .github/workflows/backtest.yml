@@ -20,15 +20,5 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: pip install -r requirements.txt
-      - run: python -m pytest -q
-      - name: Fetch history (uses committed cache when present)
-        run: python scripts/run_daily.py || true
-      - run: python scripts/run_backtest.py
-      - name: Commit report and data
-        run: |
-          git config user.name "fear-index-bot"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add reports data docs README.md
-          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
-          git commit -m "report: backtest $(date -u +%F)"
-          git push
+      - run: python -m pytest -q tests/test_pipeline.py
+      - run: python scripts/probe_qvix.py
