@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-23T01:59+00:00",
+  "as_of": "2026-11-23T02:01+00:00",
   "method": "c769c7bccbdb",
   "regions": {
     "global": {
@@ -77,12 +77,12 @@
     "cn": {
       "name": "A股",
       "fresh": true,
-      "score": 28.0,
+      "score": 28.3,
       "band": "恐慌",
       "date": "2026-11-23",
       "official": 29.4,
       "official_date": "2026-11-20",
-      "change": -1.4,
+      "change": -1.1,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -119,34 +119,34 @@
       "fresh": true
     },
     "gold": {
-      "value": 3604.413,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 3605.125,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "csi300": {
-      "value": 3908.31,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 3910.78,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "hsi": {
-      "value": 22088.17,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 22092.29,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "hstech": {
-      "value": 3.37,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 3.372,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
     "a_turnover": {
-      "value": 44888247.0,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 45993419.0,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
-      "fresh": false
+      "fresh": true
     },
     "spx": {
       "value": 6918.450195,
@@ -185,14 +185,14 @@
       "fresh": false
     },
     "eurchf": {
-      "value": 0.92228,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 0.92229,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.884003,
-      "time": "2026-11-23T01:59+00:00",
+      "value": 158.923004,
+      "time": "2026-11-23T02:00+00:00",
       "date": "2026-11-23",
       "fresh": true
     },
@@ -216,6 +216,7 @@
     }
   },
   "fresh": [
+    "a_turnover",
     "csi300",
     "hsi",
     "hstech",
