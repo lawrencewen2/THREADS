@@ -225,7 +225,7 @@ def _sse_iv_series(start, end):
     from . import akcompat
 
     cached = load_cached(SSE_IV_KEY)
-    cached = cached.dropna() if cached is not None else pd.Series(dtype=float)
+    cached = cached.dropna() if cached is not None else pd.Series(dtype=float, index=pd.DatetimeIndex([]))
     want = [d for d in pd.bdate_range(start, end) if d not in cached.index]
     if len(cached[cached.index >= start]) >= SSE_IV_MIN_OVERLAP:
         # 缓存够用时只看最近一周，不反复请求更早的节假日

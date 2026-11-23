@@ -385,3 +385,65 @@ def test_intraday_unfreeze_qvix():
     out, seen3 = intraday.unfreeze_qvix(fresh, seen)
     assert out is fresh and seen3 == dict(sig="def", date="2026-11-20")
     assert intraday.unfreeze_qvix(None, seen) == (None, seen)
+
+
+def _risk_table(date, iv_near=0.15, iv_far=0.17):
+    """仿上交所期权风险指标表：50ETF 12 月、次年 3 月两个到期月，认购认沽各 5 个行权价。"""
+    rows = []
+    for ym, iv in (("2612", iv_near), ("2703", iv_far)):
+        for i, strike in enumerate((2800, 2900, 3000, 3100, 3200)):
+            dc = 0.9 - 0.2 * i  # 认购 Delta 0.9 → 0.1
+            for cp, delta in (("C", dc), ("P", dc - 1)):
+                skew = 0.01 * abs(abs(delta) - 0.5)
+                rows.append({"交易日期": date, "合约交易代码": f"510050{cp}{ym}M0{strike}", "Delta": delta, "隐含波动率": iv + skew})
+    rows.append({"交易日期": date, "合约交易代码": "510300C2612M04000", "Delta": 0.5, "隐含波动率": 0.99})  # 其他标的不算
+    return pd.DataFrame(rows)
+
+
+def test_atm_iv_30d_interpolates_to_30_days():
+    from fearindex import fetch
+
+    # 2026-12 的第四个星期三是 12-23；11-23 距它正好 30 天 → 就是近月平值波动率
+    assert fetch._option_expiry("2612") == pd.Timestamp("2026-12-23")
+    assert fetch.atm_iv_30d(_risk_table("2026-11-23"), pd.Timestamp("2026-11-23")) == pytest.approx(15.0, abs=0.01)
+    # 12-10：近月只剩 13 天，30 天落在两个到期月之间 → 介于两者之间
+    mid = fetch.atm_iv_30d(_risk_table("2026-12-10"), pd.Timestamp("2026-12-10"))
+    assert 15.0 < mid < 17.0
+    # 12-18：近月不足 7 天，直接用次近月
+    assert fetch.atm_iv_30d(_risk_table("2026-12-18"), pd.Timestamp("2026-12-18")) == pytest.approx(17.0, abs=0.01)
+    assert fetch.atm_iv_30d(_risk_table("2026-11-23").iloc[-1:], pd.Timestamp("2026-11-23")) is None
+
+
+def test_qvix_tail_filled_from_sse_official(monkeypatch, tmp_path):
+    """optbbs 停更后，QVIX 之后的日子用上交所口径的波动率按最近的比值补上；节假日（空表）跳过。"""
+    from fearindex import akcompat, fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch.time, "sleep", lambda s: None)
+    days = pd.bdate_range("2026-09-01", "2026-11-18")
+    qvix = pd.Series(np.linspace(14, 16, len(days)), index=days)
+    holiday = pd.Timestamp("2026-10-01")
+    calls = []
+
+    def fake(name, date):
+        d = pd.Timestamp(date)
+        calls.append(d)
+        if d == holiday or d > pd.Timestamp("2026-11-20"):
+            raise KeyError("empty")
+        base = qvix.get(d, 18.9 if d == pd.Timestamp("2026-11-20") else 16.8) / 1.05 / 100  # QVIX 比平值波动率高 5%
+        return _risk_table(str(d.date()), iv_near=base, iv_far=base)
+
+    monkeypatch.setattr(akcompat, "call", fake)
+    monkeypatch.setattr(pd.Timestamp, "now", classmethod(lambda cls, tz=None: pd.Timestamp("2026-11-23 06:35", tz=tz)))
+    out = fetch._sse_iv_tail(qvix)
+    assert out.index[-1] == pd.Timestamp("2026-11-20") and len(out) == len(qvix) + 2
+    assert out.loc["2026-11-19"] == pytest.approx(16.8, abs=0.02) and out.loc["2026-11-20"] == pytest.approx(18.9, abs=0.02)
+    assert out.iloc[: len(qvix)].equals(fetch._clean(qvix))  # 已有历史不动
+    # 第二次运行只请求最近一周里还没有的日子
+    calls.clear()
+    fetch._sse_iv_tail(qvix)
+    assert calls and min(calls) > pd.Timestamp("2026-11-13")
+    # 上交所连不上：原样返回
+    monkeypatch.setattr(akcompat, "call", lambda name, date: (_ for _ in ()).throw(OSError("down")))
+    (tmp_path / "_sse_iv50.csv").unlink()
+    assert fetch._sse_iv_tail(qvix).index[-1] == pd.Timestamp("2026-11-18")
