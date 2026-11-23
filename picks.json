@@ -68,7 +68,7 @@
   "from_entry": null,
   "to_stop": -13.77,
   "to_take": 9.5,
-  "time": "11-23 12:04",
+  "time": "11-23 12:05",
   "status": "正常"
  },
  {
@@ -176,7 +176,7 @@
   "from_entry": null,
   "to_stop": -27.98,
   "to_take": 19.81,
-  "time": "11-23 12:04",
+  "time": "11-23 12:05",
   "status": "正常"
  }
 ]
