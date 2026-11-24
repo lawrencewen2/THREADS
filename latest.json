@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-24T13:11+00:00",
+  "as_of": "2026-11-24T13:12+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 22.3,
+      "score": 22.2,
       "band": "恐慌",
       "date": "2026-11-24",
       "official": 25.2,
       "official_date": "2026-11-23",
-      "change": -2.9,
+      "change": -3.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 12.0,
+      "score": 11.9,
       "band": "极度恐慌",
       "date": "2026-11-24",
       "official": 11.6,
       "official_date": "2026-11-23",
-      "change": 0.4,
+      "change": 0.3,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3663.21,
-      "time": "2026-11-24T13:11+00:00",
+      "value": 3657.126,
+      "time": "2026-11-24T13:12+00:00",
       "date": "2026-11-24",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 28.73,
-      "time": "2026-11-24T12:56+00:00",
+      "value": 28.860001,
+      "time": "2026-11-24T12:57+00:00",
       "date": "2026-11-24",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6040.27002,
-      "time": "2026-11-24T12:56+00:00",
+      "value": 6036.490234,
+      "time": "2026-11-24T12:57+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91839,
-      "time": "2026-11-24T13:11+00:00",
+      "value": 0.9179,
+      "time": "2026-11-24T13:12+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.085999,
-      "time": "2026-11-24T13:11+00:00",
+      "value": 159.059998,
+      "time": "2026-11-24T13:12+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
