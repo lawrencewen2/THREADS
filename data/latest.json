@@ -4,9 +4,9 @@
   "regions": {
     "global": {
       "name": "全球",
-      "score": 21.7,
+      "score": 21.8,
       "band": "恐慌",
-      "change_5d": -14.9,
+      "change_5d": -14.8,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -20,9 +20,9 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 24.2,
+      "score": 25.2,
       "band": "恐慌",
-      "change_5d": -24.1,
+      "change_5d": -23.1,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -44,9 +44,9 @@
     },
     "hk": {
       "name": "港股",
-      "score": 26.0,
+      "score": 25.7,
       "band": "恐慌",
-      "change_5d": -18.9,
+      "change_5d": -19.2,
       "risk_off": true,
       "signal": "risk_off"
     }
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 32.1
+      "score": 48.3
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -125,7 +125,7 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 61.0
+      "score": 60.9
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 1.6
+      "score": 1.7
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 11.4
+      "score": 6.7
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
