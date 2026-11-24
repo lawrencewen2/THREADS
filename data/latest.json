@@ -20,9 +20,9 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 21.5,
+      "score": 21.4,
       "band": "恐慌",
-      "change_5d": -19.9,
+      "change_5d": -20.0,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 26.9
+      "score": 25.6
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -125,7 +125,7 @@
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 55.4
+      "score": 56.1
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
@@ -160,7 +160,7 @@
     "cn_margin": {
       "name": "沪市融资余额下降",
       "region": "cn",
-      "score": 1.7
+      "score": 2.5
     },
     "cn_crash": {
       "name": "沪深300 10日急跌",
