@@ -16,13 +16,14 @@ import logging
 import numpy as np
 import pandas as pd
 
-from . import config, model
+from . import config, live_market, model
 from .factors import Panel
 
 log = logging.getLogger(__name__)
 
 INDUSTRY_FILE = config.DATA_DIR / "industry.csv"
 OUT_FILE = config.PAGE_DIR / "insight.json"
+REF_FILE = config.PAGE_DIR / "market_ref.json"  # 盘中市场温度用（astock/live_market.py）
 TEMP_DAYS = 60  # 面板上画的市场温度天数
 TEMP_RANK_WINDOW = 250  # 温度分：各指标在近 250 个交易日里的分位
 MIN_INDUSTRY_SIZE = 10  # 行业内股票少于这个数不列
@@ -50,17 +51,7 @@ def market_temperature(p):
         "above_ma20": (p.close > ma20).sum(axis=1) / ma20.notna().sum(axis=1).replace(0, np.nan),
         "median_ret": ret.median(axis=1),
     })
-    df["up_share"] = df["up"] / (df["up"] + df["down"]).replace(0, np.nan)
-    df["net_limit"] = df["limit_up"] - df["limit_down"]
-    df["amount_ratio"] = df["amount"] / df["amount"].rolling(20, min_periods=10).mean()
-
-    def pr(s):
-        return s.rolling(TEMP_RANK_WINDOW, min_periods=60).rank(pct=True)
-
-    parts = [pr(df["up_share"].rolling(5, min_periods=3).mean()), pr(df["above_ma20"]),
-             pr(df["net_limit"].rolling(5, min_periods=3).mean()), pr(df["amount_ratio"])]
-    df["temperature"] = (pd.concat(parts, axis=1).mean(axis=1) * 100)
-    return df
+    return live_market.temperature_from_metrics(df)
 
 
 def temperature_label(v):
@@ -70,6 +61,21 @@ def temperature_label(v):
         if v < upper:
             return label
     return "过热"
+
+
+def live_ref(p, temp):
+    """盘中温度要用的参考数据：每只股票前 19 天收盘均价和涨跌停幅度，以及最近的每日指标。"""
+    close19 = p.close.iloc[-19:]
+    mean19 = close19.mean().where(close19.notna().sum() >= 14)
+    pct = p.limit_pct().where(~p.is_st, 0.05).iloc[-1]
+    traded_recently = p.traded.iloc[-20:].any()
+    codes = {c: [None if np.isnan(m) else round(float(m), 4), float(pct[c])]
+             for c, m in mean19.items() if traded_recently.get(c, False)}
+    cols = ["up", "down", "limit_up", "limit_down", "amount", "above_ma20"]
+    h = temp[cols].iloc[-live_market.HIST_DAYS:]
+    hist = {"date": [d.strftime("%Y-%m-%d") for d in h.index]}
+    hist.update({c: [None if pd.isna(v) else round(float(v), 4) for v in h[c]] for c in cols})
+    return dict(signal_date=str(p.dates[-1].date()), codes=codes, hist=hist)
 
 
 # ---------- 行业 ----------
@@ -127,9 +133,12 @@ def sector_strength(p, industry, ranking):
 # ---------- 个股体检 ----------
 
 def checkups(p, industry, ranking, names):
-    """每只可选股票：行业、估值（市盈率、市净率）、估值在自身近 3 年和行业内的分位、近期走势与风险提示。"""
+    """全部 A 股：行业、估值（市盈率、市净率）、估值在自身近 3 年和行业内的分位、近期走势与风险提示。
+    有业绩预期得分的排在前面（带 rank、score_pct），其余当天有交易的股票也列上，得分留空。"""
     t = p.dates[-1]
-    codes = list(ranking["code"]) if ranking is not None else list(p.codes[p.traded.loc[t]])
+    codes = list(ranking["code"]) if ranking is not None else []
+    seen = set(codes)
+    codes += [c for c in p.codes[p.traded.loc[t]] if c not in seen]
     codes = [c for c in codes if c in p.codes]
     ret = (p.close / p.preclose - 1).where(p.traded).fillna(0)
     adj = (1 + ret).cumprod()
@@ -175,6 +184,38 @@ def checkups(p, industry, ranking, names):
     df["name"] = [names.get(c, "") for c in codes]
     df["flags"] = [";".join(risk_flags(row)) for _, row in df.iterrows()]
     return df
+
+
+OVERSOLD_SCORE = 0.9   # 业绩预期得分前 10%
+OVERSOLD_DROP = -0.15  # 近 20 个交易日跌超 15%
+OVERSOLD_MIN_AMOUNT = 1.0  # 近 20 日日均成交额至少 1 亿元
+OVERSOLD_N = 5
+
+
+def oversold(checks, n=OVERSOLD_N):
+    """错杀候选：业绩预期得分前 10%、近 20 日跌超 15%、盈利（市盈率为正）、非 ST、近 3 天跌停不到 2 次、
+    日均成交至少 1 亿。按近 20 日跌幅从大到小，取前 n 只。这是观察名单，不是买入信号。"""
+    if "score_pct" not in checks:
+        return dict(count=0, rule="", items=[])
+    c = checks
+    m = ((c["score_pct"] >= OVERSOLD_SCORE) & (c["ret20"] <= OVERSOLD_DROP) & (c["pe"] > 0)
+         & ~c["st"].astype(bool) & (c["limit_down3"] < 2) & (c["amount20"] >= OVERSOLD_MIN_AMOUNT))
+    sel = c[m.fillna(False)].sort_values("ret20")
+    items = []
+    for code, r in sel.head(n).iterrows():
+        why = [f"业绩预期得分前 {max(1, round((1 - r['score_pct']) * 100))}%",
+               f"近20日跌 {abs(r['ret20']) * 100:.0f}%"]
+        if pd.notna(r["from_high"]):
+            why.append(f"离一年高点 {r['from_high'] * 100:.0f}%")
+        if pd.notna(r.get("pe_self_pct")):
+            why.append(f"市盈率在自身近3年 {r['pe_self_pct'] * 100:.0f}% 分位")
+        items.append(dict(code=code, name=r["name"], industry=r["industry"], ret20=_clean(r["ret20"]),
+                          from_high=_clean(r["from_high"]), pe=_clean(r["pe"]),
+                          pe_self_pct=_clean(r.get("pe_self_pct")), score_pct=_clean(r["score_pct"]),
+                          reason="，".join(why)))
+    rule = (f"业绩预期得分前 {round((1 - OVERSOLD_SCORE) * 100)}%、近20日跌超 {abs(OVERSOLD_DROP) * 100:.0f}%、"
+            f"盈利、非ST、近3天跌停不到2次、日均成交≥{OVERSOLD_MIN_AMOUNT:g}亿，按跌幅排")
+    return dict(count=int(len(sel)), rule=rule, items=items)
 
 
 def risk_flags(r):
@@ -270,6 +311,18 @@ def contrarian_state(bt, fear):
     return dict(buy=ch["buy"], sell=ch["sell"], in_market=bool(np.asarray(reg)[-1]))
 
 
+def _gate_text(picks):
+    """今天为什么持有或空仓：情绪开关和净值 20 日均线是两道独立的闸门，分开说。"""
+    if picks.get("gate_open"):
+        return "今天两道开关都开，按清单持有"
+    ma = picks.get("equity_vs_ma20")
+    if picks.get("emotion_on") and ma is not None and ma < 0:
+        return f"今天情绪开关开，但组合净值比 20 日均线低 {abs(ma) * 100:.1f}%，空仓，回到均线上方再买"
+    if picks.get("emotion_on") is False:
+        return "今天情绪开关关，空仓"
+    return "今天空仓"
+
+
 def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
     """把各板块的结论压成几条“可以做 / 小心 / 不要做”。只是规则汇总，不是投资建议。"""
     items = []
@@ -298,7 +351,15 @@ def checklist(picks, temp_row, sectors, conf, cstate, top_checks, bt):
              + {"冰点": "；逆向看是机会", "偏冷": "；逆向看偏向机会", "偏热": "；追高要小心", "过热": "；过热，追高风险大"}.get(label, ""))
         items.append(dict(item="市场温度", status=s, detail=d))
     test = ((bt or {}).get("chosen") or {}).get("test") or {}
-    if test.get("avg_next_open_net") is not None:
+    live_bt = ((picks or {}).get("backtest") or {}).get("test") or {}
+    if (picks or {}).get("strategy") and live_bt.get("ann_return") is not None:
+        # 2026-10-28 起线上是持仓组合，不再是隔夜清单
+        v = live_bt["ann_return"]
+        s = "中" if v > 0 else "差"
+        d = (f"线上规则“{picks['strategy']}”样本外年化 {v * 100:.1f}%，最大回撤 {live_bt['max_drawdown'] * 100:.1f}%，"
+             f"每笔胜率 {live_bt['trade_win'] * 100:.0f}%；{_gate_text(picks)}")
+        items.append(dict(item="线上规则回测", status=s, detail=d))
+    elif test.get("avg_next_open_net") is not None:
         v = test["avg_next_open_net"]
         s = "好" if v > 0 else "差"
         d = f"样本外每笔扣费后平均 {v * 100:+.2f}%，" + ("优势覆盖了成本" if v > 0 else "选股优势不够付交易成本，不宜照单隔夜买卖")
@@ -369,9 +430,15 @@ def build(kline, basic, valuation, industry, ranking, picks, bt):
         sectors=sector_rows,
         confidence=conf,
         checkups=check_rows,
+        oversold=oversold(checks),
+        live_ref=live_ref(p, temp),
     )
 
 
 def write(out):
     config.PAGE_DIR.mkdir(parents=True, exist_ok=True)
+    out = dict(out)
+    ref = out.pop("live_ref", None)
     OUT_FILE.write_text(json.dumps(out, ensure_ascii=False, default=_clean))
+    if ref is not None:
+        REF_FILE.write_text(json.dumps(ref, ensure_ascii=False, separators=(",", ":")))

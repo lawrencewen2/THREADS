@@ -137,6 +137,33 @@ def test_fetch_rejects_short_history(tmp_path, monkeypatch):
     assert len(out["x"]) == 300
 
 
+def test_fetch_refetches_full_history_on_level_break(tmp_path, monkeypatch):
+    from fearindex import fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
+    monkeypatch.setattr(config, "SERIES", {"x": [("akshare", "B")]})
+    idx = pd.bdate_range("2020-01-01", periods=600)
+    old = pd.Series(1e9, index=idx)
+    fetch.save_cached("x", old.iloc[:-1])
+    (tmp_path / "_sources.json").write_text('{"x": "akshare:B"}')
+    calls = []
+
+    def unit_changed(code, start):
+        calls.append(start)
+        s = pd.Series(1.7e12, index=idx)
+        return s[s.index >= pd.Timestamp(start)]
+
+    monkeypatch.setattr(fetch, "FETCHERS", {"akshare": unit_changed})
+    out, errors = fetch.update_all()
+    assert not errors and calls[-1] == config.START_DATE and fetch.LAST_REBASED == ["x"]
+    assert (out["x"] == 1.7e12).all() and len(out["x"]) == 600
+    # 量级一致时只做增量拉取
+    calls.clear()
+    fetch.update_all()
+    assert len(calls) == 1 and calls[0] != config.START_DATE and fetch.LAST_REBASED == []
+
+
 def test_short_series_does_not_break_build():
     series = synthetic_series()
     series["hstech"] = series["hstech"].iloc[-1:]
@@ -152,6 +179,7 @@ def test_drift_check(built):
     tampered.loc[tampered.index[100], "global"] += 5
     assert not check.run_checks(series, {}, idx, tampered)["ok"]
     assert check.run_checks(series, {}, idx, tampered, method_changed=True)["ok"]
+    assert check.run_checks(series, {}, idx, tampered, rebased=["x"])["ok"]
     assert check.run_checks(series, {}, idx, idx)["ok"]
 
 
@@ -266,3 +294,193 @@ def test_intraday_apply_quotes():
     # 主指数还没开盘时，24 小时交易的汇率不接
     fx = {"usdjpy": dict(value=149.0, time=t, date=nxt)}
     assert intraday.apply_quotes(series, fx)[1] == []
+    # 北京时间过零点后，按北京日期标注的行情不能比主指数多出一天
+    late = {"n225": dict(value=250.0, time=t, date=nxt), "usdjpy": dict(value=149.0, time=t, date=nxt + pd.offsets.BDay())}
+    out, fresh = intraday.apply_quotes(series, late)
+    assert sorted(fresh) == ["n225", "usdjpy"] and out["usdjpy"].index[-1] == nxt
+
+
+def test_intraday_realtime_parsers():
+    from fearindex import intraday
+
+    hk = ["100", "恒生指数", "HSI", "22993.070"] + ["0"] * 26 + ["2026/10/29 15:40:38"]
+    t, d = intraday._tencent_time(hk)
+    assert d == pd.Timestamp("2026-10-29") and t.hour == 7 and t.minute == 40  # 北京 15:40 = UTC 07:40
+    a = ["1"] * 30 + ["20261029154012"]
+    assert intraday._tencent_time(a)[1] == pd.Timestamp("2026-10-29")
+    nky = "日经225指数,64659.2500,705.06,1.10,2:12 AM,14:12:00,2026-10-29,14:30:01,64126.25".split(",")
+    q = intraday._sina_quote("b_NKY", nky)
+    assert q["value"] == 64659.25 and q["date"] == pd.Timestamp("2026-10-29") and q["time"].hour == 6
+    gc = "4039.133,,4039.700,4039.900,4081.700,4033.400,15:40:40,4051.600,4081.400,0,1,1,2026-10-29,纽约黄金,0".split(",")
+    assert intraday._sina_quote("hf_GC", gc)["value"] == 4039.133
+
+
+def test_intraday_pick_rows(monkeypatch):
+    from datetime import datetime
+
+    from fearindex import intraday
+
+    now = datetime.now(intraday.CN_TZ).strftime("%Y%m%d%H%M%S")
+
+    def fields(price, prev, high, low):
+        f = ["0"] * 40
+        f[3], f[4], f[30], f[33], f[34] = str(price), str(prev), now, str(high), str(low)
+        return f
+
+    raw = {"sz002772": fields(8.0, 8.5, 8.6, 7.9), "sh603334": fields(30.0, 28.0, 31.2, 28.0),
+           "sz301317": fields(33.0, 32.6, 33.5, 32.5)}
+    monkeypatch.setattr(intraday, "_tencent_raw", lambda codes, session: {c: raw[c] for c in codes if c in raw})
+    doc = {"trade_date": "2026-10-29", "picks": [
+        dict(code="sz.002772", name="A", action="继续持有", entry_price=8.5, stop_price=7.95, take_profit_price=9.5),
+        dict(code="sh.603334", name="B", action="继续持有", entry_price=28.0, stop_price=26.0, take_profit_price=31.0),
+        dict(code="sz.301317", name="C", action="观察", stop_price_ref=31.0, take_profit_price_ref=36.0),
+        dict(code="sz.000001", name="D", action="观察", stop_price_ref=9.0, take_profit_price_ref=11.0)]}
+    rows, notes = intraday.pick_rows(doc, session=object())
+    st = {r["code"]: r["status"] for r in rows}
+    assert st == {"sz.002772": "触及止损", "sh.603334": "触及止盈", "sz.301317": "正常", "sz.000001": "无行情"}
+    assert rows[0]["from_entry"] == -5.88 and rows[2]["ref"] is True and rows[0]["ref"] is False
+    assert [k for _, k, _ in notes] == ["触及止损", "触及止盈"]  # 观察的股票不提醒
+
+
+def test_sanitize_fixes_short_price_glitch():
+    """价格序列连续一两天被多除了 10（Yahoo 拆分日错位）要修回来；成交额这类序列的真实骤降不能动。"""
+    from fearindex import fetch
+
+    idx = pd.bdate_range("2026-03-24", periods=9)
+    px = pd.Series([374.3, 383.6, 382.6, 382.7, 37.64, 37.14, 389.2, 383.0, 386.6], index=idx)
+    out = fetch.sanitize("topix", px)
+    assert len(out) == 9
+    assert out.loc["2026-03-30"] == pytest.approx(376.4)
+    assert out.loc["2026-03-31"] == pytest.approx(371.4)
+    # 换算不回来的坏点直接删掉
+    odd = px.copy()
+    odd.loc["2026-03-30"] = 55.0
+    out = fetch.sanitize("topix", odd)
+    assert pd.Timestamp("2026-03-30") not in out.index and out.loc["2026-03-31"] == pytest.approx(371.4)
+    # 跌到十分之一后没有回来（真实拆分或还没走完）：不动
+    stay = pd.Series([380.0, 382.0, 38.0, 38.2, 38.1, 38.3, 38.0, 38.4, 38.2], index=idx)
+    kept = fetch.sanitize("topix", stay)
+    assert len(kept) == 9 and list(kept) == list(stay)
+    # 成交额不在名单里：2016-01-07 熔断日那样的真实骤降保留
+    amt = pd.Series([7.0e11, 1.9e11, 7.6e11, 7.2e11], index=pd.bdate_range("2016-01-06", periods=4))
+    assert fetch.sanitize("a_turnover", amt).min() == 1.9e11
+
+
+def test_intraday_unfreeze_qvix():
+    """QVIX 分钟文件停更时，内容和以前见过的一样，日期沿用第一次见到的那天，不当成今天的新行情。"""
+    from datetime import datetime, timezone
+
+    from fearindex import intraday
+
+    t = datetime(2026, 11, 19, 7, 0, tzinfo=timezone.utc)
+    q = dict(value=14.75, time=t, date=pd.Timestamp("2026-11-19"), sig="abc")
+    out, seen = intraday.unfreeze_qvix(q, None)
+    assert out is q and seen == dict(sig="abc", date="2026-11-19")
+    # 第二天收盘后文件没变：日期和时间退回 11-19
+    stale = dict(q, time=t.replace(day=20), date=pd.Timestamp("2026-11-20"))
+    out, seen2 = intraday.unfreeze_qvix(stale, seen)
+    assert out["date"] == pd.Timestamp("2026-11-19") and out["time"] == t and seen2 == seen
+    # 文件更新了：按新日期记
+    fresh = dict(stale, sig="def", value=16.2)
+    out, seen3 = intraday.unfreeze_qvix(fresh, seen)
+    assert out is fresh and seen3 == dict(sig="def", date="2026-11-20")
+    assert intraday.unfreeze_qvix(None, seen) == (None, seen)
+
+
+def _risk_table(date, iv_near=0.15, iv_far=0.17):
+    """仿上交所期权风险指标表：50ETF 12 月、次年 3 月两个到期月，认购认沽各 5 个行权价。"""
+    rows = []
+    for ym, iv in (("2612", iv_near), ("2703", iv_far)):
+        for i, strike in enumerate((2800, 2900, 3000, 3100, 3200)):
+            dc = 0.9 - 0.2 * i  # 认购 Delta 0.9 → 0.1
+            for cp, delta in (("C", dc), ("P", dc - 1)):
+                skew = 0.01 * abs(abs(delta) - 0.5)
+                rows.append({"交易日期": date, "合约交易代码": f"510050{cp}{ym}M0{strike}", "Delta": delta, "隐含波动率": iv + skew})
+    rows.append({"交易日期": date, "合约交易代码": "510300C2612M04000", "Delta": 0.5, "隐含波动率": 0.99})  # 其他标的不算
+    return pd.DataFrame(rows)
+
+
+def test_atm_iv_30d_interpolates_to_30_days():
+    from fearindex import fetch
+
+    # 2026-12 的第四个星期三是 12-23；11-23 距它正好 30 天 → 就是近月平值波动率
+    assert fetch._option_expiry("2612") == pd.Timestamp("2026-12-23")
+    assert fetch.atm_iv_30d(_risk_table("2026-11-23"), pd.Timestamp("2026-11-23")) == pytest.approx(15.0, abs=0.01)
+    # 12-10：近月只剩 13 天，30 天落在两个到期月之间 → 介于两者之间
+    mid = fetch.atm_iv_30d(_risk_table("2026-12-10"), pd.Timestamp("2026-12-10"))
+    assert 15.0 < mid < 17.0
+    # 12-18：近月不足 7 天，直接用次近月
+    assert fetch.atm_iv_30d(_risk_table("2026-12-18"), pd.Timestamp("2026-12-18")) == pytest.approx(17.0, abs=0.01)
+    assert fetch.atm_iv_30d(_risk_table("2026-11-23").iloc[-1:], pd.Timestamp("2026-11-23")) is None
+
+
+def test_qvix_tail_filled_from_sse_official(monkeypatch, tmp_path):
+    """optbbs 停更后，QVIX 之后的日子用上交所口径的波动率按最近的比值补上；节假日（空表）跳过。"""
+    from fearindex import akcompat, fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch.time, "sleep", lambda s: None)
+    days = pd.bdate_range("2026-09-01", "2026-11-18")
+    qvix = pd.Series(np.linspace(14, 16, len(days)), index=days)
+    holiday = pd.Timestamp("2026-10-01")
+    calls = []
+
+    def fake(name, date):
+        d = pd.Timestamp(date)
+        calls.append(d)
+        if d == holiday or d > pd.Timestamp("2026-11-20"):
+            raise KeyError("empty")
+        base = qvix.get(d, 18.9 if d == pd.Timestamp("2026-11-20") else 16.8) / 1.05 / 100  # QVIX 比平值波动率高 5%
+        return _risk_table(str(d.date()), iv_near=base, iv_far=base)
+
+    monkeypatch.setattr(akcompat, "call", fake)
+    monkeypatch.setattr(pd.Timestamp, "now", classmethod(lambda cls, tz=None: pd.Timestamp("2026-11-23 06:35", tz=tz)))
+    out = fetch._sse_iv_tail(qvix)
+    assert out.index[-1] == pd.Timestamp("2026-11-20") and len(out) == len(qvix) + 2
+    assert out.loc["2026-11-19"] == pytest.approx(16.8, abs=0.02) and out.loc["2026-11-20"] == pytest.approx(18.9, abs=0.02)
+    assert out.iloc[: len(qvix)].equals(fetch._clean(qvix))  # 已有历史不动
+    # 第二次运行只请求最近一周里还没有的日子
+    calls.clear()
+    fetch._sse_iv_tail(qvix)
+    assert calls and min(calls) > pd.Timestamp("2026-11-13")
+    # 上交所连不上：原样返回
+    monkeypatch.setattr(akcompat, "call", lambda name, date: (_ for _ in ()).throw(OSError("down")))
+    (tmp_path / "_sse_iv50.csv").unlink()
+    assert fetch._sse_iv_tail(qvix).index[-1] == pd.Timestamp("2026-11-18")
+
+
+def test_hold_latest_keeps_stored_close_for_evening_session_series():
+    from fearindex import fetch
+
+    idx = pd.to_datetime(["2026-11-17", "2026-11-18", "2026-11-19"])
+    cached = pd.Series([3864.2, 3741.9, 3627.9], index=idx)
+    fresh = pd.Series([3864.2, 3741.9, 3536.8], index=idx)  # 重跑时 Yahoo 把夜盘实时价写进 11-19
+    late = pd.Timestamp("2026-11-20 03:47", tz="UTC")
+    held = fetch._hold_latest("gold", cached, fresh, now=late)
+    assert held["2026-11-19"] == 3627.9 and fresh["2026-11-19"] == 3536.8
+    # 其他序列的重跑修订照常生效
+    assert fetch._hold_latest("n225", cached, fresh, now=late)["2026-11-19"] == 3536.8
+    # 下一个交易日入库时，前一天换成 Yahoo 事后给出的结算价，当天取新值
+    idx2 = idx.append(pd.to_datetime(["2026-11-20"]))
+    fresh2 = pd.Series([3864.2, 3741.9, 3685.5, 3515.4], index=idx2)
+    nxt = fetch._hold_latest("gold", cached, fresh2, now=pd.Timestamp("2026-11-20 22:36", tz="UTC"))
+    assert nxt["2026-11-19"] == 3685.5 and nxt["2026-11-20"] == 3515.4
+    # 第一次入库（缓存里还没有这一天）用新值
+    first = fetch._hold_latest("gold", cached.iloc[:2], fresh, now=pd.Timestamp("2026-11-19 22:36", tz="UTC"))
+    assert first["2026-11-19"] == 3536.8
+
+
+def test_turnover_cross_check_reads_market_ref_amount(tmp_path):
+    import json
+
+    from fearindex import verify
+
+    days = pd.bdate_range("2026-11-02", periods=12)
+    amount = [15000.0 + 100 * i for i in range(12)]
+    ref = tmp_path / "market_ref.json"
+    ref.write_text(json.dumps({"hist": {"date": [d.strftime("%Y-%m-%d") for d in days], "amount": amount}}))
+    theirs = verify._market_ref_amount(ref)
+    ours = pd.Series([a * 1e8 * 1.0001 for a in amount], index=days)
+    assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.OK
+    ours.iloc[-1] *= 0.9
+    assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.WARN

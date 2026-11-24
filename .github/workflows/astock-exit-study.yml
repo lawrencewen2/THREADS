@@ -1,0 +1,65 @@
+name: astock-exit-study
+
+# 出场规则研究（2026-11-16 量化小组第 2 轮研究员）。只做研究，结果写回本分支。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-fox1r1]
+    paths: ["astock/exit_study.py", "astock/slots.py", "scripts/astock_exit_study.py", ".github/workflows/astock-exit-study.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-exit-study
+  cancel-in-progress: true
+
+jobs:
+  rerun:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_exit_study.py tests/test_astock_slots_refill.py tests/test_astock_guards.py tests/test_astock_ledger.py
+      - name: Restore price cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-rerun-fullfc
+          restore-keys: |
+            astock-kline-diversify-fullfc
+            astock-kline-
+      - name: Make sure forecasts go back to 2014
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-rerun-fullfc' && steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        timeout-minutes: 220
+        run: python scripts/astock_factor_hunt.py --ensure-forecast
+      - name: Save full cache for later reruns
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-rerun-fullfc'
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-rerun-fullfc
+      - name: Exit study（线上打分，含业绩加速）
+        run: python scripts/astock_exit_study.py
+      - name: Exit study（不加业绩加速）
+        run: EXIT_SCORE=base python scripts/astock_exit_study.py
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/exit_study*.md docs/astock/exit_study*.json data/research/exit_daily*.csv.gz
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: exit study $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

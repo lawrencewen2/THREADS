@@ -71,7 +71,7 @@ def sina_live(n=MARKET_N):
         title, body = _title_and_body(_text(it.get("rich_text")))
         tags = [t.get("name", "") for t in (it.get("tag") or []) if t.get("name")]
         rows.append(dict(time=it.get("create_time", "")[:16], title=title, body=body, tags="、".join(tags),
-                         source="新浪财经 7x24", url=f"https://finance.sina.com.cn/7x24/"))
+                         source="新浪财经 7x24", url=f"https://finance.sina.com.cn/7x24/", stocks=_ext_stocks(it)))
     return rows
 
 
@@ -192,8 +192,8 @@ THEME_RE = [(n, re.compile(k), st) for n, k, st in THEMES]
 BROAD = [("sh.510300", "沪深300ETF"), ("sh.510050", "上证50ETF")]
 
 
-def event_targets(items, text, n=3):
-    """一件事最直接关联的标的：快讯里点名次数最多的股票优先，不够再按主题补龙头；都没有时给宽基 ETF。"""
+def event_targets(items, text, n=3, broad=True):
+    """一件事最直接关联的标的：快讯里点名次数最多的股票优先，不够再按主题补龙头；都没有时给宽基 ETF（broad=False 时留空）。"""
     # 新浪按字面自动挂股票（“机器人”“新城市”这类词也会挂上同名公司），所以只认标题里真出现了名字的，且不要指数
     titles = " ".join(it.get("title", "") for it in items)
     named = pd.Series([s for it in items for s in (it.get("stocks") or [])
@@ -211,7 +211,7 @@ def event_targets(items, text, n=3):
                 out.append(dict(code=c, name=nm, why=name))
         if len(out) >= n:
             break
-    if not out:
+    if not out and broad:
         out = [dict(code=c, name=nm, why="大盘") for c, nm in BROAD[:1]]
     return out
 FOCUS_TAGS = ("焦点", "重要", "头条")
@@ -333,12 +333,16 @@ def sina_stock_news(code, days=STOCK_DAYS):
 # ---------- 汇总 ----------
 
 def tag_market(rows, names, industries):
-    """标出提到候选股或强弱行业的快讯，方便先看和自己相关的。"""
+    """每条快讯的相关股：先列提到的候选股和强弱行业，再补快讯点名的股票和题材龙头（最多 3 只）。
+    都没有时留空，不硬塞宽基 ETF。stocks 是新浪 ext 里的点名，只用来算标的，不写进结果。"""
     for r in rows:
         text = r["title"] + r["body"]
         hits = [n for n in names if n and n in text]
         hits += [i for i in industries if i and i in text]
-        r["related"] = "、".join(dict.fromkeys(hits))
+        targets = event_targets([r], text, broad=False)
+        r["targets"] = targets
+        r["related"] = "、".join(dict.fromkeys(hits + [t["name"] for t in targets]))
+        r.pop("stocks", None)
     return rows
 
 

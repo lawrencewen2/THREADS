@@ -33,7 +33,8 @@ def main():
 
     index_df, comp_df, raw_df = compute.build(series)
     status = check.run_checks(series, errors, index_df, previous,
-                              method_changed=prev_method != config.fingerprint())
+                              method_changed=prev_method != config.fingerprint(),
+                              rebased=[] if args.offline else list(fetch.LAST_REBASED))
     latest = publish.write_data(index_df, comp_df, raw_df, status)
     publish.write_dashboard(index_df, latest)
     publish.update_readme(latest, index_df, comp_df)

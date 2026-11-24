@@ -25,6 +25,10 @@ KINDS = {"kline": (KLINE_FIELDS, KLINE_FILE), "valuation": (VALUATION_FIELDS, VA
 BASIC_FILE = config.DATA_DIR / "basic.csv"
 
 
+class BaostockBlocked(RuntimeError):
+    """baostock 拒绝服务（黑名单、登录失败）：不再逐只重试，马上整体失败。"""
+
+
 class Session:
     def __enter__(self):
         import baostock as bs
@@ -44,7 +48,7 @@ class Session:
         socket.setdefaulttimeout(config.FETCH_TIMEOUT)
         lg = self.bs.login()
         if lg.error_code != "0":
-            raise RuntimeError(f"baostock login failed: {lg.error_msg}")
+            raise BaostockBlocked(f"baostock login failed: {lg.error_msg}")
 
     def query(self, fn_name, *args, attempts=4, **kwargs):
         """调用 baostock 查询并返回 DataFrame；网络错误时重新登录重试。"""
@@ -60,6 +64,9 @@ class Session:
                     raise RuntimeError(f"{fn_name}: {rs.error_code} {rs.error_msg}")
                 return pd.DataFrame(rows, columns=rs.fields)
             except Exception as exc:
+                # 2026-10-29 请求太多被 baostock 拉黑：每只股票再重试 4 次要几十个小时，直接放弃
+                if "黑名单" in str(exc):
+                    raise BaostockBlocked(str(exc)) from exc
                 if i == attempts - 1:
                     raise
                 log.warning("retry %s %s: %s", fn_name, args[:1], exc)
@@ -142,7 +149,19 @@ _worker_session = None
 def _init_worker():
     """每个下载进程登录一次、全程不登出：baostock 的匿名账号共用会话，任何一个进程登出会把其他进程一起踢下线。"""
     global _worker_session
-    _worker_session = Session().__enter__()
+    # 初始化函数抛错时进程池会不停地重开进程，整个任务卡死（2026-10-29 卡了两个小时）；登录失败留给 _session() 处理
+    try:
+        _worker_session = Session().__enter__()
+    except Exception as exc:
+        log.warning("worker login failed: %s", exc)
+        _worker_session = None
+
+
+def _session():
+    global _worker_session
+    if _worker_session is None:
+        _worker_session = Session().__enter__()
+    return _worker_session
 
 
 def _fetch_chunk(job):
@@ -150,11 +169,18 @@ def _fetch_chunk(job):
     items, end, kind = job
     fields = KINDS[kind][0]
     clean = clean_valuation if kind == "valuation" else clean_kline
-    sess = _worker_session or Session().__enter__()
     parts, failed = [], []
-    for code, start in items:
+    try:
+        sess = _session()
+    except Exception as exc:
+        log.warning("baostock unavailable: %s", exc)
+        return parts, [c for c, _ in items]
+    for n, (code, start) in enumerate(items):
         try:
             df = sess.kline(code, start, end, fields)
+        except BaostockBlocked as exc:
+            log.warning("baostock blocked: %s", exc)
+            return parts, failed + [c for c, _ in items[n:]]
         except Exception as exc:
             log.warning("kline %s failed: %s", code, exc)
             failed.append(code)
@@ -202,3 +228,71 @@ def _merge(old, parts, kind="kline"):
     out = out.drop_duplicates(["code", "date"], keep="last").sort_values(["code", "date"]).reset_index(drop=True)
     save_kline(out, kind)
     return out
+
+
+# 业绩预告：每只股票一次查询拉全部历史。公告日（pubDate）之后的第一个交易日才算已知
+FORECAST_FILE = config.CACHE_DIR / "forecast.pkl.gz"
+FORECAST_COLS = {"profitForcastExpPubDate": "pub", "profitForcastExpStatDate": "stat",
+                 "profitForcastType": "type", "profitForcastChgPctUp": "up", "profitForcastChgPctDwn": "dn"}
+
+
+def _fetch_forecast_chunk(job):
+    codes, start, end = job
+    parts, failed = [], []
+    try:
+        sess = _session()
+    except Exception as exc:
+        log.warning("baostock unavailable: %s", exc)
+        return parts, list(codes)
+    for n, code in enumerate(codes):
+        try:
+            df = sess.query("query_forecast_report", code, start_date=start, end_date=end)
+        except BaostockBlocked as exc:
+            log.warning("baostock blocked: %s", exc)
+            return parts, failed + list(codes[n:])
+        except Exception as exc:
+            log.warning("forecast %s failed: %s", code, exc)
+            failed.append(code)
+            continue
+        if len(df):
+            parts.append(df)
+    return parts, failed
+
+
+def update_forecast(codes, start=config.HISTORY_START, end=None, workers=config.FETCH_WORKERS, merge=False):
+    """拉全部股票的业绩预告（数据量小，每次全量重拉），存到 FORECAST_FILE。merge=True 时只补 start 之后的并入已有缓存。"""
+    from multiprocessing import Pool
+
+    end = end or pd.Timestamp.today().strftime("%Y-%m-%d")
+    jobs = [(codes[i:i + 150], start, end) for i in range(0, len(codes), 150)]
+    parts, failed, done = [], [], 0
+    with Pool(max(1, workers), initializer=_init_worker) as pool:
+        for got, bad in pool.imap_unordered(_fetch_forecast_chunk, jobs):
+            parts += got
+            failed += bad
+            done += 1
+            log.info("forecast chunks %d/%d", done, len(jobs))
+    if len(failed) > 0.1 * len(codes):
+        # 不拿残缺的结果覆盖缓存
+        raise BaostockBlocked(f"forecast: {len(failed)} of {len(codes)} codes failed")
+    df = clean_forecast(pd.concat(parts, ignore_index=True)) if parts else pd.DataFrame(columns=["code", *FORECAST_COLS.values()])
+    old = load_forecast() if merge else None
+    if old is not None and len(old):
+        df = pd.concat([old, df], ignore_index=True).drop_duplicates(["code", "pub", "stat", "type"], keep="last")
+        df = df.sort_values(["code", "pub"]).reset_index(drop=True)
+    config.CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    df.to_pickle(FORECAST_FILE)
+    return df, failed
+
+
+def clean_forecast(df):
+    df = df.rename(columns=FORECAST_COLS)[["code", *FORECAST_COLS.values()]].copy()
+    for c in ("pub", "stat"):
+        df[c] = pd.to_datetime(df[c], errors="coerce")
+    for c in ("up", "dn"):
+        df[c] = pd.to_numeric(df[c], errors="coerce")
+    return df.dropna(subset=["pub"]).reset_index(drop=True)
+
+
+def load_forecast():
+    return pd.read_pickle(FORECAST_FILE) if FORECAST_FILE.exists() else None

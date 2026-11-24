@@ -1,0 +1,55 @@
+name: astock-factor-hunt
+
+# 新因子挖掘（2026-11-12 用户：发掘新的因子加入回测，提高胜率和年化）。只做研究，不改线上规则。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-9l9paz]
+    paths: ["astock/factor_hunt.py", "scripts/astock_factor_hunt.py", "tests/test_astock_factor_hunt.py", ".github/workflows/astock-factor-hunt.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-factor-hunt
+  cancel-in-progress: true
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - run: python -m pytest -q tests/test_astock_factor_hunt.py
+      - name: Restore price cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-diversify-fullfc
+          restore-keys: astock-kline-
+      - name: Make sure forecasts go back to 2014
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        timeout-minutes: 120
+        run: python scripts/astock_factor_hunt.py --ensure-forecast
+      - name: Factor hunt
+        run: python scripts/astock_factor_hunt.py --combos
+      - name: Commit results
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add reports/astock/factor_hunt.md docs/astock/factor_hunt.json reports/astock/factor_combos.md docs/astock/factor_combos.json data/research/combo_daily.csv.gz
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "astock: factor hunt $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

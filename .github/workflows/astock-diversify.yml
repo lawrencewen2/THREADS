@@ -1,0 +1,89 @@
+name: astock-diversify
+
+# 分散化研究（2026-11-10 用户：寻找扩大年化同时减少回撤的策略）。只做研究数据，不改线上规则。
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/project-thread-9l9paz]
+    paths: ["scripts/astock_diversify*.py", "astock/diversify.py", ".github/workflows/astock-diversify.yml"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: astock-diversify
+  cancel-in-progress: true
+
+jobs:
+  etf:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - name: ETF history
+        run: python scripts/astock_diversify_dump.py --etf
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/research || exit 0
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "research: diversify inputs $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1
+
+  live:
+    timeout-minutes: 240
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r astock/requirements.txt
+      - name: Restore price cache
+        id: restore
+        uses: actions/cache/restore@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-diversify-fullfc
+          restore-keys: astock-kline-
+      - name: Make sure forecasts go back to 2014
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        timeout-minutes: 120
+        run: python scripts/astock_diversify_dump.py --ensure-forecast
+      - name: Save cache with full forecasts
+        if: steps.restore.outputs.cache-matched-key != 'astock-kline-diversify-fullfc'
+        uses: actions/cache/save@v4
+        with:
+          path: data/astock/cache
+          key: astock-kline-diversify-fullfc
+      - name: Live rule daily returns
+        run: python scripts/astock_diversify_dump.py --live --alt
+      - name: Commit results
+        if: always()
+        run: |
+          git config user.name "astock-bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/research || exit 0
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "research: diversify inputs $(date -u +%F) [skip ci]"
+          for i in 1 2 3 4; do
+            git pull --rebase && git push && exit 0
+            sleep $((2 ** i))
+          done
+          exit 1

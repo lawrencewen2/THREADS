@@ -47,7 +47,7 @@ jobs:
         run: |
           git config user.name "astock-bot"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/astock/industry.csv docs/astock/insight.json
+          git add data/astock/industry.csv docs/astock/insight.json docs/astock/market_ref.json
           if git diff --cached --quiet; then echo "no changes"; exit 0; fi
           git commit -m "astock: insight $(date -u +%F) [skip ci]"
           for i in 1 2 3 4; do
