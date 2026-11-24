@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-24T01:09+00:00",
+  "as_of": "2026-11-24T01:10+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 21.8,
+      "score": 21.9,
       "band": "恐慌",
       "date": "2026-11-24",
       "official": 21.7,
       "official_date": "2026-11-23",
-      "change": 0.1,
+      "change": 0.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -76,13 +76,13 @@
     },
     "cn": {
       "name": "A股",
-      "fresh": false,
-      "score": 27.3,
+      "fresh": true,
+      "score": 28.0,
       "band": "恐慌",
-      "date": "2026-11-23",
+      "date": "2026-11-24",
       "official": 27.3,
       "official_date": "2026-11-23",
-      "change": 0.0,
+      "change": 0.7,
       "signal": "normal",
       "signal_text": "正常",
       "official_signal": "normal",
@@ -90,7 +90,7 @@
         "short_bottom": false,
         "bottom": false
       },
-      "session": "未开盘"
+      "session": "已收盘"
     },
     "hk": {
       "name": "港股",
@@ -113,39 +113,39 @@
   },
   "quotes": {
     "n225": {
-      "value": 59204.04,
-      "time": "2026-11-24T01:08+00:00",
+      "value": 59251.24,
+      "time": "2026-11-24T01:09+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "gold": {
-      "value": 3687.54,
-      "time": "2026-11-24T01:09+00:00",
+      "value": 3686.344,
+      "time": "2026-11-24T01:10+00:00",
       "date": "2026-11-24",
       "fresh": false
     },
     "csi300": {
       "value": 3958.29,
-      "time": "2026-11-23T08:14+00:00",
-      "date": "2026-11-23",
-      "fresh": false
+      "time": "2026-11-24T01:10+00:00",
+      "date": "2026-11-24",
+      "fresh": true
     },
     "hsi": {
       "value": 22383.74,
-      "time": "2026-11-24T01:09+00:00",
+      "time": "2026-11-24T01:10+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "hstech": {
       "value": 3.52,
-      "time": "2026-11-24T01:07+00:00",
+      "time": "2026-11-24T01:09+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "a_turnover": {
-      "value": 155288017.0,
-      "time": "2026-11-23T08:14+00:00",
-      "date": "2026-11-23",
+      "value": 0.0,
+      "time": "2026-11-24T01:10+00:00",
+      "date": "2026-11-24",
       "fresh": false
     },
     "spx": {
@@ -186,19 +186,19 @@
     },
     "eurchf": {
       "value": 0.91808,
-      "time": "2026-11-24T01:09+00:00",
+      "time": "2026-11-24T01:10+00:00",
       "date": "2026-11-24",
       "fresh": false
     },
     "usdjpy": {
-      "value": 158.964996,
-      "time": "2026-11-24T01:09+00:00",
+      "value": 158.972,
+      "time": "2026-11-24T01:10+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
     "topix": {
-      "value": 396.0,
-      "time": "2026-11-24T00:53+00:00",
+      "value": 396.100006,
+      "time": "2026-11-24T00:55+00:00",
       "date": "2026-11-24",
       "fresh": true
     },
@@ -216,6 +216,7 @@
     }
   },
   "fresh": [
+    "csi300",
     "hsi",
     "hstech",
     "n225",
