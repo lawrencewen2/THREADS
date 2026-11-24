@@ -126,6 +126,11 @@ GLITCH_KEYS = ["spx", "rsp", "iwm", "hyg", "ief", "sx5e", "n225", "topix", "csi3
 GLITCH_RATIO = 3.0
 GLITCH_MAX_RUN = 3
 
+# 夜盘期货：Yahoo 的日线按美东日历日切分，美东 18:00 新交易日开盘后，夜盘实时价会被写进“当天”那一行。
+# 定时任务晚到的重跑因此会把已存的收盘价换成夜盘价。这些序列的最新完整日一旦入库，当轮重跑不再改写，
+# 等下一个交易日入库时再连同 Yahoo 换上的结算价一起更新。
+HOLD_LATEST_KEYS = ["gold"]
+
 # 仓位信号：分数 ≤ RISK_OFF_LEVEL 且低于 RISK_OFF_LOOKBACK 个交易日前（恐慌在加深）→ 建议仓位减半。
 # 参数只用 2018 年以前的数据选定（见 reports/backtest.md）。
 RISK_OFF_LEVEL = 40

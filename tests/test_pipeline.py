@@ -447,3 +447,40 @@ def test_qvix_tail_filled_from_sse_official(monkeypatch, tmp_path):
     monkeypatch.setattr(akcompat, "call", lambda name, date: (_ for _ in ()).throw(OSError("down")))
     (tmp_path / "_sse_iv50.csv").unlink()
     assert fetch._sse_iv_tail(qvix).index[-1] == pd.Timestamp("2026-11-18")
+
+
+def test_hold_latest_keeps_stored_close_for_evening_session_series():
+    from fearindex import fetch
+
+    idx = pd.to_datetime(["2026-11-17", "2026-11-18", "2026-11-19"])
+    cached = pd.Series([3864.2, 3741.9, 3627.9], index=idx)
+    fresh = pd.Series([3864.2, 3741.9, 3536.8], index=idx)  # 重跑时 Yahoo 把夜盘实时价写进 11-19
+    late = pd.Timestamp("2026-11-20 03:47", tz="UTC")
+    held = fetch._hold_latest("gold", cached, fresh, now=late)
+    assert held["2026-11-19"] == 3627.9 and fresh["2026-11-19"] == 3536.8
+    # 其他序列的重跑修订照常生效
+    assert fetch._hold_latest("n225", cached, fresh, now=late)["2026-11-19"] == 3536.8
+    # 下一个交易日入库时，前一天换成 Yahoo 事后给出的结算价，当天取新值
+    idx2 = idx.append(pd.to_datetime(["2026-11-20"]))
+    fresh2 = pd.Series([3864.2, 3741.9, 3685.5, 3515.4], index=idx2)
+    nxt = fetch._hold_latest("gold", cached, fresh2, now=pd.Timestamp("2026-11-20 22:36", tz="UTC"))
+    assert nxt["2026-11-19"] == 3685.5 and nxt["2026-11-20"] == 3515.4
+    # 第一次入库（缓存里还没有这一天）用新值
+    first = fetch._hold_latest("gold", cached.iloc[:2], fresh, now=pd.Timestamp("2026-11-19 22:36", tz="UTC"))
+    assert first["2026-11-19"] == 3536.8
+
+
+def test_turnover_cross_check_reads_market_ref_amount(tmp_path):
+    import json
+
+    from fearindex import verify
+
+    days = pd.bdate_range("2026-11-02", periods=12)
+    amount = [15000.0 + 100 * i for i in range(12)]
+    ref = tmp_path / "market_ref.json"
+    ref.write_text(json.dumps({"hist": {"date": [d.strftime("%Y-%m-%d") for d in days], "amount": amount}}))
+    theirs = verify._market_ref_amount(ref)
+    ours = pd.Series([a * 1e8 * 1.0001 for a in amount], index=days)
+    assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.OK
+    ours.iloc[-1] *= 0.9
+    assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.WARN

@@ -381,6 +381,20 @@ def _level_break(cached, fresh):
     return not (1 / LEVEL_BREAK < b / a < LEVEL_BREAK)
 
 
+def _hold_latest(key, cached, fresh, now=None):
+    """config.HOLD_LATEST_KEYS 里的序列：最新完整日在缓存里已有值时沿用缓存，不让晚到的重跑用夜盘实时价改写。"""
+    if key not in config.HOLD_LATEST_KEYS or cached is None:
+        return fresh
+    now = pd.Timestamp.now(tz="UTC") if now is None else now
+    day = (now - pd.Timedelta(hours=22)).tz_localize(None).normalize()  # 与 sanitize 的截止日一致
+    if day in cached.index and day in fresh.index and fresh[day] != cached[day]:
+        log.info("%s: keeping stored %s value %s (fresh %s is the evening session)", key, day.date(),
+                 cached[day], fresh[day])
+        fresh = fresh.copy()
+        fresh[day] = cached[day]
+    return fresh
+
+
 def update_all(keys=None, start=config.START_DATE, full=False):
     """拉取并合并所有序列。返回 (dict key->Series, dict key->错误信息)。
 
@@ -425,6 +439,8 @@ def update_all(keys=None, start=config.START_DATE, full=False):
                     continue
                 same_source = False
                 LAST_REBASED.append(key)
+            if same_source:
+                fresh = _hold_latest(key, cached, fresh)
             merged = pd.concat([cached[cached.index < fresh.index[0]], fresh]) if same_source else fresh
             merged = sanitize(key, _clean(merged))
             save_cached(key, merged)

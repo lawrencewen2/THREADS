@@ -222,6 +222,13 @@ def _first(*getters):
     return go
 
 
+def _market_ref_amount(path=None):
+    """A股选股每天早上写出的市场统计（astock/insight.py），其中 amount 是全部沪深个股成交额之和，单位亿元。"""
+    path = path or publish.DOCS / "astock" / "market_ref.json"
+    hist = json.loads(path.read_text())["hist"]
+    return _series(pd.DataFrame({"date": hist["date"], "amount": hist["amount"]}), "date", "amount")
+
+
 def _sse_margin():
     end = pd.Timestamp.today()
     start = end - pd.Timedelta(days=60)
@@ -244,14 +251,21 @@ CROSS_CHECKS = [
     ("n225", "新浪 日经225指数", lambda: _ak("index_global_hist_sina", symbol="日经225指数"), "level", 0.005),
     ("usdjpy", "欧洲央行参考汇率（JPY/USD 交叉）", lambda: _ecb("JPY/USD"), "level", 0.015),
     ("csi300", "新浪 沪深300", lambda: _ak("stock_zh_index_daily", symbol="sh000300"), "level", 0.005),
-    # 我方是成交额、新浪只有成交量，两者比值是平均股价，会随行情浮动几个百分点，所以容差放宽，只防单位错和数据错位
+    # 成交额对成交额：选股数据里全部沪深个股的成交额之和（逐股日线，和我方的指数成交额是两条独立的取数路径），
+    # 单位不同（亿元对元）所以比比值；两边长期只差万分之一二
+    ("a_turnover", "选股数据 全部沪深个股成交额之和（docs/astock/market_ref.json）", lambda: _market_ref_amount(), "ratio", 0.01),
+    # 我方是成交额、新浪只有成交量，两者比值是平均成交价。普跌日低价股放量时比值单日可掉 15% 左右
+    # （2026-11-20：成交额已由上一行核对无误，比值仍偏 15.2%），所以容差放宽，只防单位错和数据错位
     ("a_turnover", "新浪 上证+深成 成交量（我方为成交额，只核对走势）",
-     lambda: _ak_sum("stock_zh_index_daily", ["sh000001", "sz399001"], "volume"), "ratio", 0.15),
+     lambda: _ak_sum("stock_zh_index_daily", ["sh000001", "sz399001"], "volume"), "ratio", 0.20),
     ("sh_margin", "上交所官网 融资余额", _sse_margin, "ratio", 0.005),
     ("hsi", "新浪 恒生指数", lambda: _ak("stock_hk_index_daily_sina", symbol="HSI"), "level", 0.005),
     ("hstech", "新浪 恒生科技指数（3033.HK 为跟踪 ETF）", lambda: _ak("stock_hk_index_daily_sina", symbol="HSTECH"),
      "ratio", 0.02),
-    ("gold", "新浪 COMEX 黄金期货", lambda: _ak("futures_foreign_hist", symbol="GC"), "level", 0.01),
+    # 我方（Yahoo）事后会换成交易所结算价（美东 13:30 定），新浪是 17:00 的最后成交价；
+    # 金价午后大涨大跌的日子两者能差 1.5% 以上（2026-11-19 差 1.59%），所以容差 2%
+    ("gold", "新浪 COMEX 黄金期货（对方为 17:00 收盘价，我方为结算价）",
+     lambda: _ak("futures_foreign_hist", symbol="GC"), "level", 0.02),
 ]
 
 NO_SECOND_SOURCE = {
@@ -369,12 +383,12 @@ def to_markdown(rep, date):
         warn = [r for r in cross if r["status"] == WARN]
         failed = [r for r in cross if r["status"] == "—"]
         ok_n = sum(r["status"] == OK for r in cross)
-        detail = f"{ok_n} 个序列与第二来源一致"
+        detail = f"{ok_n} 项与第二来源一致"
         if warn:
-            detail += "；偏差超容差：" + "、".join(r["key"] for r in warn)
+            detail += "；偏差超容差：" + "、".join(dict.fromkeys(r["key"] for r in warn))
         if failed:
-            detail += "；第二来源取数失败：" + "、".join(r["key"] for r in failed)
-        summary.append(("跨数据源比对", f"{len(cross)} 个序列 × 最近 20 天", warn and WARN or OK, detail))
+            detail += "；第二来源取数失败：" + "、".join(dict.fromkeys(r["key"] for r in failed))
+        summary.append(("跨数据源比对", f"{len(cross)} 项比对 × 最近 20 天", warn and WARN or OK, detail))
 
     intra = rep.get("intraday")
     if intra:
