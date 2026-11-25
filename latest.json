@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-25T21:00+00:00",
+  "as_of": "2026-11-25T21:01+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 9.8,
+      "score": 9.9,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 11.9,
       "official_date": "2026-11-24",
-      "change": -2.1,
+      "change": -2.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3601.405,
-      "time": "2026-11-25T21:00+00:00",
+      "value": 3601.25,
+      "time": "2026-11-25T21:01+00:00",
       "date": "2026-11-26",
       "fresh": true
     },
@@ -155,7 +155,7 @@
       "fresh": true
     },
     "vix": {
-      "value": 28.540001,
+      "value": 28.52,
       "time": "2026-11-25T20:45+00:00",
       "date": "2026-11-25",
       "fresh": true
@@ -191,7 +191,7 @@
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.201996,
+      "value": 159.207993,
       "time": "2026-11-25T21:00+00:00",
       "date": "2026-11-25",
       "fresh": true
