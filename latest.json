@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-25T12:10+00:00",
+  "as_of": "2026-11-25T12:11+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 20.3,
+      "score": 20.2,
       "band": "恐慌",
       "date": "2026-11-25",
       "official": 21.3,
       "official_date": "2026-11-24",
-      "change": -1.0,
+      "change": -1.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 18.9,
+      "score": 18.8,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 21.8,
       "official_date": "2026-11-24",
-      "change": -2.9,
+      "change": -3.0,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3526.752,
-      "time": "2026-11-25T12:10+00:00",
+      "value": 3528.888,
+      "time": "2026-11-25T12:11+00:00",
       "date": "2026-11-25",
       "fresh": false
     },
@@ -155,8 +155,8 @@
       "fresh": false
     },
     "vix": {
-      "value": 30.290001,
-      "time": "2026-11-25T11:55+00:00",
+      "value": 30.32,
+      "time": "2026-11-25T11:56+00:00",
       "date": "2026-11-25",
       "fresh": false
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 5986.72998,
-      "time": "2026-11-25T11:54+00:00",
+      "value": 5983.899902,
+      "time": "2026-11-25T11:55+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.90955,
-      "time": "2026-11-25T12:10+00:00",
+      "value": 0.90935,
+      "time": "2026-11-25T12:11+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.216995,
-      "time": "2026-11-25T12:10+00:00",
+      "value": 159.220993,
+      "time": "2026-11-25T12:11+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
