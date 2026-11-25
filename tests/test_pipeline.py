@@ -257,7 +257,8 @@ def test_short_bottom_hint():
 def test_sanitize_drops_unfinished_today():
     from fearindex import fetch
 
-    today = pd.Timestamp.now(tz="UTC").tz_localize(None).normalize()
+    # 第一个还没收盘的日期：22:00 UTC 之后当天已算完整，所以取截止日的下一天（否则 22–24 点 UTC 跑测试会失败）。
+    today = (pd.Timestamp.now(tz="UTC") - pd.Timedelta(hours=22)).tz_localize(None).normalize() + pd.Timedelta(days=1)
     idx = pd.bdate_range(end=today - pd.Timedelta(days=7), periods=5).append(pd.DatetimeIndex([today]))
     s = pd.Series(1.0, index=idx)
     out = fetch.sanitize("spx", s)
