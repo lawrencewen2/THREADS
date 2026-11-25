@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-25T08:26+00:00",
+  "as_of": "2026-11-25T08:27+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 19.7,
+      "score": 19.6,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 21.8,
       "official_date": "2026-11-24",
-      "change": -2.1,
+      "change": -2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -59,12 +59,12 @@
     "jp": {
       "name": "日本",
       "fresh": true,
-      "score": 9.9,
+      "score": 10.0,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 11.9,
       "official_date": "2026-11-24",
-      "change": -2.0,
+      "change": -1.9,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3554.67,
-      "time": "2026-11-25T08:25+00:00",
+      "value": 3553.248,
+      "time": "2026-11-25T08:27+00:00",
       "date": "2026-11-25",
       "fresh": false
     },
@@ -132,7 +132,7 @@
     },
     "hsi": {
       "value": 21966.01,
-      "time": "2026-11-25T08:25+00:00",
+      "time": "2026-11-25T08:27+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
@@ -179,20 +179,20 @@
       "fresh": false
     },
     "sx5e": {
-      "value": 6005.439941,
-      "time": "2026-11-25T08:10+00:00",
+      "value": 6005.77002,
+      "time": "2026-11-25T08:11+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91359,
-      "time": "2026-11-25T08:25+00:00",
+      "value": 0.91333,
+      "time": "2026-11-25T08:27+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.328003,
-      "time": "2026-11-25T08:25+00:00",
+      "value": 159.367004,
+      "time": "2026-11-25T08:27+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
