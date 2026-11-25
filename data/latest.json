@@ -20,17 +20,17 @@
     },
     "eu": {
       "name": "欧洲",
-      "score": 21.4,
+      "score": 21.8,
       "band": "恐慌",
-      "change_5d": -20.0,
+      "change_5d": -19.6,
       "risk_off": true,
       "signal": "risk_off"
     },
     "jp": {
       "name": "日本",
-      "score": 12.0,
+      "score": 11.9,
       "band": "极度恐慌",
-      "change_5d": -1.2,
+      "change_5d": -1.3,
       "risk_off": true,
       "signal": "risk_off"
     },
@@ -100,7 +100,7 @@
     "eu_chf": {
       "name": "瑞郎避险升值",
       "region": "eu",
-      "score": 25.6
+      "score": 31.3
     },
     "eu_crash": {
       "name": "欧洲斯托克50 10日急跌",
@@ -110,7 +110,7 @@
     "jp_rvol": {
       "name": "日经225 20日实际波动率",
       "region": "jp",
-      "score": 4.5
+      "score": 4.4
     },
     "jp_dd": {
       "name": "日经225 回撤",
@@ -120,17 +120,17 @@
     "jp_ma": {
       "name": "日经225 低于125日均线幅度",
       "region": "jp",
-      "score": 1.2
+      "score": 1.3
     },
     "jp_yen": {
       "name": "日元20日急升",
       "region": "jp",
-      "score": 56.1
+      "score": 52.5
     },
     "jp_crash": {
       "name": "日经225 10日急跌",
       "region": "jp",
-      "score": 39.4
+      "score": 40.6
     },
     "jp_breadth": {
       "name": "TOPIX 回撤（全市场）",
@@ -185,7 +185,7 @@
     "hk_tech": {
       "name": "恒生科技跑输恒指",
       "region": "hk",
-      "score": 11.7
+      "score": 11.4
     },
     "hk_crash": {
       "name": "恒指 10日急跌",
