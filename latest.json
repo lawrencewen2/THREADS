@@ -1,16 +1,16 @@
 {
-  "as_of": "2026-11-25T17:45+00:00",
+  "as_of": "2026-11-25T17:46+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
       "name": "全球",
       "fresh": true,
-      "score": 19.0,
+      "score": 19.1,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 21.3,
       "official_date": "2026-11-24",
-      "change": -2.3,
+      "change": -2.2,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -23,12 +23,12 @@
     "us": {
       "name": "美国",
       "fresh": true,
-      "score": 9.6,
+      "score": 9.7,
       "band": "极度恐慌",
       "date": "2026-11-25",
       "official": 11.8,
       "official_date": "2026-11-24",
-      "change": -2.2,
+      "change": -2.1,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -119,8 +119,8 @@
       "fresh": true
     },
     "gold": {
-      "value": 3539.176,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 3538.868,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-26",
       "fresh": true
     },
@@ -149,32 +149,32 @@
       "fresh": true
     },
     "spx": {
-      "value": 7116.220215,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 7120.990234,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "vix": {
-      "value": 31.440001,
-      "time": "2026-11-25T17:30+00:00",
+      "value": 31.0,
+      "time": "2026-11-25T17:31+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "vix3m": {
-      "value": 28.309999,
-      "time": "2026-11-25T17:30+00:00",
+      "value": 28.040001,
+      "time": "2026-11-25T17:31+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "hyg": {
-      "value": 76.464996,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 76.470001,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "ief": {
-      "value": 92.254997,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 92.25,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
@@ -185,14 +185,14 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91121,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 0.91116,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
     "usdjpy": {
-      "value": 158.932999,
-      "time": "2026-11-25T17:45+00:00",
+      "value": 158.925003,
+      "time": "2026-11-25T17:46+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
@@ -203,8 +203,8 @@
       "fresh": true
     },
     "us10y": {
-      "value": 4.828,
-      "time": "2026-11-25T17:30+00:00",
+      "value": 4.83,
+      "time": "2026-11-25T17:31+00:00",
       "date": "2026-11-25",
       "fresh": true
     },
