@@ -3800,10 +3800,10 @@
  },
  "picks": [],
  "frozen": false,
- "time": "11-26 09:25",
+ "time": "11-26 09:26",
  "phase": "集合竞价",
- "breadth": 0.817,
- "stocks": 3807,
+ "breadth": 0.815,
+ "stocks": 3886,
  "top_volume": [
   {
    "code": "sh.603960",
