@@ -1,5 +1,5 @@
 {
-  "as_of": "2026-11-26T19:51+00:00",
+  "as_of": "2026-11-26T19:52+00:00",
   "method": "449a4455b86c",
   "regions": {
     "global": {
@@ -41,12 +41,12 @@
     "eu": {
       "name": "欧洲",
       "fresh": true,
-      "score": 17.4,
+      "score": 17.5,
       "band": "极度恐慌",
       "date": "2026-11-26",
       "official": 19.0,
       "official_date": "2026-11-25",
-      "change": -1.6,
+      "change": -1.5,
       "signal": "risk_off",
       "signal_text": "恐慌加深，减仓",
       "official_signal": "risk_off",
@@ -185,14 +185,14 @@
       "fresh": true
     },
     "eurchf": {
-      "value": 0.91509,
-      "time": "2026-11-26T19:51+00:00",
+      "value": 0.91514,
+      "time": "2026-11-26T19:52+00:00",
       "date": "2026-11-26",
       "fresh": true
     },
     "usdjpy": {
-      "value": 159.268005,
-      "time": "2026-11-26T19:51+00:00",
+      "value": 159.264008,
+      "time": "2026-11-26T19:52+00:00",
       "date": "2026-11-26",
       "fresh": true
     },
