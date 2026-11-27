@@ -2,7 +2,7 @@
 
 不重新抓行情，只用仓库里已有的文件：
   docs/page/latest.json、docs/page/history.json   恐慌贪婪指数读数和历史
-  data/components.csv                              各分项得分（0–100，越高越恐慌，发布时会反过来）
+  data/components.csv                              各分项得分（0–100，已和指数同向：越高越贪婪；这里换回越高越恐慌再给模型）
   data/raw/*.csv                                   原始行情（算涨跌幅）
   docs/astock/insight.json、docs/astock/picks.json A股市场温度、行业强弱、选股开关
 
@@ -143,9 +143,10 @@ def component_table(asof: pd.Timestamp) -> dict:
         if col not in df.columns or pd.isna(last[col]):
             continue
         region = REGION_NAMES.get(spec["region"], spec["region"])
-        item = dict(name=spec["name"], fear_pct=round(float(last[col]), 1))
+        # components.csv 发布时已翻转成“越高越贪婪”，换回恐慌分位，和提示词里的“越高越恐慌”一致
+        item = dict(name=spec["name"], fear_pct=round(100 - float(last[col]), 1))
         if prev5 is not None and not pd.isna(prev5[col]):
-            item["chg_5d"] = round(float(last[col] - prev5[col]), 1)
+            item["chg_5d"] = round(float(prev5[col] - last[col]), 1)
         out.setdefault(region, []).append(item)
     return out
 
