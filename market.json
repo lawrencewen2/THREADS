@@ -1,6 +1,6 @@
 {
  "date": "2026-11-27",
- "time": "11-27 14:57",
+ "time": "11-27 14:59",
  "session": "盘中",
  "temperature": 69.5,
  "label": "偏热",
@@ -14,11 +14,11 @@
  "net_limit": 490,
  "up_share": 0.9652,
  "amount": 19829.4,
- "amount_full_day": 20015.7,
- "amount_ratio": 1.2319,
+ "amount_full_day": 19906.9,
+ "amount_ratio": 1.2256,
  "above_ma20": 0.1859,
  "median_ret": 0.0671,
  "stocks": 5219,
- "last_quote": "14:57:46",
+ "last_quote": "14:59:04",
  "signal_date": "2026-11-26"
 }
