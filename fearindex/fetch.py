@@ -153,8 +153,8 @@ def _sse_margin_tail(s):
 
     try:
         end = pd.Timestamp.today()
-        df = akcompat.call("stock_margin_sse", start_date=f"{end - pd.Timedelta(days=60):%Y%m%d}",
-                           end_date=f"{end:%Y%m%d}")
+        df = _retry(lambda: akcompat.call("stock_margin_sse", start_date=f"{end - pd.Timedelta(days=60):%Y%m%d}",
+                                          end_date=f"{end:%Y%m%d}"), attempts=3, base_delay=5.0)
         sse = pd.to_numeric(df["融资余额"], errors="coerce")
         sse.index = pd.to_datetime(df["信用交易日期"].astype(str))
         sse = sse.dropna().sort_index()
@@ -441,7 +441,16 @@ def update_all(keys=None, start=config.START_DATE, full=False):
                 LAST_REBASED.append(key)
             if same_source:
                 fresh = _hold_latest(key, cached, fresh)
-            merged = pd.concat([cached[cached.index < fresh.index[0]], fresh]) if same_source else fresh
+            if same_source:
+                # 本次拉到的数据比缓存短（例如金十停更、补尾的上交所官网当次连不上）时保留缓存里更新的日子，
+                # 不让一次取数失败把已有的近期数据截掉（2026-11-27 曾因此让沪市融资余额退回 11-05）
+                newer = cached[cached.index > fresh.index.max()]
+                if len(newer):
+                    log.warning("%s via %s ends %s, keeping %d newer cached days (to %s)", key, label,
+                                fresh.index.max().date(), len(newer), newer.index[-1].date())
+                merged = pd.concat([cached[cached.index < fresh.index[0]], fresh, newer])
+            else:
+                merged = fresh
             merged = sanitize(key, _clean(merged))
             save_cached(key, merged)
             sources[key] = label

@@ -485,3 +485,21 @@ def test_turnover_cross_check_reads_market_ref_amount(tmp_path):
     assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.OK
     ours.iloc[-1] *= 0.9
     assert verify.compare(ours, theirs, "ratio", 0.01)["status"] == verify.WARN
+
+
+def test_fetch_keeps_newer_cached_days_when_source_is_stale(tmp_path, monkeypatch):
+    """数据源这次只返回到较早的日期（补尾来源当次连不上）时，缓存里更新的日子不能被截掉。"""
+    from fearindex import fetch
+
+    monkeypatch.setattr(fetch, "RAW_DIR", tmp_path)
+    monkeypatch.setattr(fetch, "SOURCES_FILE", tmp_path / "_sources.json")
+    monkeypatch.setattr(config, "SERIES", {"x": [("akshare", "B")]})
+    idx = pd.bdate_range("2020-01-01", periods=600)
+    full = pd.Series(np.linspace(1.0, 2.0, len(idx)), index=idx)
+    fetch.save_cached("x", full)
+    (tmp_path / "_sources.json").write_text('{"x": "akshare:B"}')
+    stale = full.iloc[:-15]
+    monkeypatch.setattr(fetch, "FETCHERS", {"akshare": lambda c, s: stale[stale.index >= pd.Timestamp(s)]})
+    out, errors = fetch.update_all()
+    assert not errors and out["x"].index[-1] == idx[-1] and len(out["x"]) == 600
+    assert np.allclose(out["x"].values, fetch.load_cached("x").values)
